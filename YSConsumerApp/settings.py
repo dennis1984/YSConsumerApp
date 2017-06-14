@@ -170,7 +170,7 @@ MAX_PAGE_SIZE = 500
 
 # domain name
 
-DOMAIN_NAME = '121.42.249.43'
+DOMAIN_NAME = 'yinshi.city23.com'
 
 # WEB URL FIX
 

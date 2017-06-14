@@ -14,8 +14,19 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import url, include
+from rest_framework import routers
+
+### debug  ###
+from users import views
+router = routers.DefaultRouter()
+router.register(r'users', views.UserViewSet)
+### end debug  ###
 
 urlpatterns = [
+    ### debug  ###
+    url(r'', include(router.urls)),
+    ### end debug ###
+
     url(r'^api-auth', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
 

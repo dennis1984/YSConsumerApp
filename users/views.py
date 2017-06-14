@@ -7,7 +7,8 @@ from rest_framework import status
 from users.serializers import (UserSerializer,
                                UserInstanceSerializer,
                                UserDetailSerializer,
-                               UserListSerializer)
+                               UserListSerializer,
+                               IdentifyingCodeSerializer)
 from users.permissions import IsOwnerOrReadOnly
 from users.models import (ConsumerUser,
                           make_token_expire,
@@ -15,11 +16,13 @@ from users.models import (ConsumerUser,
 from users.forms import (CreateUserForm,
                          SendIdentifyingCodeForm,
                          VerifyIdentifyingCodeForm,
-                         ChangePasswordForm,
+                         UpdateUserInfoForm,
                          SetPasswordForm)
 
 from horizon.views import APIView
 from horizon.main import make_random_number_of_string
+from horizon import main
+import copy
 
 
 def verify_identifying_code(params_dict):
@@ -57,16 +60,21 @@ class IdentifyingCodeAction(APIView):
         """
         发送验证码
         """
-        form = SendIdentifyingCodeForm(getattr(request, request.method))
+        form = SendIdentifyingCodeForm(request.data)
         if not form.is_valid():
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         cld = form.cleaned_data
         result = self.verify_phone(cld)
-        if isinstance(request, Exception):
+        if isinstance(result, Exception):
             return Response({'Detail': result.args}, status=status.HTTP_400_BAD_REQUEST)
 
         identifying_code = make_random_number_of_string(str_length=6)
+        serializer = IdentifyingCodeSerializer(data={'phone': cld['username'],
+                                                     'identifying_code': identifying_code})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
         # 发送到短线平台
         return Response(status=status.HTTP_200_OK)
 
@@ -76,7 +84,7 @@ class IdentifyingCodeVerify(APIView):
         """
         验证手机验证码
         """
-        form = VerifyIdentifyingCodeForm(getattr(request, request.method))
+        form = VerifyIdentifyingCodeForm(request.data)
         if not form.is_valid():
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
         cld = form.cleaned_data
@@ -84,6 +92,29 @@ class IdentifyingCodeVerify(APIView):
         if isinstance(result, Exception):
             return Response({'Detail': result.args}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'Result': result}, status=status.HTTP_200_OK)
+
+
+class WXAuthAction(APIView):
+    def post(self, request, *args, **kwargs):
+        """
+        微信第三方登录授权
+        """
+        from users.wx_auth import settings as wx_auth_settings
+        from users.wx_auth.serializers import RandomStringSerializer
+
+        wx_auth_params = copy.deepcopy(wx_auth_settings.WX_AUTH_PARAMS['get_code'])
+        wx_auth_url = wx_auth_settings.WX_AUTH_URLS['get_code']
+        end_params = wx_auth_params.pop('end_params')
+        state = wx_auth_params['state']()
+        wx_auth_params['state'] = state
+        return_url = '%s?%s%s' % (wx_auth_url,
+                                  main.make_dict_to_verify_string(wx_auth_params),
+                                  end_params)
+        serializer = RandomStringSerializer(data={'random_str': state})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'wx_auth_url': return_url}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserNotLoggedAction(APIView):
@@ -97,7 +128,7 @@ class UserNotLoggedAction(APIView):
         """
         用户注册
         """
-        form = CreateUserForm(request.POST)
+        form = CreateUserForm(request.data)
         if not form.is_valid():
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -117,7 +148,7 @@ class UserNotLoggedAction(APIView):
         """
         忘记密码
         """
-        form = SetPasswordForm(getattr(request, request.method))
+        form = SetPasswordForm(request.data)
         if not form.is_valid():
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -151,9 +182,9 @@ class UserAction(generics.GenericAPIView):
 
     def put(self, request, *args, **kwargs):
         """
-        修改密码
+        更新用户信息
         """
-        form = ChangePasswordForm(request.data)
+        form = UpdateUserInfoForm(request.data)
         if not form.is_valid():
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -163,7 +194,7 @@ class UserAction(generics.GenericAPIView):
             return Response({'Detail': obj.args}, status=status.HTTP_400_BAD_REQUEST)
         serializer = UserSerializer(obj)
         try:
-            serializer.update_password(request, obj, cld)
+            serializer.update_userinfo(request, obj, cld)
         except Exception as e:
             return Response({'Detail': e.args}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -223,8 +254,8 @@ class AuthLogout(generics.GenericAPIView):
         return Response(status=status.HTTP_200_OK)
 
 
-# class UserViewSet(viewsets.ModelViewSet):
-#     """
-#     """
-#     queryset = ConsumerUser.objects.all().order_by('-date_joined')
-#     serializer_class = UserSerializer
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    """
+    queryset = ConsumerUser.objects.all().order_by('-date_joined')
+    serializer_class = UserSerializer

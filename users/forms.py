@@ -29,8 +29,7 @@ class SendIdentifyingCodeForm(PhoneForm):
     """
     发送手机验证码
     """
-    method = forms.ChoiceField(choices=('register', 'forget_password'),
-                               max_length=30,
+    method = forms.ChoiceField(choices=(('register', 1), ('forget_password', 2)),
                                error_messages={
                                    'required': u'method 值必须为"register"或"forget_password"',
                                })
@@ -44,10 +43,16 @@ class VerifyIdentifyingCodeForm(PhoneForm):
                                        error_messages={'required': u'验证码不能为空'})
 
 
-class ChangePasswordForm(PasswordForm):
+class UpdateUserInfoForm(forms.Form):
     """
-    修改密码
+    更改用户信息
     """
+    password = forms.CharField(min_length=6, max_length=50, required=False)
+    nickname = forms.CharField(max_length=100, required=False)
+    gender = forms.IntegerField(min_value=1, max_value=2, required=False)
+    birthday = forms.DateField(required=False)
+    region = forms.CharField(max_length=64, required=False)
+    head_picture = forms.ImageField(required=False)
 
 
 class CreateUserForm(VerifyIdentifyingCodeForm, PasswordForm):

@@ -2,12 +2,34 @@
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
-from users.models import ConsumerUser
+from users.models import ConsumerUser, IdentifyingCode
 from horizon.serializers import BaseListSerializer, timezoneStringTostring
 from django.conf import settings
 from horizon.models import model_to_dict
 from horizon.decorators import has_permission_to_update
 import os
+
+
+class WXUserSerializer(serializers.ModelSerializer):
+    def __init__(self, instance=None, data=None, **kwargs):
+        if data:
+            data['gender'] = data.pop('sex')
+            data['out_open_id'] = data.pop('openid')
+            data['head_picture'] = data.pop('headimgurl')
+            data['phone'] = 'WX_USER'
+            super(WXUserSerializer, self).__init__(data=data, **kwargs)
+        else:
+            super(WXUserSerializer, self).__init__(instance, **kwargs)
+
+    class Meta:
+        model = ConsumerUser
+        fields = ('out_open_id', 'nickname', 'gender',
+                  'province', 'city', 'head_picture')
+
+    def save(self, **kwargs):
+        kwargs['channel'] = 'WX'
+        kwargs['password'] = make_password(self.validated_data['out_open_id'])
+        return super(WXUserSerializer, self).save(**kwargs)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -25,6 +47,12 @@ class UserSerializer(serializers.ModelSerializer):
         validated_data['password'] = make_password(password)
         return super(UserSerializer, self).update(instance, validated_data)
 
+    @has_permission_to_update
+    def update_userinfo(self, request, instance, validated_data):
+        if 'password' in validated_data:
+            validated_data['password'] = make_password(validated_data['password'])
+        return super(UserSerializer, self).update(instance, validated_data)
+
 
 class UserInstanceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,7 +61,7 @@ class UserInstanceSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.Serializer):
-    user_id = serializers.IntegerField()
+    pk = serializers.IntegerField()
     phone = serializers.CharField(max_length=20)
     nickname = serializers.CharField(max_length=100, required=False)
     gender = serializers.IntegerField(default=0)
@@ -53,7 +81,7 @@ class UserDetailSerializer(serializers.Serializer):
     @property
     def data(self):
         _data = super(UserDetailSerializer, self).data
-        if _data.get('user_id', None):
+        if _data.get('pk', None):
             _data['last_login'] = timezoneStringTostring(_data['last_login'])
             _data['head_picture_url'] = os.path.join(settings.WEB_URL_FIX, _data['head_picture'])
         return _data
@@ -67,4 +95,10 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Group
         fields = ('url', 'name')
+
+
+class IdentifyingCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IdentifyingCode
+        fields = '__all__'
 

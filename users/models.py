@@ -26,15 +26,25 @@ class ConsumerUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+    def create_superuser(self, username, password, **kwargs):
+        user = self.create_user(username=username,
+                                password=password,
+                                **kwargs)
+        user.is_admin = True
+        user.save(using=self._db)
+        return user
+
 
 class ConsumerUser(AbstractBaseUser):
     phone = models.CharField(u'手机号', max_length=20, unique=True, db_index=True)
+    out_open_id = models.CharField(u'第三方唯一标识', max_length=64, unique=True, db_index=True, null=True)
     nickname = models.CharField(u'昵称', max_length=100, unique=True, null=True)
 
     # 性别，0：未设定，1：男，2：女
     gender = models.IntegerField(u'性别', default=0)
     birthday = models.DateField(u'生日', null=True)
-    region = models.CharField(u'所在地区', max_length=64, null=True)
+    province = models.CharField(u'所在省份或直辖市', max_length=16, null=True)
+    city = models.CharField(u'所在城市', max_length=32, null=True)
     head_picture = models.ImageField(u'头像',
                                      upload_to='static/picture/consume/head_picture/',
                                      default='static/picture/consume/head_picture/noImage.png')
@@ -43,7 +53,7 @@ class ConsumerUser(AbstractBaseUser):
     #          新浪微博：SINA_WB
     channel = models.CharField(u'注册渠道', max_length=20, default='YS')
     is_active = models.BooleanField(default=True)
-    # is_admin = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
     date_joined = models.DateTimeField(u'创建时间', default=now)
     updated = models.DateTimeField(u'最后更新时间', auto_now=True)
 
@@ -53,7 +63,7 @@ class ConsumerUser(AbstractBaseUser):
     REQUIRED_FIELDS = ['channel']
 
     class Meta:
-        db_table = 'ys_auth_consume_user'
+        db_table = 'ys_auth_user'
         # unique_together = ('nickname', 'food_court_id')
 
     def set_password(self, raw_password):
