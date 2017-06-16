@@ -77,6 +77,7 @@ class IdentifyingCodeAction(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
         # 发送到短线平台
+        main.send_identifying_code_to_phone('identifying_code', (cld['username'],), 'template')
         return Response(status=status.HTTP_200_OK)
 
 

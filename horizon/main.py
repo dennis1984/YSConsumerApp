@@ -186,3 +186,28 @@ def make_random_char_and_number_of_string(str_length=32):
     index_start = random.randint(0, len(random_str) - str_length)
     return random_str[index_start: index_start + str_length]
 
+
+def send_identifying_code_to_phone(params, receive_phones, template):
+    """
+    使用阿里云的短信服务发送短信
+    """
+    from horizon.http_requests import send_http_request
+    import urllib
+    url = 'http://sms.market.alicloudapi.com/singleSendSms'
+    AppCode = '2e8a1a8a3e22486b9be6ac46c3d2c6ec	'
+
+    if isinstance(params, basestring):
+        params_query = params
+    elif isinstance(params, dict):
+        params_query = urllib.quote(json.dumps(params))
+    else:
+        return TypeError('params must be unicode or dictionary')
+
+    if not isinstance(receive_phones, (tuple, list)):
+        return TypeError('receive phones type must be list or tuple')
+
+    query = {'ParamString': params_query,
+             'RecNum': ','.join(receive_phones),
+             'TemplateCode': template}
+
+    return send_http_request(url, query, add_header={'Authorization:': 'APPCODE %s' % AppCode})

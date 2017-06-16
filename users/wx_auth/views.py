@@ -83,3 +83,4 @@ class AuthCallback(APIView):
             return Response(status=status.HTTP_200_OK)
 
         return Response(status=status.HTTP_200_OK)
+    
