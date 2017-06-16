@@ -1,3 +1,4 @@
+# -*- coding:utf8 -*-
 """YSConsumerApp URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -15,6 +16,7 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from rest_framework import routers
+from users.wx_auth import views as wx_auth_views
 
 ### debug  ###
 from users import views
@@ -34,4 +36,7 @@ urlpatterns = [
     #
     # url(r'^wxpay/', include('PAY.wxpay.urls', namespace='wxpay')),
     # url(r'^alipay/', include('PAY.alipay.urls', namespace='alipay')),
-    ]
+
+    # 微信授权第三方回调地址
+    url(r'wxauth/callback/$', wx_auth_views.AuthCallback.as_view()),
+]
