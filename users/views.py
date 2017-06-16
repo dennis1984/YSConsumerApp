@@ -17,7 +17,8 @@ from users.forms import (CreateUserForm,
                          SendIdentifyingCodeForm,
                          VerifyIdentifyingCodeForm,
                          UpdateUserInfoForm,
-                         SetPasswordForm)
+                         SetPasswordForm,
+                         WXAuthCreateUserForm)
 
 from horizon.views import APIView
 from horizon.main import make_random_number_of_string
@@ -167,6 +168,39 @@ class UserNotLoggedAction(APIView):
 
         serializer_response = UserInstanceSerializer(instance)
         return Response(serializer_response.data, status=status.HTTP_206_PARTIAL_CONTENT)
+
+
+class WXAuthUserNotLoggedAction(APIView):
+    """
+    微信用户注册
+    """
+    def get_object_by_openid(self, out_open_id):
+        return ConsumerUser.get_object(**{'out_open_id': out_open_id})
+
+    def post(self, request, *args, **kwargs):
+        """
+        用户注册
+        """
+        form = WXAuthCreateUserForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        result = verify_identifying_code(cld)
+        if isinstance(result, Exception):
+            return Response({'Detail': result.args}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = self.get_object_by_openid(cld['out_open_id'])
+        if isinstance(user, Exception):
+            return Response({'Detail': user.args}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = UserSerializer(user)
+        try:
+            serializer.update_userinfo(request, user, cld)
+        except Exception as e:
+            return Response({'Detail': e.args}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = UserInstanceSerializer(data=serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class UserAction(generics.GenericAPIView):

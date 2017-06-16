@@ -65,3 +65,11 @@ class SetPasswordForm(CreateUserForm):
     """
     忘记密码
     """
+
+
+class WXAuthCreateUserForm(VerifyIdentifyingCodeForm, PasswordForm):
+    """
+    微信授权登录后绑定用户手机号
+    """
+    out_open_id = forms.CharField(max_length=64)
+
