@@ -27,7 +27,7 @@ GRANT_TYPE = {
 # 微信授权接口参数配置
 
 # 回调地址
-REDIRECT_URI = os.path.join(settings.WEB_URL_FIX, 'apics/auth/wxauth/callback/')
+REDIRECT_URI = os.path.join(settings.WEB_URL_FIX, 'api-cs/wxauth/callback/')
 
 # 网页授权登录链接
 WX_AUTH_WEB_LINK = 'https://open.weixin.qq.com/connect/oauth2/authorize'
