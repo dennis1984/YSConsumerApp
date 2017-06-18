@@ -32,11 +32,13 @@ urlpatterns = [
     url(r'^api-auth', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
 
-    url(r'^auth/', include('users.urls')),
+    url(r'^auth/', include('users.urls', namespace='user')),
+    url(r'^orders/', include('orders.urls', namespace='orders')),
+    url(r'^shopping_cart/', include('shopping_cart.urls', namespace='shopping_cart')),
     #
     # url(r'^wxpay/', include('PAY.wxpay.urls', namespace='wxpay')),
     # url(r'^alipay/', include('PAY.alipay.urls', namespace='alipay')),
 
     # 微信授权第三方回调地址
-    url(r'wxauth/callback/$', wx_auth_views.AuthCallback.as_view()),
+    url(r'^wxauth/callback$', wx_auth_views.AuthCallback.as_view()),
 ]

@@ -40,7 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'oauth2_provider',
+    'Business_App.dishes',
     'users',
+    'orders',
+    'shopping_cart',
 ]
 
 MIDDLEWARE = [
@@ -85,9 +88,19 @@ DATABASES = {
         'PASSWORD': 'Con!082%Trib',
         'HOST': '127.0.0.1',
         'PORT': 3306,
+    },
+    'business': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'yinShi',
+        'USER': 'yinShi_project',
+        'PASSWORD': 'Con!082%Trib',
+        'HOST': '127.0.0.1',
+        'PORT': 3306,
     }
 }
 
+
+DATABASE_ROUTERS = ['Business_App.router.BusinessAppRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
@@ -177,10 +190,17 @@ DOMAIN_NAME = 'yinshi.city23.com'
 WEB_URL_FIX = os.path.join('http://', DOMAIN_NAME)
 
 # 图片根目录
-PICTURE_ROOT = os.path.join(STATIC_ROOT, 'picture')
+PICTURE_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static', 'business', 'picture')
 
 PICTURE_DIRS = {
-    'head_picture': os.path.join(PICTURE_ROOT, 'head_picture'),   # 用户头像图片目录
+    'consumer': {
+        'head_picture': os.path.join(PICTURE_ROOT, 'head_picture'),   # 用户头像图片目录
+    },
+    'business': {
+        'dishes': os.path.join(PICTURE_ROOT, 'dishes'),               # 菜品图片目录
+        'head_picture': os.path.join(PICTURE_ROOT, 'head_picture'),   # 用户头像图片目录
+        'qrcode': os.path.join(PICTURE_ROOT, 'qrcode'),               # 二维码图片目录
+    }
 }
 
 # 缓存服务器配置
@@ -188,6 +208,7 @@ REDIS_SETTINGS = {
     'host': '121.42.249.43',
     'port': 6379,
     'db_set': {
-        'default': 1,
+        'business': 0,
+        'consumer': 1,
         }
 }
