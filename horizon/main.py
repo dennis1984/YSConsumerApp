@@ -35,6 +35,21 @@ def make_time_delta(days=0, minutes=0, seconds=0):
                                       seconds=seconds)
 
 
+class DatetimeEncode(json.JSONEncoder):
+    """
+    让json模块可以序列化datetime类型的字段
+    """
+    def default(self, o):
+        from django.db.models.fields.files import ImageFieldFile
+
+        if isinstance(o, datetime.datetime):
+            return str(o)
+        elif isinstance(o, ImageFieldFile):
+            return str(o)
+        else:
+            return json.JSONEncoder.default(self, o)
+
+
 def timezoneStringTostring(timezone_string):
     """
     rest framework用JSONRender方法格式化datetime.datetime格式的数据时，

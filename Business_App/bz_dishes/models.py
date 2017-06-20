@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils.timezone import now
 from django.conf import settings
-from Business_App.bz_users.models import BusinessUser
+from Business_App.bz_users.models import BusinessUser, FoodCourt
 from horizon.models import model_to_dict
 from django.conf import settings
 import os
@@ -66,6 +66,7 @@ class Dishes(models.Model):
         user = BusinessUser.get_object(pk=instance.user_id)
         dishes_dict = model_to_dict(instance)
         dishes_dict['business_name'] = getattr(user, 'business_name', '')
+        dishes_dict['business_id'] = dishes_dict['user_id']
 
         base_dir = str(dishes_dict['image']).split('static', 1)[1]
         if base_dir.startswith(os.path.sep):
@@ -74,4 +75,9 @@ class Dishes(models.Model):
         dishes_dict['image_url'] = os.path.join(settings.WEB_URL_FIX,
                                                 'static',
                                                 base_dir)
+        # 获取美食城信息
+        food_instance = FoodCourt.get_object(pk=user.food_court_id)
+        dishes_dict['food_court_name'] = getattr(food_instance, 'name', '')
+        dishes_dict['food_court_id'] = getattr(food_instance, 'id', None)
+
         return dishes_dict

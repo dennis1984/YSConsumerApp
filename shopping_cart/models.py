@@ -26,7 +26,7 @@ class ShoppingCartManager(models.Manager):
 
 class ShoppingCart(models.Model):
     user_id = models.IntegerField('用户ID', db_index=True)
-    dishes_id = models.IntegerField('菜品ID', db_index=True, unique=True)
+    dishes_id = models.IntegerField('菜品ID', db_index=True)
     count = models.IntegerField('数量',)
 
     # 购物车中商品状态 1：有效 2：已删除 3：其它（预留状态）

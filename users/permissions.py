@@ -12,7 +12,7 @@ class IsOwnerOrReadOnly(permissions.IsAuthenticated):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Write permissions are only allowed to the owner of the bz_dishes.
+        # Write permissions are only allowed to the owner of the dishes.
         return obj.user_id == request.user.is_admin
 
     def has_permission(self, request, view):
