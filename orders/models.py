@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import models
 from django.utils.timezone import now
-# from dishes.models import Dishes, FoodCourt
+# from bz_dishes.models import Dishes, FoodCourt
 from users.models import ConsumerUser
 from horizon.models import model_to_dict
 from horizon.main import minutes_30_plus
@@ -59,13 +59,12 @@ class Orders(models.Model):
     def __unicode__(self):
         return self.orders_id
 
-
     @classmethod
     def get_dishes_by_id(cls, pk):
         try:
             return Dishes.objects.get(pk=pk)
         except Exception as e:
-            return  e
+            return e
 
     @classmethod
     def make_orders_by_dishes_ids(cls, request, dishes_ids):

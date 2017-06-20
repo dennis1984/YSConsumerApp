@@ -40,7 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'oauth2_provider',
-    'Business_App.dishes',
+
+    'Business_App.bz_dishes',
+    'Business_App.bz_users',
+
     'users',
     'orders',
     'shopping_cart',
@@ -135,11 +138,11 @@ USE_L10N = True
 USE_TZ = False
 
 
-AUTH_USER_MODEL = 'users.ConsumerUser'
+AUTH_USER_MODEL = 'bz_users.ConsumerUser'
 
 AUTHENTICATION_BACKENDS = (
     # 'django.contrib.auth.backends.ModelBackend',
-    'users.auth.ConsumerUserBackend',
+    'bz_users.auth.ConsumerUserBackend',
 )
 
 # Static files (CSS, JavaScript, Images)
@@ -197,7 +200,7 @@ PICTURE_DIRS = {
         'head_picture': os.path.join(PICTURE_ROOT, 'head_picture'),   # 用户头像图片目录
     },
     'business': {
-        'dishes': os.path.join(PICTURE_ROOT, 'dishes'),               # 菜品图片目录
+        'bz_dishes': os.path.join(PICTURE_ROOT, 'bz_dishes'),               # 菜品图片目录
         'head_picture': os.path.join(PICTURE_ROOT, 'head_picture'),   # 用户头像图片目录
         'qrcode': os.path.join(PICTURE_ROOT, 'qrcode'),               # 二维码图片目录
     }

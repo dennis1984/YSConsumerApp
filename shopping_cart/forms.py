@@ -2,74 +2,38 @@
 from horizon import forms
 
 
-class PhoneForm(forms.Form):
-    username = forms.CharField(max_length=20, min_length=11,
+class DishesIdForm(forms.Form):
+    dishes_id = forms.IntegerField(min_value=1,
+                                   error_messages={
+                                       'required': u'菜品ID不能为空'
+                                   })
+
+
+class DishesCountForm(forms.Form):
+    count = forms.IntegerField(min_value=1,
                                error_messages={
-                                   'required': u'手机号不能为空',
-                                   'min_length': u'手机号位数不够'
+                                   'required': u'菜品数量不能为空'
                                })
 
 
-class PasswordForm(forms.Form):
-    password = forms.CharField(min_length=6,
-                               max_length=50,
-                               error_messages={
-                                   'required': u'密码不能为空',
-                                   'min_length': u'密码长度不能少于6位'
-                               })
-    # confirm_password = forms.CharField(min_length=6,
-    #                                    max_length=50,
-    #                                    error_messages={
-    #                                        'required': u'密码不能为空',
-    #                                        'min_length': u'密码长度不能少于6位'
-    #                                    })
+class ShoppingCartCreateForm(DishesIdForm, DishesCountForm):
+    """
+    添加新的菜品，放入到购物车中
+    """
 
 
-class SendIdentifyingCodeForm(PhoneForm):
+class ShoppingCartUpdateForm(DishesIdForm, DishesCountForm):
     """
-    发送手机验证码
+    更新购物车中某个菜品的数量
     """
-    method = forms.ChoiceField(choices=(('register', 1), ('forget_password', 2)),
+    method = forms.ChoiceField(choices=(('add', 1), ('sub', 2)),
                                error_messages={
-                                   'required': u'method 值必须为"register"或"forget_password"',
+                                   'required': u'更新菜品数量的方法不能为空'
                                })
 
 
-class VerifyIdentifyingCodeForm(PhoneForm):
+class ShoppingCartDeleteForm(DishesIdForm):
     """
-    验证手机验证码
+    从购物车中删除某个菜品
     """
-    identifying_code = forms.CharField(max_length=10,
-                                       error_messages={'required': u'验证码不能为空'})
-
-
-class UpdateUserInfoForm(forms.Form):
-    """
-    更改用户信息
-    """
-    password = forms.CharField(min_length=6, max_length=50, required=False)
-    nickname = forms.CharField(max_length=100, required=False)
-    gender = forms.IntegerField(min_value=1, max_value=2, required=False)
-    birthday = forms.DateField(required=False)
-    region = forms.CharField(max_length=64, required=False)
-    head_picture = forms.ImageField(required=False)
-
-
-class CreateUserForm(VerifyIdentifyingCodeForm, PasswordForm):
-    """
-    用户注册
-    """
-
-
-class SetPasswordForm(CreateUserForm):
-    """
-    忘记密码
-    """
-
-
-class WXAuthCreateUserForm(VerifyIdentifyingCodeForm, PasswordForm):
-    """
-    微信授权登录后绑定用户手机号
-    """
-    out_open_id = forms.CharField(max_length=64)
 

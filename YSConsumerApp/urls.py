@@ -21,7 +21,7 @@ from users.wx_auth import views as wx_auth_views
 ### debug  ###
 from users import views
 router = routers.DefaultRouter()
-router.register(r'users', views.UserViewSet)
+router.register(r'bz_users', views.UserViewSet)
 ### end debug  ###
 
 urlpatterns = [
@@ -32,7 +32,7 @@ urlpatterns = [
     url(r'^api-auth', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
 
-    url(r'^auth/', include('users.urls', namespace='user')),
+    url(r'^auth/', include('bz_users.urls', namespace='user')),
     url(r'^orders/', include('orders.urls', namespace='orders')),
     url(r'^shopping_cart/', include('shopping_cart.urls', namespace='shopping_cart')),
     #

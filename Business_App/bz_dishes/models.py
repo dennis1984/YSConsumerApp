@@ -4,6 +4,9 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils.timezone import now
 from django.conf import settings
+from Business_App.bz_users.models import BusinessUser
+from horizon.models import model_to_dict
+from django.conf import settings
 import os
 
 
@@ -39,8 +42,6 @@ class Dishes(models.Model):
     is_recommend = models.BooleanField('是否推荐该菜品', default=False)   # 0: 不推荐  1：推荐
     extend = models.TextField('扩展信息', default='', blank=True)
 
-    # objects = models.Manager()
-    # active_objects = DishesManager()
     objects = DishesManager()
 
     class Meta:
@@ -58,52 +59,19 @@ class Dishes(models.Model):
             return e
 
     @classmethod
-    def get_object_list(cls, request, **kwargs):
-        # 如果是用户是admin并且过滤条件为空，则返回所有菜品
-        # 否则返回过滤条件中对应用户的所有菜品
-        # 如果是商户，则返回当前用户的所有菜品
-        if request.user.is_admin:
-            if 'user_id' not in kwargs:
-                return cls.objects.all()
-            else:
-                filter_dict = {'user_id': kwargs['user_id']}
-        else:
-            filter_dict = {'user_id': request.user.id}
+    def get_dishes_detail_dict_with_user_info(cls, **kwargs):
+        instance = cls.get_object(**kwargs)
+        if isinstance(instance, Exception):
+            return instance
+        user = BusinessUser.get_object(pk=instance.user_id)
+        dishes_dict = model_to_dict(instance)
+        dishes_dict['business_name'] = getattr(user, 'business_name', '')
 
-        try:
-            return cls.objects.filter(**filter_dict)
-        except Exception as e:
-            return e
-
-
-class FoodCourt(models.Model):
-    """
-    美食城数据表
-    """
-    name = models.CharField('美食城名字', max_length=200)
-    city = models.CharField('所属城市', max_length=100, null=False)
-    district = models.CharField('所属市区', max_length=100, null=False)
-    mall = models.CharField('所属购物中心', max_length=200, default='')
-    extend = models.TextField('扩展信息', default='', blank=True, null=True)
-
-    class Meta:
-        db_table = 'ys_food_court'
-        unique_together = ('name', 'mall')
-
-    def __unicode__(self):
-        return self.name
-
-    @classmethod
-    def get_object(cls, **kwargs):
-        try:
-            return cls.objects.get(**kwargs)
-        except Exception as e:
-            return e
-
-    @classmethod
-    def get_object_list(cls, **kwargs):
-        if 'page_size' in kwargs:
-            kwargs.pop('page_size')
-        if 'page_index' in kwargs:
-            kwargs.pop('page_index')
-        return cls.objects.filter(**kwargs)
+        base_dir = str(dishes_dict['image']).split('static', 1)[1]
+        if base_dir.startswith(os.path.sep):
+            base_dir = base_dir[1:]
+        dishes_dict.pop('image')
+        dishes_dict['image_url'] = os.path.join(settings.WEB_URL_FIX,
+                                                'static',
+                                                base_dir)
+        return dishes_dict
