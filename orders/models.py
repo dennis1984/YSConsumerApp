@@ -71,6 +71,23 @@ class PayOrders(models.Model):
         return self.orders_id
 
     @classmethod
+    def get_object(cls, **kwargs):
+        try:
+            return cls.objects.get(**kwargs)
+        except Exception as e:
+            return e
+
+    @classmethod
+    def get_valid_orders(cls, **kwargs):
+        kwargs['payment_status'] = 0
+        kwargs['expires__gt'] = now()
+        try:
+            return cls.objects.get(**kwargs)
+        except Exception as e:
+            e.args = ('Orders %s does not existed or is expired',)
+            return e
+
+    @classmethod
     def get_dishes_ids_detail(cls, request, dishes_ids):
         dishes_details = {}
         food_court_id = None
@@ -99,9 +116,8 @@ class PayOrders(models.Model):
         meal_ids = []
         total_amount = '0'
         try:
-            food_court_id, \
-            food_court_name, \
-            dishes_details = cls.get_dishes_ids_detail(request, dishes_ids)
+            food_court_id, food_court_name, dishes_details = \
+                cls.get_dishes_ids_detail(request, dishes_ids)
         except Exception as e:
             return e
         for bz_item in dishes_details.values():
@@ -109,11 +125,9 @@ class PayOrders(models.Model):
                 for item2 in _details:
                     total_amount = str(Decimal(total_amount) +
                                        Decimal(item2['price']) * item2['count'])
-
         # 会员优惠及其他优惠
         member_discount = 0
         other_discount = 0
-
         orders_data = {'user_id': request.user.id,
                        'orders_id': OrdersIdGenerator.get_orders_id(),
                        'food_court_id': food_court_id,

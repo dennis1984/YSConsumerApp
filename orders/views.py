@@ -5,9 +5,11 @@ from rest_framework import status
 from orders.serializers import (PayOrdersSerializer,)
 from orders.permissions import IsOwnerOrReadOnly
 from orders.models import (PayOrders, ConsumeOrders)
-from orders.forms import (PayOrdersCreateForm,)
+from orders.forms import (PayOrdersCreateForm,
+                          PayOrdersUpdateForm)
 from shopping_cart.serializers import ShoppingCartSerializer
 from shopping_cart.models import ShoppingCart
+from orders.pay import WXPay
 import json
 
 
@@ -18,6 +20,9 @@ class PayOrdersAction(generics.GenericAPIView):
     queryset = PayOrders.objects.all()
     serializer_class = PayOrdersSerializer
     permission_classes = (IsOwnerOrReadOnly, )
+
+    def get_orders_by_orders_id(self, orders_id):
+        return PayOrders.get_object(orders_id=orders_id)
 
     def make_orders_by_dishes_ids(self, request, dishes_ids):
         return PayOrders.make_orders_by_dishes_ids(request, dishes_ids)
@@ -31,6 +36,12 @@ class PayOrdersAction(generics.GenericAPIView):
                 continue
             instances.append(_instance)
         return instances
+
+    def check_shopping_cart(self, dishes_ids):
+        """
+        检查购物车是否存在该物品
+        """
+        return 33
 
     def clean_shopping_cart(self, request, dishes_ids):
         """
@@ -60,6 +71,12 @@ class PayOrdersAction(generics.GenericAPIView):
             dishes_ids = json.loads(cld['dishes_ids'])
         except Exception as e:
             return Response({'Detail': e.args}, status=status.HTTP_400_BAD_REQUEST)
+        # 检查购物车
+        if cld['gateway'] == 'shopping_cart':
+            results = self.check_shopping_cart(dishes_ids)
+            if not results:
+                return Response({'Detail': results}, status=status.HTTP_400_BAD_REQUEST)
+
         _data = self.make_orders_by_dishes_ids(request, dishes_ids)
         if isinstance(_data, Exception):
             return Response({'Detail': _data.args}, status=status.HTTP_400_BAD_REQUEST)
@@ -72,6 +89,34 @@ class PayOrdersAction(generics.GenericAPIView):
                 self.clean_shopping_cart(request, dishes_ids)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, *args, **kwargs):
+        """
+        选择支付方式
+        :param request: 
+        :param args: 
+        :param kwargs: 
+        :return: 
+        """
+        form = PayOrdersUpdateForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        payment_mode = cld['payment_mode']
+        _instance = self.get_orders_by_orders_id(cld['orders_id'])
+        if isinstance(_instance, Exception):
+            return Response({'Detail': _instance.args}, status=status.HTTP_400_BAD_REQUEST)
+        # 钱包支付
+        if payment_mode == 1:
+            pass
+        elif payment_mode == 2:   # 微信支付
+            _wxpay = WXPay(_instance)
+            result = _wxpay.js_api()
+        else:   # 支付宝支付
+            pass
+        return Response({}, status=status.HTTP_206_PARTIAL_CONTENT)
+
 
 #
 # class UserDetail(generics.GenericAPIView):

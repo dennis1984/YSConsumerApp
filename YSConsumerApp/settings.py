@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'users',
     'orders',
     'shopping_cart',
+    'PAY.wxpay',
 ]
 
 MIDDLEWARE = [

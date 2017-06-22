@@ -1,5 +1,5 @@
-#-*- coding:utf8 -*-
-# from PAY.wxpay import settings as wx_settings
+# -*- coding:utf8 -*-
+from PAY.wxpay import settings as wx_settings
 # from PAY.alipay import settings as ali_settings
 from django.conf import settings
 from django.utils.timezone import now
@@ -99,56 +99,56 @@ def anaysize_xml_to_dict(source):
     result = {article.tag: article.text for article in root}
     return result
 
-#
-# def make_dict_to_xml(source_dict, use_cdata=True):
-#     """
-#     生成xml字符串
-#     """
-#     if not isinstance(source_dict, dict):
-#         raise ValueError('Parameter must be dict.')
-#
-#     xml = etree.Element('xml')
-#     for _key, _value in source_dict.items():
-#         _key_xml = etree.SubElement(xml, _key)
-#         if _key == 'detail':
-#             _key_xml.text = etree.CDATA(_value)
-#         else:
-#             if not isinstance(_value, (bytes, unicode)):
-#                 _value = unicode(_value)
-#             if use_cdata:
-#                 _key_xml.text = etree.CDATA(_value)
-#             else:
-#                 _key_xml.text = _value
-#
-#     xml_string = etree.tostring(xml,
-#                                 pretty_print=True,
-#                                 encoding="UTF-8",
-#                                 method="xml",
-#                                 xml_declaration=True,
-#                                 standalone=None)
-#     return xml_string.split('\n', 1)[1]
+
+def make_dict_to_xml(source_dict, use_cdata=True):
+    """
+    生成xml字符串
+    """
+    if not isinstance(source_dict, dict):
+        raise ValueError('Parameter must be dict.')
+
+    xml = etree.Element('xml')
+    for _key, _value in source_dict.items():
+        _key_xml = etree.SubElement(xml, _key)
+        if _key == 'detail':
+            _key_xml.text = etree.CDATA(_value)
+        else:
+            if not isinstance(_value, (bytes, unicode)):
+                _value = unicode(_value)
+            if use_cdata:
+                _key_xml.text = etree.CDATA(_value)
+            else:
+                _key_xml.text = _value
+
+    xml_string = etree.tostring(xml,
+                                pretty_print=True,
+                                encoding="UTF-8",
+                                method="xml",
+                                xml_declaration=True,
+                                standalone=None)
+    return xml_string.split('\n', 1)[1]
 
 
-# def make_sign_for_wxpay(source_dict):
-#     """
-#     生成签名（微信支付）
-#     """
-#     key_list = []
-#     for _key in source_dict:
-#         if not source_dict[_key] or _key == 'sign':
-#             continue
-#         key_list.append({'key': _key, 'value': source_dict[_key]})
-#     key_list.sort(key=lambda x: x['key'])
-#
-#     string_param = ''
-#     for item in key_list:
-#         string_param += '%s=%s&' % (item['key'], item['value'])
-#         # 把密钥和其它参数组合起来
-#     string_param += 'key=%s' % wx_settings.KEY
-#     md5_string = md5(string_param.encode('utf8')).hexdigest()
-#     return md5_string.upper()
-#
-#
+def make_sign_for_wxpay(source_dict):
+    """
+    生成签名（微信支付）
+    """
+    key_list = []
+    for _key in source_dict:
+        if not source_dict[_key] or _key == 'sign':
+            continue
+        key_list.append({'key': _key, 'value': source_dict[_key]})
+    key_list.sort(key=lambda x: x['key'])
+
+    string_param = ''
+    for item in key_list:
+        string_param += '%s=%s&' % (item['key'], item['value'])
+        # 把密钥和其它参数组合起来
+    string_param += 'key=%s' % wx_settings.KEY
+    md5_string = md5(string_param.encode('utf8')).hexdigest()
+    return md5_string.upper()
+
+
 # def verify_sign_for_alipay(params_str, source_sign):
 #     """
 #     支付宝支付验证签名（公钥验证签名）
@@ -211,7 +211,7 @@ def send_identifying_code_to_phone(params, receive_phones, template):
     url = 'http://sms.market.alicloudapi.com/singleSendSms'
     AppCode = '2e8a1a8a3e22486b9be6ac46c3d2c6ec	'
 
-    if isinstance(params, basestring):
+    if isinstance(params, (str, unicode)):
         params_query = params
     elif isinstance(params, dict):
         params_query = urllib.quote(json.dumps(params))
@@ -220,7 +220,6 @@ def send_identifying_code_to_phone(params, receive_phones, template):
 
     if not isinstance(receive_phones, (tuple, list)):
         return TypeError('receive phones type must be list or tuple')
-
     query = {'ParamString': params_query,
              'RecNum': ','.join(receive_phones),
              'TemplateCode': template}
