@@ -47,6 +47,7 @@ class Dishes(models.Model):
     class Meta:
         db_table = 'ys_dishes'
         unique_together = ('title', 'user_id', 'size')
+        app_label = 'Business_App.bz_dishes.models.Dishes'
 
     def __unicode__(self):
         return self.title

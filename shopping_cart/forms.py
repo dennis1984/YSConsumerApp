@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 from horizon import forms
+from django.conf import settings
 
 
 class DishesIdForm(forms.Form):
@@ -36,4 +37,16 @@ class ShoppingCartDeleteForm(DishesIdForm):
     """
     从购物车中删除某个菜品
     """
+
+
+class ShoppingCartListForm(forms.Form):
+    """
+    展示用户购物车里的菜品信息
+    """
+    food_court_id = forms.IntegerField(min_value=1,
+                                       error_messages={
+                                           'required': u'美食城ID不能为空'
+                                       })
+    page_size = forms.IntegerField(min_value=1, max_value=settings.MAX_PAGE_SIZE, required=False)
+    page_index = forms.IntegerField(min_value=1, required=False)
 

@@ -1,8 +1,7 @@
 #-*- coding:utf8 -*-
-from django.contrib.auth.models import User, Group
-from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from shopping_cart.models import ShoppingCart
+from Business_App.bz_dishes.models import Dishes
 from horizon.serializers import BaseListSerializer, timezoneStringTostring
 from django.conf import settings
 from horizon.models import model_to_dict

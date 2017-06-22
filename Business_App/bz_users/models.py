@@ -70,6 +70,7 @@ class BusinessUser(AbstractBaseUser):
     class Meta:
         db_table = 'ys_auth_user'
         unique_together = ('business_name', 'food_court_id')
+        app_label = 'Business_App.bz_users.models.BusinessUser'
 
     def set_password(self, raw_password):
         self.password = make_password(raw_password)
@@ -125,6 +126,7 @@ class FoodCourt(models.Model):
     class Meta:
         db_table = 'ys_food_court'
         unique_together = ('name', 'mall')
+        app_label = 'Business_App.bz_users.models.FoodCourt'
 
     def __unicode__(self):
         return self.name
