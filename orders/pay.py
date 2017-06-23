@@ -36,7 +36,7 @@ class WXPay(object):
         # 解析xml
         xml_dict = main.anaysize_xml_to_dict(results.text)
         self.response_params = xml_dict
-        if 'code_url' not in xml_dict:
+        if 'prepay_id' not in xml_dict:
             return Exception({'Detail': xml_dict.get('err_code', xml_dict['return_msg'])})
         if not self.is_response_params_valid():
             return Exception({'Detail': 'Sign is not valid'})

@@ -9,6 +9,7 @@ from users.wx_auth import settings as wx_auth_settings
 from users.serializers import WXUserSerializer
 from horizon.views import APIView
 from horizon.http_requests import send_http_request
+from horizon.main import make_time_delta
 
 import json
 
@@ -57,6 +58,7 @@ class AuthCallback(APIView):
         response_dict = json.loads(result.text)
         if 'access_token' not in response_dict:
             return Response(status=status.HTTP_200_OK)
+        response_dict['state'] = cld['state']
         serializer = AccessTokenSerializer(data=response_dict)
         if serializer.is_valid():
             serializer.save()

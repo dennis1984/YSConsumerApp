@@ -50,7 +50,7 @@ class WXPAYUnifiedOrder(object):
         self.out_trade_no = out_trade_no        # 商户订单号
         self.total_fee = total_fee              # 交易金额（单位：分，字段类型：整数）
         self.trade_type = trade_type            # 交易类型为：NATIVE, JSAPI 或 APP
-        self.spbill_create_ip = app_settings.DOMAIN_NAME      # 终端IP
+        self.spbill_create_ip = wx_settings.SPBILL_CREATE_IP      # 终端IP
         self.notify_url = notify_url              # 回调地址
         self.nonce_str = get_nonce_string()                   # 随机字符串
 

@@ -15,7 +15,7 @@ class WXUserSerializer(serializers.ModelSerializer):
         if data:
             data['gender'] = data.pop('sex')
             data['out_open_id'] = data.pop('openid')
-            data['head_picture'] = data.pop('headimgurl')
+            # data['head_picture'] = data.pop('headimgurl')
             data['phone'] = 'WX_USER'
             super(WXUserSerializer, self).__init__(data=data, **kwargs)
         else:
