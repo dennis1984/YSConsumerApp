@@ -4,7 +4,7 @@ from shopping_cart.models import ShoppingCart
 from Business_App.bz_dishes.models import Dishes
 from horizon.serializers import BaseListSerializer, timezoneStringTostring
 from django.conf import settings
-from horizon.models import model_to_dict
+from horizon.serializers import BaseSerializer
 from horizon.decorators import has_permission_to_update
 import os
 
@@ -45,20 +45,13 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         return super(ShoppingCartSerializer, self).update(instance, kwargs)
 
 
-class ShoppingCartDetailSerializer(serializers.Serializer):
+class ShoppingCartDetailSerializer(BaseSerializer):
     id = serializers.IntegerField()
     user_id = serializers.IntegerField()
     dishes_id = serializers.IntegerField()
     count = serializers.IntegerField()
     updated = serializers.DateTimeField()
     dishes_detail = serializers.DictField()
-
-    @property
-    def data(self):
-        _data = super(ShoppingCartDetailSerializer, self).data
-        if _data.get('id', None):
-            _data['updated'] = timezoneStringTostring(_data['updated'])
-        return _data
 
 
 class ShoppingCartListSerializer(BaseListSerializer):

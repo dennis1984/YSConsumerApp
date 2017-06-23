@@ -85,12 +85,18 @@ class PayOrders(models.Model):
         try:
             return cls.objects.get(**kwargs)
         except Exception as e:
-            e.args = ('Orders %s does not existed or is expired',)
+            setattr(e, 'args', ('Orders %s does not existed or is expired' % kwargs['orders_id'],))
             return e
 
+    @property
+    def dishes_ids_json_detail(self):
+        import json
+        return self.dishes_ids
+
     @classmethod
-    def get_dishes_ids_detail(cls, request, dishes_ids):
+    def get_dishes_ids_detail(cls, dishes_ids):
         dishes_details = {}
+        dishes_details_list = []
         food_court_id = None
         food_court_name = None
         for item in dishes_ids:
@@ -101,16 +107,22 @@ class PayOrders(models.Model):
                 raise ValueError('Dishes ID %s does not existed' % dishes_id)
             detail_dict['count'] = count
 
-            food_court_dict = dishes_details.get(detail_dict['food_court_id'], {})
-            business_list = food_court_dict.get(detail_dict['business_id'], [])
+            business_list = dishes_details.get(detail_dict['business_id'], [])
             business_list.append(detail_dict)
-            food_court_dict[detail_dict['business_id']] = business_list
-            dishes_details[detail_dict['food_court_id']] = food_court_dict
+            dishes_details[detail_dict['business_id']] = business_list
             if not food_court_id:
                 food_court_id = detail_dict['food_court_id']
                 food_court_name = detail_dict['food_court_name']
+            if food_court_id != detail_dict['food_court_id']:
+                raise ValueError('One orders cannot contain multiple food court')
 
-        return food_court_id, food_court_name, dishes_details
+        for business_id in sorted(dishes_details.keys()):
+            detail_dict = {'dishes_detail': dishes_details[business_id],
+                           'business_id': business_id,
+                           'business_name': dishes_details[business_id][0]['business_name']}
+            dishes_details_list.append(detail_dict)
+
+        return food_court_id, food_court_name, dishes_details_list
 
     @classmethod
     def make_orders_by_dishes_ids(cls, request, dishes_ids):
@@ -118,14 +130,13 @@ class PayOrders(models.Model):
         total_amount = '0'
         try:
             food_court_id, food_court_name, dishes_details = \
-                cls.get_dishes_ids_detail(request, dishes_ids)
+                cls.get_dishes_ids_detail(dishes_ids)
         except Exception as e:
             return e
-        for bz_item in dishes_details.values():
-            for bz_id, _details in bz_item.items():
-                for item2 in _details:
-                    total_amount = str(Decimal(total_amount) +
-                                       Decimal(item2['price']) * item2['count'])
+        for _details in dishes_details:
+            for item2 in _details['dishes_detail']:
+                total_amount = str(Decimal(total_amount) +
+                                   Decimal(item2['price']) * item2['count'])
         # 会员优惠及其他优惠
         member_discount = 0
         other_discount = 0
@@ -142,6 +153,32 @@ class PayOrders(models.Model):
                                       Decimal(other_discount))
                        }
         return orders_data
+
+    @classmethod
+    def update_payment_status_by_pay_callback(cls, orders_id, validated_data):
+        if not isinstance(validated_data, dict):
+            raise ValueError('Parameter error')
+
+        payment_status = validated_data.get('payment_status')
+        payment_mode = validated_data.get('payment_mode')
+        if payment_status not in (200, 400, 500):
+            raise ValueError('Payment status must in range [200, 400, 500]')
+        if payment_mode not in [1, 2, 3]:    # 钱包支付、微信支付和支付宝支付
+            raise ValueError('Payment mode must in range [1, 2, 3]')
+        instance = None
+        # 数据库加排它锁，保证更改信息是列队操作的，防止数据混乱
+        with transaction.atomic():
+            try:
+                _instance = cls.objects.select_for_update().get(orders_id=orders_id)
+            except cls.DoesNotExist:
+                raise cls.DoesNotExist
+            if _instance.payment_status != 0:
+                raise Exception('Cannot perform this action')
+            _instance.payment_status = payment_status
+            _instance.payment_mode = payment_mode
+            _instance.save()
+            instance = _instance
+        return instance
 
 
 class ConsumeOrders(models.Model):

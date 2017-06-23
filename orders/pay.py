@@ -10,20 +10,16 @@ import json
 from decimal import Decimal
 
 
-def get_user_info(user_id):
-    return ConsumerUser.get_object(pk=user_id)
-
-
 class WXPay(object):
-    def __init__(self, instance):
+    def __init__(self, request, instance):
         if not isinstance(instance, PayOrders):
             raise Exception('Initialization Error')
         self.orders_id = instance.orders_id
         self.total_fee = int(Decimal(instance.payable) * 100)
+        self.openid = request.user.out_open_id
         self.kwargs = {'detail': instance.dishes_ids_json_detail}
 
-        user_info = get_user_info(instance.user_id)
-        self.body = u'%s-%s' % (user_info.business_name, instance.orders_id)
+        self.body = u'%s-%s' % (instance.food_court_name, instance.orders_id)
 
     def js_api(self):
         """
@@ -32,6 +28,7 @@ class WXPay(object):
         _wxpay = WXPAYJsApi(body=self.body,
                             out_trade_no=self.orders_id,
                             total_fee=self.total_fee,
+                            openid=self.openid,
                             **self.kwargs)
         results = _wxpay.go_to_pay()
         if results.status_code != 200:
@@ -50,10 +47,12 @@ class WXPay(object):
         serializer = wx_serializers.RequestSerializer(data=request_data)
         if serializer.is_valid():
             serializer.save()
-        qrcode_path = main.make_qrcode(xml_dict['code_url'])
-        return os.path.join(settings.WEB_URL_FIX,
-                            'static',
-                            qrcode_path.split('/static/', 1)[1])
+        return {'trade_type': xml_dict['trade_type'],
+                'prepay_id': xml_dict['prepay_id']}
+        # qrcode_path = main.make_qrcode(xml_dict['code_url'])
+        # return os.path.join(settings.WEB_URL_FIX,
+        #                     'static',
+        #                     qrcode_path.split('/static/', 1)[1])
 
     def is_response_params_valid(self):
         """

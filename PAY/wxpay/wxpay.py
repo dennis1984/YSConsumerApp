@@ -36,10 +36,10 @@ class WXPAYUnifiedOrder(object):
     """
     统一下单支付模式（微信支付入口  注：除了刷卡支付，刷卡支付有单独的支付入口）
     """
-    def __init__(self, body=None, out_trade_no=None,
-                 total_fee=None, trade_type=None, **kwargs):
-        if not (body and out_trade_no and total_fee and trade_type):
-            raise ValueError('fields [body, out_trade_no, total_fee, trade_type] '
+    def __init__(self, body=None, out_trade_no=None, total_fee=None,
+                 trade_type=None, notify_url=None, **kwargs):
+        if not (body and out_trade_no and total_fee and trade_type and notify_url):
+            raise ValueError('fields [body, out_trade_no, total_fee, trade_type, notify_url] '
                              'must be not empty!')
         if trade_type not in wx_settings.TRADE_TYPE.values():
             raise ValueError('Fields trade_type is incorrect')
@@ -51,7 +51,7 @@ class WXPAYUnifiedOrder(object):
         self.total_fee = total_fee              # 交易金额（单位：分，字段类型：整数）
         self.trade_type = trade_type            # 交易类型为：NATIVE, JSAPI 或 APP
         self.spbill_create_ip = app_settings.DOMAIN_NAME      # 终端IP
-        self.notify_url = wx_settings.NOTIFY_URL              # 回调地址
+        self.notify_url = notify_url              # 回调地址
         self.nonce_str = get_nonce_string()                   # 随机字符串
 
         for _key in kwargs:
@@ -118,11 +118,26 @@ def get_nonce_string():
 
 
 class WXPAYJsApi(WXPAYUnifiedOrder):
-    def __init__(self, body=None, out_trade_no=None, total_fee=None, **kwargs):
-        if not (body and out_trade_no and total_fee):
-            raise ValueError('fields [body, out_trade_no, total_fee] must be not empty!')
+    def __init__(self, body=None, out_trade_no=None, total_fee=None, openid=None, **kwargs):
+        if not (body and out_trade_no and total_fee and openid):
+            raise ValueError('fields [body, out_trade_no, total_fee, openid] must be not empty!')
+
+        kwargs['openid'] = openid
         super(WXPAYJsApi, self).__init__(body=body,
                                          out_trade_no=out_trade_no,
                                          total_fee=total_fee,
                                          trade_type=wx_settings.TRADE_TYPE['js'],
+                                         notify_url=wx_settings.NOTIFY_URL_DICT['JSAPI'],
                                          **kwargs)
+
+
+class WXPAYApp(WXPAYUnifiedOrder):
+    def __init__(self, body=None, out_trade_no=None, total_fee=None, **kwargs):
+        if not (body and out_trade_no and total_fee):
+            raise ValueError('fields [body, out_trade_no, total_fee] must be not empty!')
+        super(WXPAYApp, self).__init__(body=body,
+                                       out_trade_no=out_trade_no,
+                                       total_fee=total_fee,
+                                       trade_type=wx_settings.TRADE_TYPE['js'],
+                                       notify_url=wx_settings.NOTIFY_URL_DICT['APP'],
+                                       **kwargs)

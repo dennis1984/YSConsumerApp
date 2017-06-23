@@ -12,11 +12,11 @@ class PayOrdersCreateForm(forms.Form):
     # 生成订单途径
     gateway = forms.ChoiceField(choices=(('shopping_cart', 1), ('other', 2)),
                                 error_messages={
-                                   'required': u'更新菜品数量的方法不能为空'
+                                    'required': u'生成订单途径不能为空'
                                 })
 
 
 class PayOrdersUpdateForm(forms.Form):
     orders_id = forms.CharField(max_length=32)
     # 支付模式 1：钱包 2：微信支付 3：支付宝支付
-    payment_mode = forms.ChoiceField(choices=((1, 1), (2, 2), (3, 3)))
+    payment_mode = forms.IntegerField(min_value=1, max_value=3)

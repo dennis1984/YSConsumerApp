@@ -31,7 +31,7 @@ class OrdersIdGenerator(models.Model):
         date_day = date_for_model()
         orders_id = 0
         # 数据库加排它锁，保证订单号是唯一的
-        with transaction.atomic():
+        with transaction.atomic(using='business'):   # 多数据库事务管理需显示声明操作的数据库（以后的版本可能会改进）
             try:
                 _instance = cls.objects.select_for_update().get(pk=date_day)
             except cls.DoesNotExist:

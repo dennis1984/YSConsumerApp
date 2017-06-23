@@ -18,7 +18,7 @@ class BusinessAppRouter(object):
             return 'business'
         return None
 
-    def allow_relationi(self, obj1, obj2, **hints):
+    def allow_relation(self, obj1, obj2, **hints):
         obj1_module_name = self.get_module_name(obj1)
         obj2_module_name = self.get_module_name(obj2)
         if obj1_module_name == 'Business_App' or obj2_module_name == 'Business_App':

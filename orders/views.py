@@ -2,7 +2,8 @@
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
-from orders.serializers import (PayOrdersSerializer,)
+from orders.serializers import (PayOrdersSerializer,
+                                PayOrdersResponseSerializer)
 from orders.permissions import IsOwnerOrReadOnly
 from orders.models import (PayOrders, ConsumeOrders)
 from orders.forms import (PayOrdersCreateForm,
@@ -22,26 +23,30 @@ class PayOrdersAction(generics.GenericAPIView):
     permission_classes = (IsOwnerOrReadOnly, )
 
     def get_orders_by_orders_id(self, orders_id):
-        return PayOrders.get_object(orders_id=orders_id)
+        return PayOrders.get_valid_orders(orders_id=orders_id)
 
     def make_orders_by_dishes_ids(self, request, dishes_ids):
         return PayOrders.make_orders_by_dishes_ids(request, dishes_ids)
 
     def get_shopping_cart_instances_by_dishes_ids(self, request, dishes_ids):
         instances = []
-        dishes_ids = [item['dishes_id'] for item in dishes_ids]
-        for dishes_id in dishes_ids:
-            _instance = ShoppingCart.get_object_by_dishes_id(request, dishes_id)
+        for item in dishes_ids:
+            dishes_id = item['dishes_id']
+            kwargs = {'count': item['count']}
+            _instance = ShoppingCart.get_object_by_dishes_id(request, dishes_id, **kwargs)
             if isinstance(_instance, Exception):
-                continue
+                return _instance
             instances.append(_instance)
         return instances
 
-    def check_shopping_cart(self, dishes_ids):
+    def check_shopping_cart(self, request, dishes_ids):
         """
         检查购物车是否存在该物品
         """
-        return 33
+        _instances = self.get_shopping_cart_instances_by_dishes_ids(request, dishes_ids)
+        if isinstance(_instances, Exception):
+            return False, _instances
+        return True, None
 
     def clean_shopping_cart(self, request, dishes_ids):
         """
@@ -73,9 +78,9 @@ class PayOrdersAction(generics.GenericAPIView):
             return Response({'Detail': e.args}, status=status.HTTP_400_BAD_REQUEST)
         # 检查购物车
         if cld['gateway'] == 'shopping_cart':
-            results = self.check_shopping_cart(dishes_ids)
-            if not results:
-                return Response({'Detail': results}, status=status.HTTP_400_BAD_REQUEST)
+            results = self.check_shopping_cart(request, dishes_ids)
+            if not results[0]:
+                return Response({'Detail': results[1].args}, status=status.HTTP_400_BAD_REQUEST)
 
         _data = self.make_orders_by_dishes_ids(request, dishes_ids)
         if isinstance(_data, Exception):
@@ -87,7 +92,13 @@ class PayOrdersAction(generics.GenericAPIView):
             # 清空购物车
             if cld['gateway'] == 'shopping_cart':
                 self.clean_shopping_cart(request, dishes_ids)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            orders_detail = serializer.data
+            dishes_detail = json.loads(orders_detail.pop('dishes_ids'))
+            orders_detail['dishes_ids'] = dishes_detail
+            serializer_response = PayOrdersResponseSerializer(data=orders_detail)
+            if serializer_response.is_valid():
+                return Response(serializer_response.data, status=status.HTTP_200_OK)
+            return Response(serializer_response.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, *args, **kwargs):
@@ -111,8 +122,11 @@ class PayOrdersAction(generics.GenericAPIView):
         if payment_mode == 1:
             pass
         elif payment_mode == 2:   # 微信支付
-            _wxpay = WXPay(_instance)
+            _wxpay = WXPay(request, _instance)
             result = _wxpay.js_api()
+            if isinstance(result, Exception):
+                return Response({'Detail': result.args}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(result, status=status.HTTP_206_PARTIAL_CONTENT)
         else:   # 支付宝支付
             pass
         return Response({}, status=status.HTTP_206_PARTIAL_CONTENT)

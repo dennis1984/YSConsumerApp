@@ -1,5 +1,6 @@
 #-*- coding:utf8 -*-
 from rest_framework import serializers
+from rest_framework import fields as Fields
 from django.core.paginator import Paginator
 from django.conf import settings
 from django.db import models
@@ -59,3 +60,26 @@ class BaseListSerializer(serializers.ListSerializer):
                     item['%s_url' % key] = os.path.join(settings.WEB_URL_FIX, item[key])
         return ordered_dict
 
+
+class BaseSerializer(serializers.Serializer):
+    @property
+    def data(self):
+        _data = super(BaseSerializer, self).data
+        return perfect_result(self, _data)
+
+
+class BaseModelSerializer(serializers.ModelSerializer):
+    @property
+    def data(self):
+        _data = super(BaseModelSerializer, self).data
+        return perfect_result(self, _data)
+
+
+def perfect_result(self, _data):
+    _fields = self.get_fields()
+    for key in _data:
+        if isinstance(_fields[key], Fields.DateTimeField):
+            _data[key] = timezoneStringTostring(_data[key])
+        if isinstance(_fields[key], Fields.ImageField):
+            _data['%s_url' % key] = os.path.join(settings.WEB_URL_FIX, _data[key])
+    return _data

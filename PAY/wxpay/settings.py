@@ -12,8 +12,11 @@ APPID = 'wx55da5a50194f8c73'
 # 商户号
 MCH_ID = '1448533802'
 
-# 回调地址 （只在预支付模式二起作用）
-NOTIFY_URL = os.path.join(settings.WEB_URL_FIX, 'wxpay/native_callback/')
+# 回调地址
+NOTIFY_URL_DICT = {'NATIVE': os.path.join(settings.WEB_URL_FIX, 'wxpay/native_callback/'),
+                   'JSAPI': os.path.join(settings.WEB_URL_FIX, 'wxpay/jsapi_callback/'),
+                   'APP': os.path.join(settings.WEB_URL_FIX, 'wxpay/app_callback/'),
+                   }
 # NOTIFY_URL = reverse('WXPay:native_callback',
 #                      current_app=self.request.resolver_match.namespace)
 

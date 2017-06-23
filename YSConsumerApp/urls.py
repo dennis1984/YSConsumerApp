@@ -35,10 +35,8 @@ urlpatterns = [
     url(r'^auth/', include('users.urls', namespace='user')),
     url(r'^orders/', include('orders.urls', namespace='orders')),
     url(r'^shopping_cart/', include('shopping_cart.urls', namespace='shopping_cart')),
-    #
-    # url(r'^wxpay/', include('PAY.wxpay.urls', namespace='wxpay')),
-    # url(r'^alipay/', include('PAY.alipay.urls', namespace='alipay')),
 
-    # 微信授权第三方回调地址
-    url(r'^wxauth/callback$', wx_auth_views.AuthCallback.as_view()),
+    # 微信支付回调
+    url(r'^wxpay/', include('PAY.wxpay.urls', namespace='wxpay')),
+    # url(r'^alipay/', include('PAY.alipay.urls', namespace='alipay')),
 ]
