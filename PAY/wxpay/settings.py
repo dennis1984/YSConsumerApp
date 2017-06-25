@@ -12,6 +12,9 @@ APPID = 'wx55da5a50194f8c73'
 # 商户号
 MCH_ID = '1448533802'
 
+# 签名类型
+SIGN_TYPE = 'MD5'
+
 # 调用微信支付的服务器IP地址
 SPBILL_CREATE_IP = '121.42.249.43'
 

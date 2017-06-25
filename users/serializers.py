@@ -6,8 +6,11 @@ from users.models import ConsumerUser, IdentifyingCode
 from horizon.serializers import BaseListSerializer, timezoneStringTostring
 from django.conf import settings
 from horizon.models import model_to_dict
+from horizon import main
 from horizon.decorators import has_permission_to_update
 import os
+import json
+import re
 
 
 class WXUserSerializer(serializers.ModelSerializer):
@@ -16,20 +19,47 @@ class WXUserSerializer(serializers.ModelSerializer):
             data['gender'] = data.pop('sex')
             data['out_open_id'] = data.pop('openid')
             # data['head_picture'] = data.pop('headimgurl')
-            data['phone'] = 'WX_USER'
+            data['phone'] = 'WX%s' % main.make_random_char_and_number_of_string(18)
+            self.make_correct_params(data)
             super(WXUserSerializer, self).__init__(data=data, **kwargs)
         else:
             super(WXUserSerializer, self).__init__(instance, **kwargs)
 
     class Meta:
         model = ConsumerUser
-        fields = ('out_open_id', 'nickname', 'gender',
+        fields = ('phone', 'out_open_id', 'nickname', 'gender',
                   'province', 'city', 'head_picture')
 
     def save(self, **kwargs):
         kwargs['channel'] = 'WX'
         kwargs['password'] = make_password(self.validated_data['out_open_id'])
         return super(WXUserSerializer, self).save(**kwargs)
+
+    def make_correct_params(self, source_dict):
+        """
+        解决微信授权登录后返回用户信息乱码的问题
+        """
+        zh_cn_list = ['nickname', 'city', 'province', 'country']
+        compile_str = '\\u00[0-9a-z]{2}'
+        re_com = re.compile(compile_str)
+        for key in source_dict.keys():
+            if key in zh_cn_list:
+                utf8_list = re_com.findall(json.dumps(source_dict[key]))
+                unicode_list = []
+                for ch_item in utf8_list:
+                    exec('unicode_list.append("\\x%s")' % ch_item.split('u00')[1])
+                key_tmp_list = [json.dumps(source_dict[key])[1:-1]]
+                for item2 in utf8_list:
+                    tmp2 = key_tmp_list[-1].split('\\%s' % item2, 1)
+                    key_tmp_list.pop(-1)
+                    key_tmp_list.extend(tmp2)
+
+                for index in range(len(key_tmp_list)):
+                    if not key_tmp_list[index]:
+                        if index < len(unicode_list):
+                            key_tmp_list[index] = unicode_list[index]
+                source_dict[key] = ''.join(key_tmp_list).decode('utf8')
+        return source_dict
 
 
 class UserSerializer(serializers.ModelSerializer):

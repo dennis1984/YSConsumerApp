@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 from PAY.wxpay.wxpay import WXPAYJsApi
 from PAY.wxpay import serializers as wx_serializers
+from PAY.wxpay import settings as wx_settings
 from orders.models import PayOrders
 from users.models import ConsumerUser
 from horizon import main
@@ -47,12 +48,15 @@ class WXPay(object):
         serializer = wx_serializers.RequestSerializer(data=request_data)
         if serializer.is_valid():
             serializer.save()
-        return {'trade_type': xml_dict['trade_type'],
-                'prepay_id': xml_dict['prepay_id']}
-        # qrcode_path = main.make_qrcode(xml_dict['code_url'])
-        # return os.path.join(settings.WEB_URL_FIX,
-        #                     'static',
-        #                     qrcode_path.split('/static/', 1)[1])
+        js_params_dict = {'appId': xml_dict['appid'],
+                          'timeStamp': main.get_time_stamp(),
+                          'nonceStr': main.make_random_char_and_number_of_string(str_length=32),
+                          'package': 'prepay_id=%s' % xml_dict['prepay_id'],
+                          'signType': wx_settings.SIGN_TYPE}
+        pay_sign = main.make_sign_for_wxpay(js_params_dict)
+        js_params_dict['paySign'] = pay_sign
+        # return_dict = {'wx_jsapi': json.dumps(js_params_dict)}
+        return js_params_dict
 
     def is_response_params_valid(self):
         """

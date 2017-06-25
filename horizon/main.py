@@ -12,6 +12,7 @@ import uuid
 from hashlib import md5
 import base64
 import random
+import time
 
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
@@ -200,6 +201,11 @@ def make_random_char_and_number_of_string(str_length=32):
         random_str += ''.join(str(uuid.uuid4()).split('-'))
     index_start = random.randint(0, len(random_str) - str_length)
     return random_str[index_start: index_start + str_length]
+
+
+def get_time_stamp():
+    stamp = str(time.time()).split('.')[0]
+    return stamp
 
 
 def send_identifying_code_to_phone(params, receive_phones, template):

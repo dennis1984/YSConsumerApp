@@ -53,6 +53,7 @@ class WXPAYUnifiedOrder(object):
         self.spbill_create_ip = wx_settings.SPBILL_CREATE_IP      # 终端IP
         self.notify_url = notify_url              # 回调地址
         self.nonce_str = get_nonce_string()                   # 随机字符串
+        self.sign_type = wx_settings.SIGN_TYPE    # 签名类型
 
         for _key in kwargs:
             if kwargs[_key] and _key in FIELDS:
