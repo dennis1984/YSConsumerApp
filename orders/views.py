@@ -132,19 +132,29 @@ class PayOrdersAction(generics.GenericAPIView):
         return Response({}, status=status.HTTP_206_PARTIAL_CONTENT)
 
 
-#
-# class UserDetail(generics.GenericAPIView):
-#     queryset = ConsumerUser.objects.all()
-#     serializer_class = UserDetailSerializer
-#     # permission_classes = (IsAdminOrReadOnly, )
-#
-#     def post(self, request, *args, **kwargs):
-#         user = ConsumerUser.get_user_detail(request)
-#         if isinstance(user, Exception):
-#             return Response({'Error': user.args}, status=status.HTTP_400_BAD_REQUEST)
-#
-#         serializer = UserDetailSerializer(user)
-#         # if serializer.is_valid():
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#
+class ConsumeOrder(object):
+    """
+    子订单
+    """
+    def create(self, pay_orders):
+        """
+        生成子订单
+        """
+        if isinstance(pay_orders, PayOrders):
+            serializer = PayOrdersSerializer(pay_orders)
+        elif isinstance(pay_orders, dict):
+            serializer = PayOrdersSerializer(data=pay_orders)
+        else:
+            return TypeError('pay_orders must be PayOrders instance or dict')
+        if not serializer.is_valid():
+            return serializer.errors
+
+        _data = serializer.data
+        if _data['payment_status'] != 200:
+            return ValueError('The orders payment status must be 200!')
+        
+
+
+
+
+
