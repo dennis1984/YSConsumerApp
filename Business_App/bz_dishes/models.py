@@ -36,6 +36,7 @@ class Dishes(models.Model):
                               upload_to=DISHES_PICTURE_DIR,
                               default=os.path.join(DISHES_PICTURE_DIR, 'noImage.png'),)
     user_id = models.IntegerField('创建者ID', null=False)
+    food_court_id = models.IntegerField('商城ID', db_index=True)
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
     status = models.IntegerField('数据状态', default=1)   # 1 有效 2 已删除 3 其他（比如暂时不用）
