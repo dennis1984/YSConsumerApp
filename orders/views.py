@@ -3,7 +3,8 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from orders.serializers import (PayOrdersSerializer,
-                                PayOrdersResponseSerializer)
+                                PayOrdersResponseSerializer,
+                                ConsumeOrderSerializer)
 from orders.permissions import IsOwnerOrReadOnly
 from orders.models import (PayOrders, ConsumeOrders)
 from orders.forms import (PayOrdersCreateForm,
@@ -132,29 +133,65 @@ class PayOrdersAction(generics.GenericAPIView):
         return Response({}, status=status.HTTP_206_PARTIAL_CONTENT)
 
 
-class ConsumeOrder(object):
+class BaseConsumeOrders(object):
     """
     子订单
     """
+    def get_pay_orders_by_orders_id(self, pay_orders_id):
+        return PayOrders.get_object(**{'orders_id': pay_orders_id})
+
+    def make_consume_orders_id(self, pay_orders_id, index):
+        return 'Z%s%03d' % (pay_orders_id, index)
+
     def create(self, pay_orders):
         """
-        生成子订单
+        创建子订单
         """
+        from decimal import Decimal
+
         if isinstance(pay_orders, PayOrders):
             serializer = PayOrdersSerializer(pay_orders)
         elif isinstance(pay_orders, dict):
             serializer = PayOrdersSerializer(data=pay_orders)
         else:
-            return TypeError('pay_orders must be PayOrders instance or dict')
-        if not serializer.is_valid():
-            return serializer.errors
+            _instance = self.get_pay_orders_by_orders_id(pay_orders)
+            if isinstance(_instance, Exception):
+                return TypeError('pay_orders must be PayOrders instance, dict or orders_id')
+            serializer = PayOrdersSerializer(_instance)
 
+        if hasattr(serializer, 'initial_data') and not serializer.is_valid():
+            return serializer.errors
         _data = serializer.data
         if _data['payment_status'] != 200:
             return ValueError('The orders payment status must be 200!')
-        
 
-
-
-
-
+        pay_orders_id = _data['orders_id']
+        dishes_detail_list = json.loads(_data['dishes_ids'])
+        for index, business_dishes in enumerate(dishes_detail_list, 1):
+            member_discount = 0
+            other_discount = 0
+            total_amount = 0
+            for item in business_dishes['dishes_detail']:
+                total_amount = Decimal(total_amount) + Decimal(item['price']) * item['count']
+            payable = Decimal(total_amount) - Decimal(member_discount) - Decimal(other_discount)
+            consume_data = {
+                'orders_id': self.make_consume_orders_id(pay_orders_id, index),
+                'user_id': _data['user_id'],
+                'dishes_ids': json.dumps(business_dishes['dishes_detail']),
+                'total_amount': str(total_amount),
+                'member_discount': member_discount,
+                'other_discount': other_discount,
+                'payable': str(payable),
+                'business_name': business_dishes['business_name'],
+                'business_id': business_dishes['business_id'],
+                'food_court_id': _data['food_court_id'],
+                'food_court_name': _data['food_court_name'],
+                'payment_mode': _data['payment_mode'],
+                'orders_type': _data['orders_type'],
+                'master_orders_id': pay_orders_id
+            }
+            serializer = ConsumeOrderSerializer(data=consume_data)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                raise Exception(serializer.errors)

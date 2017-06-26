@@ -8,6 +8,7 @@ from horizon import main
 from PAY.wxpay.models import WXPayResult
 from PAY.wxpay.serializers import ResponseSerializer
 from orders.models import PayOrders
+from orders.views import BaseConsumeOrders
 import json
 import copy
 
@@ -31,14 +32,17 @@ WXPAY_REQUEST_DATA = ('appid', 'mch_id', 'nonce_str', 'sign', 'result_code',
                       'cash_fee', 'transaction_id', 'out_trade_no', 'time_end')
 
 
-class NativeCallback(APIView):
+class JsApiCallback(APIView):
+    """
+    微信支付JSAPI模式回调
+    """
     authentication_classes = api_settings.PAY_CALLBACK_AUTHENTICATION_CLASSES
     permission_classes = api_settings.PAY_CALLBACK_PERMISSION_CLASSES
 
     def __init__(self, **kwargs):
         self._orders_id = None
         self._wx_instance = None
-        super(NativeCallback, self).__init__(**kwargs)
+        super(JsApiCallback, self).__init__(**kwargs)
 
     def post(self, request, *args, **kwargs):
         """
@@ -70,6 +74,9 @@ class NativeCallback(APIView):
                     validated_data=success_data)
             except:
                 return Response(return_xml, status=status.HTTP_200_OK)
+            else:
+                # 支付成功后，拆分主订单为子订单
+                BaseConsumeOrders().create(self._orders_id)
         else:
             try:
                 PayOrders.update_payment_status_by_pay_callback(

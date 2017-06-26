@@ -7,11 +7,11 @@ from PAY.wxpay import views
 
 urlpatterns = [
     # 扫描支付（模式二）
-    url(r'^native_callback/$', views.NativeCallback.as_view(), name='native_callback'),
+    url(r'^native_callback/$', views.JsApiCallback.as_view(), name='native_callback'),
     # 公众号支付
-    url(r'^jsapi_callback/$', views.NativeCallback.as_view()),
+    url(r'^jsapi_callback/$', views.JsApiCallback.as_view()),
     # APP支付
-    url(r'app_callback/$', views.NativeCallback.as_view()),
+    url(r'app_callback/$', views.JsApiCallback.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

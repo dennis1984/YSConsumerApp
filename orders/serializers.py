@@ -40,7 +40,7 @@ class PayOrdersResponseSerializer(BaseSerializer):
     payable = serializers.CharField(max_length=16)
     payment_status = serializers.IntegerField()
     payment_mode = serializers.IntegerField()
-    orders_status = serializers.IntegerField()
+    orders_type = serializers.IntegerField()
     created = serializers.DateTimeField()
     updated = serializers.DateTimeField()
     expires = serializers.DateTimeField()
