@@ -249,3 +249,68 @@ class ConsumeOrders(models.Model):
 #             _instance.save()
 #             instance = _instance
 #         return instance
+
+
+class TradeRecord(models.Model):
+    """
+    交易记录
+    """
+    serial_number = models.CharField('交易流水号', db_index=True, max_length=64)
+    orders_id = models.CharField('订单ID', db_index=True, max_length=32)
+    user_id = models.IntegerField('用户ID')
+
+    total_amount = models.CharField('应付金额', max_length=16)
+    member_discount = models.CharField('会员优惠', max_length=16, default='0')
+    other_discount = models.CharField('其他优惠', max_length=16, default='0')
+    payment = models.CharField('实付金额', max_length=16)
+
+    # 支付结果: SUCCESS: 成功 FAIL：失败 UNKNOWN: 未知
+    payment_result = models.IntegerField('支付结果', default='UNKNOWN')
+    # 支付方式：0:未指定支付方式 1：钱包支付 2：微信支付 3：支付宝支付
+    payment_mode = models.IntegerField('订单支付方式', default=0)
+
+    # 第三方支付订单号
+    out_orders_id = models.CharField('第三方订单号', max_length=64, null=True)
+
+    created = models.DateTimeField('创建时间', default=now)
+    extend = models.TextField('扩展信息', default='', blank=True)
+
+    objects = OrdersManager()
+
+
+def date_for_model():
+    return now().date()
+
+
+class SerialNumberGenerator(models.Model):
+    date = models.DateField('日期', primary_key=True, default=date_for_model)
+    serial_number = models.IntegerField('订单ID', default=1)
+    created = models.DateTimeField('创建日期', default=now)
+    updated = models.DateTimeField('最后更改日期', auto_now=True)
+
+    class Meta:
+        db_table = 'ys_serial_number_generator'
+
+    def __unicode__(self):
+        return str(self.date)
+
+    @classmethod
+    def int_to_string(cls, serial_no):
+        return "%06d" % serial_no
+
+    @classmethod
+    def get_serial_number(cls):
+        date_day = date_for_model()
+        # 数据库加排它锁，保证订单号是唯一的
+        with transaction.atomic():
+            try:
+                _instance = cls.objects.select_for_update().get(pk=date_day)
+            except cls.DoesNotExist:
+                cls().save()
+                serial_no = 1
+            else:
+                serial_no = _instance.serial_number + 1
+                _instance.serial_number = serial_no
+                _instance.save()
+        serial_no_str = cls.int_to_string(serial_no)
+        return 'LS%s%s' % (date_day.strftime('%Y%m%d'), serial_no_str)
