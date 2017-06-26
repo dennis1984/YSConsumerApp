@@ -88,6 +88,14 @@ class PayOrders(models.Model):
             setattr(e, 'args', ('Orders %s does not existed or is expired' % kwargs['orders_id'],))
             return e
 
+    @classmethod
+    def get_success_orders(cls, **kwargs):
+        kwargs['payment_status'] = 200
+        try:
+            return cls.objects.get(**kwargs)
+        except Exception as e:
+            return e
+
     @property
     def dishes_ids_json_detail(self):
         import json

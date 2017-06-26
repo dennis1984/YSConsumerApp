@@ -35,7 +35,8 @@ class Wallet(models.Model):
     用户钱包
     """
     user_id = models.IntegerField('用户ID', db_index=True)
-    balance = models.CharField('余额', max_length=16)
+    balance = models.CharField('余额', max_length=16, default='0')
+    password = models.CharField('支付密码', max_length=560)
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
     extend = models.TextField('扩展信息', default='', blank=True)

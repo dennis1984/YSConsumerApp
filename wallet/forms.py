@@ -2,21 +2,21 @@
 from horizon import forms
 
 
-class PayOrdersCreateForm(forms.Form):
-    dishes_ids = forms.CharField()
-    # dishes_ids包含如下信息
-    # dishes_ids = [{'dishes_id': 'xxx',
-    #                'count': xxx}, {}, ...
-    #              ]
-    #
-    # 生成订单途径
-    gateway = forms.ChoiceField(choices=(('shopping_cart', 1), ('other', 2)),
-                                error_messages={
-                                    'required': u'生成订单途径不能为空'
-                                })
+class WalletCreateForm(forms.Form):
+    password = forms.CharField(min_length=6, max_length=6,
+                               error_messages={
+                                   'required': u'密码不能为空'
+                               })
 
 
-class PayOrdersUpdateForm(forms.Form):
+class WalletTradeActionForm(forms.Form):
     orders_id = forms.CharField(max_length=32)
-    # 支付模式 1：钱包 2：微信支付 3：支付宝支付
-    payment_mode = forms.IntegerField(min_value=1, max_value=3)
+    # 交易类型 1: 充值 2：消费 3: 取现
+    trade_type = forms.IntegerField(min_value=1, max_value=3)
+    # 交易金额
+    amount_of_money = forms.CharField(max_length=16)
+
+
+class WalletDetailListForm(forms.Form):
+    page_index = forms.IntegerField(min_value=1)
+    page_size = forms.IntegerField(min_value=1)
