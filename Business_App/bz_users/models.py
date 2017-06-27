@@ -121,6 +121,7 @@ class FoodCourt(models.Model):
     city = models.CharField('所属城市', max_length=100, null=False)
     district = models.CharField('所属市区', max_length=100, null=False)
     mall = models.CharField('所属购物中心', max_length=200, default='')
+    address = models.CharField('购物中心地址', max_length=256, null=True, blank=True)
     extend = models.TextField('扩展信息', default='', blank=True, null=True)
 
     class Meta:

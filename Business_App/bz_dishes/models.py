@@ -55,11 +55,46 @@ class Dishes(models.Model):
 
     @classmethod
     def get_object(cls, **kwargs):
+        # filter_dict = {'food_court_id': kwargs['food_court_id']}
         try:
             return cls.objects.get(**kwargs)
         except Exception as e:
             return e
 
+    @classmethod
+    def get_hot_sale_object(cls, **kwargs):
+        # filter_dict = {'food_court_id': kwargs['food_court_id']}
+        try:
+            dishes = cls.objects.get(**kwargs)
+            dishes_detail = cls.get_dishes_detail_dict_with_user_info(pk=dishes.pk)
+            # return dishes_detail
+            return dishes_detail
+        except Exception as e:
+            return e
+
+    @classmethod
+    def get_hot_sale_list(cls, request, **kwargs):
+        # 如果是用户是admin并且过滤条件为空，则返回所有菜品
+        # 否则返回过滤条件中对应用户的所有菜品
+        # 如果是商户，则返回当前用户的所有菜品
+        # if request.user.is_admin:
+        #     if 'user_id' not in kwargs:
+        #         return cls.objects.all()
+        #     else:
+        #         filter_dict = {'user_id': kwargs['user_id']}
+        # else:
+        #     filter_dict = {'user_id': request.user.id}
+        filter_dict = {'food_court_id': kwargs['food_court_id'],'is_recommend': 1}
+        try:
+            hot_objects = cls.objects.filter(**filter_dict)
+            dishes_list = []
+            for item in  hot_objects:
+                dishe = cls.get_dishes_detail_dict_with_user_info(pk=item.pk)
+                dishes_list.append(dishe)
+
+            return dishes_list
+        except Exception as e:
+            return e
     @classmethod
     def get_dishes_detail_dict_with_user_info(cls, **kwargs):
         instance = cls.get_object(**kwargs)
