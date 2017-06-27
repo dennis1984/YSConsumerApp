@@ -29,6 +29,9 @@ class PayOrdersAction(generics.GenericAPIView):
     def make_orders_by_dishes_ids(self, request, dishes_ids):
         return PayOrders.make_orders_by_dishes_ids(request, dishes_ids)
 
+    def make_orders_by_recharge(self, request, orders_type, payable):
+        return PayOrders.make_orders_by_recharge(request, orders_type, payable)
+
     def get_shopping_cart_instances_by_dishes_ids(self, request, dishes_ids):
         instances = []
         for item in dishes_ids:
@@ -73,17 +76,25 @@ class PayOrdersAction(generics.GenericAPIView):
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         cld = form.cleaned_data
-        try:
-            dishes_ids = json.loads(cld['dishes_ids'])
-        except Exception as e:
-            return Response({'Detail': e.args}, status=status.HTTP_400_BAD_REQUEST)
-        # 检查购物车
-        if cld['gateway'] == 'shopping_cart':
-            results = self.check_shopping_cart(request, dishes_ids)
-            if not results[0]:
-                return Response({'Detail': results[1].args}, status=status.HTTP_400_BAD_REQUEST)
+        dishes_ids = None
+        # 充值订单
+        if cld['orders_type'] == 'recharge':
+            if not cld['payable']:
+                return Response({'Detail': '[payable] params error'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            _data = self.make_orders_by_recharge(request, cld['orders_type'], cld['payable'])
+        else:
+            try:
+                dishes_ids = json.loads(cld['dishes_ids'])
+            except Exception as e:
+                return Response({'Detail': e.args}, status=status.HTTP_400_BAD_REQUEST)
+            # 检查购物车
+            if cld['gateway'] == 'shopping_cart':
+                results = self.check_shopping_cart(request, dishes_ids)
+                if not results[0]:
+                    return Response({'Detail': results[1].args}, status=status.HTTP_400_BAD_REQUEST)
+            _data = self.make_orders_by_dishes_ids(request, dishes_ids)
 
-        _data = self.make_orders_by_dishes_ids(request, dishes_ids)
         if isinstance(_data, Exception):
             return Response({'Detail': _data.args}, status=status.HTTP_400_BAD_REQUEST)
 

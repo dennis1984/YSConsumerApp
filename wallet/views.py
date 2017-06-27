@@ -7,11 +7,16 @@ from wallet.serializers import (WalletSerializer,
                                 WalletDetailListSerializer,
                                 WalletResponseSerializer)
 from wallet.permissions import IsOwnerOrReadOnly
-from wallet.models import Wallet, WalletTradeDetail
+from wallet.models import (Wallet,
+                           WalletTradeDetail,
+                           WALLET_TRADE_DETAIL_TRADE_TYPE_DICT)
 from wallet.forms import (WalletDetailListForm,
                           WalletCreateForm,
                           WalletTradeActionForm)
-from orders.models import PayOrders, ConsumeOrders
+from orders.models import (PayOrders,
+                           ConsumeOrders,
+                           PAY_ORDERS_TYPE)
+from users.models import ConsumerUser
 
 
 class WalletAction(generics.GenericAPIView):
@@ -49,42 +54,77 @@ class WalletDetail(generics.GenericAPIView):
     permission_classes = (IsOwnerOrReadOnly, )
 
     def get_wallet_info(self, request):
-        return Wallet.get_object(**{'user_id': request.user.id})
+        _wallet = Wallet.get_object(**{'user_id': request.user.id})
+        if isinstance(_wallet, Exception):
+            initial_dict = {'user_id': request.user.id,
+                            'balance': '0'}
+            _wallet = Wallet(**initial_dict)
+        return _wallet
 
     def post(self, request, *args, **kwargs):
         """
         展示用户钱包余额
         """
         _instance = self.get_wallet_info(request)
-        serializer = WalletSerializer(_instance)
+        serializer = WalletResponseSerializer(_instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class WalletTradeAction(generics.GenericAPIView):
+class WalletActionBase(object):
     """
-    钱包明细相关功能
+    钱包相关功能
     """
-    queryset = WalletTradeDetail.objects.all()
-    serializer_class = WalletDetailSerializer
-    permission_classes = (IsOwnerOrReadOnly, )
-
     def get_orders_instance(self, orders_id):
         kwargs = {'orders_id': orders_id}
         return PayOrders.get_success_orders(**kwargs)
 
-    def post(self, request, *args, **kwargs):
-        form = WalletTradeActionForm(request.data)
-        if not form.is_valid():
-            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
-        cld = form.cleaned_data
-        _instance = self.get_orders_instance(cld['orders_id'])
-        if isinstance(_instance, Exception):
-            return Response({'Detail': _instance}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = WalletDetailSerializer(data=cld, _request=request)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response({'Detail': serializer.eerors}, status=status.HTTP_400_BAD_REQUEST)
+    def get_user(self, user_id):
+        return ConsumerUser.get_object(**{'pk': user_id})
+
+    def get_wallet_trade_detail(self, orders_id):
+        return WalletTradeDetail.get_object(**{'orders_id': orders_id})
+
+    def recharge(self, orders_id=None, user_id=None, amount_of_money=None):
+        """
+        充值
+        """
+        _orders = self.get_orders_instance(orders_id)
+        if isinstance(_orders, Exception):
+            return _orders
+        _user = self.get_user(user_id)
+        if isinstance(_user, Exception):
+            return _user
+        _wallet_detail = self.get_wallet_trade_detail(orders_id)
+        if isinstance(_wallet_detail, Exception):
+            return _wallet_detail
+        if _wallet_detail.user_id != user_id:
+            return ValueError('The user ID and orders ID do not match')
+        if _wallet_detail.is_sync:
+            return ValueError('Already recharged')
+        if amount_of_money != _orders.payable:
+            return ValueError('Amount of money is incorrect')
+        if _orders.orders_type != PAY_ORDERS_TYPE['wallet_recharge']:
+            return ValueError('Cannot perform this action')
+        # 去充值
+        result = Wallet.update_balance(user_id=user_id,
+                                       amount_of_money=amount_of_money,
+                                       method='recharge')
+        return result
+
+    def consume(self, orders_id=None, user_id=None, amount_of_money=None):
+        """
+        消费
+        """
+
+    def withdrawals(self, orders_id=None, user_id=None, amount_of_money=None):
+        """
+        提现
+        """
+
+    def update(self, orders_id=None, user_id=None, amount_of_money=None, trade_type=None):
+        """
+        更新钱包金额
+        """
 
 
 class WalletTradeDetailList(generics.GenericAPIView):
@@ -96,7 +136,8 @@ class WalletTradeDetailList(generics.GenericAPIView):
     permission_classes = (IsOwnerOrReadOnly, )
 
     def get_details_list(self, request):
-        return []
+        kwargs = {'user_id': request.user.id}
+        return WalletTradeDetail.get_success_list(**kwargs)
 
     def post(self, request, *args, **kwargs):
         form = WalletDetailListForm(request.data)
@@ -113,3 +154,67 @@ class WalletTradeDetailList(generics.GenericAPIView):
             return Response({'Detail': result.args}, status=status.HTTP_400_BAD_REQUEST)
         return Response(result, status=status.HTTP_200_OK)
 
+
+class WalletTradeAction(object):
+    """
+    钱包明细相关功能
+    """
+    def get_orders_instance(self, orders_id):
+        kwargs = {'orders_id': orders_id}
+        return PayOrders.get_success_orders(**kwargs)
+
+    def get_user(self, user_id):
+        return ConsumerUser.get_object(**{'pk': user_id})
+
+    def recharge(self, orders_id=None, user_id=None, amount_of_money=None):
+        """
+        充值
+        """
+        return self.create(orders_id=orders_id,
+                           user_id=user_id,
+                           amount_of_money=amount_of_money,
+                           trade_type=WALLET_TRADE_DETAIL_TRADE_TYPE_DICT['recharge'])
+
+    def consume(self, orders_id=None, user_id=None, amount_of_money=None):
+        """
+        消费
+        """
+        return self.create(orders_id=orders_id,
+                           user_id=user_id,
+                           amount_of_money=amount_of_money,
+                           trade_type=WALLET_TRADE_DETAIL_TRADE_TYPE_DICT['consume'])
+
+    def withdrawals(self, orders_id=None, user_id=None, amount_of_money=None):
+        """
+        提现
+        """
+        return self.create(orders_id=orders_id,
+                           user_id=user_id,
+                           amount_of_money=amount_of_money,
+                           trade_type=WALLET_TRADE_DETAIL_TRADE_TYPE_DICT['withdrawals'])
+
+    def create(self, orders_id=None, user_id=None, trade_type=None, amount_of_money=None):
+        """
+        创建交易明细（包含：充值、消费和提现（暂不支持）的交易明细）
+        """
+        kwargs = {'orders_id': orders_id,
+                  'user_id': user_id,
+                  'trade_type': trade_type,
+                  'amount_of_money': amount_of_money}
+        form = WalletTradeActionForm(kwargs)
+        if not form.is_valid():
+            return form.errors
+
+        cld = form.cleaned_data
+        _instance = self.get_orders_instance(orders_id)
+        if isinstance(_instance, Exception):
+            return _instance
+        _user = self.get_user(user_id)
+        if isinstance(_user, Exception):
+            return _user
+
+        serializer = WalletDetailSerializer(data=cld)
+        if serializer.is_valid():
+            serializer.save()
+            return serializer.data
+        return serializer.errors

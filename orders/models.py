@@ -30,6 +30,16 @@ class OrdersManager(models.Manager):
         return object_data
 
 
+PAY_ORDERS_TYPE = {
+    'online': 101,
+    'business': 102,
+    'take-out': 103,
+    'wallet_recharge': 201,
+    'wallet_consume': 202,
+    'wallet_withdrawals': 203,
+}
+
+
 class PayOrders(models.Model):
     """
     支付订单（主订单）
@@ -54,8 +64,9 @@ class PayOrders(models.Model):
     payment_status = models.IntegerField('订单支付状态', default=0)
     # 支付方式：0:未指定支付方式 1：钱包 2：微信支付 3：支付宝支付
     payment_mode = models.IntegerField('订单支付方式', default=0)
-    # 订单类型 1: 在线订单 2：堂食订单 3：外卖订单
-    orders_type = models.IntegerField('订单类型', default=1)
+    # 订单类型 0: 未指定 101: 在线订单 102：堂食订单 103：外卖订单
+    #         201: 钱包充值订单 202：钱包消费订单 203: 钱包提现
+    orders_type = models.IntegerField('订单类型', default=101)
 
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
@@ -153,6 +164,34 @@ class PayOrders(models.Model):
                        'food_court_id': food_court_id,
                        'food_court_name': food_court_name,
                        'dishes_ids': json.dumps(dishes_details, ensure_ascii=False, cls=DatetimeEncode),
+                       'total_amount': total_amount,
+                       'member_discount': str(member_discount),
+                       'other_discount': str(other_discount),
+                       'payable': str(Decimal(total_amount) -
+                                      Decimal(member_discount) -
+                                      Decimal(other_discount))
+                       }
+        return orders_data
+
+    @classmethod
+    def make_orders_by_recharge(cls, request, orders_type, payable):
+        dishes_details = [{'orders_type': orders_type,
+                          'payable': payable},
+                          ]
+        food_court_id = 0
+        food_court_name = 'CZ'
+        total_amount = str(payable)
+
+        # 会员优惠及其他优惠
+        member_discount = 0
+        other_discount = 0
+        orders_data = {'user_id': request.user.id,
+                       'orders_id': OrdersIdGenerator.get_orders_id(),
+                       'food_court_id': food_court_id,
+                       'food_court_name': food_court_name,
+                       'dishes_ids': json.dumps(dishes_details,
+                                                ensure_ascii=False,
+                                                cls=DatetimeEncode),
                        'total_amount': total_amount,
                        'member_discount': str(member_discount),
                        'other_discount': str(other_discount),

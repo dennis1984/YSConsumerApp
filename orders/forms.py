@@ -3,7 +3,7 @@ from horizon import forms
 
 
 class PayOrdersCreateForm(forms.Form):
-    dishes_ids = forms.CharField()
+    dishes_ids = forms.CharField(required=False)
     # dishes_ids包含如下信息
     # dishes_ids = [{'dishes_id': 'xxx',
     #                'count': xxx}, {}, ...
@@ -14,6 +14,8 @@ class PayOrdersCreateForm(forms.Form):
                                 error_messages={
                                     'required': u'生成订单途径不能为空'
                                 })
+    orders_type = forms.ChoiceField(choices=(('recharge', 1), ('consume', 2)))
+    payable = forms.IntegerField(min_value=10, required=False)
 
 
 class PayOrdersUpdateForm(forms.Form):
