@@ -82,6 +82,49 @@ class PayOrders(models.Model):
     def __unicode__(self):
         return self.orders_id
 
+    @property
+    def is_expired(self):
+        if now() <= self.expires:
+            return True
+        return False
+
+    @property
+    def is_payable(self):
+        """
+        是否是可支付订单
+        """
+        if self.payment_status == 0:
+            return True
+        return False
+
+    @property
+    def is_success(self):
+        """
+        订单是否完成
+        :return: 
+        """
+        if self.payment_status == 200:
+            return True
+        return False
+
+    @property
+    def is_recharge_orders(self):
+        """
+        充值订单
+        """
+        if self.orders_type == PAY_ORDERS_TYPE['wallet_recharge']:
+            return True
+        return False
+
+    @property
+    def is_consume_orders(self):
+        """
+        消费订单
+        """
+        if self.orders_type != PAY_ORDERS_TYPE['wallet_recharge']:
+            return True
+        return False
+
     @classmethod
     def get_object(cls, **kwargs):
         try:

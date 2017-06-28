@@ -11,7 +11,7 @@ from orders.forms import (PayOrdersCreateForm,
                           PayOrdersUpdateForm)
 from shopping_cart.serializers import ShoppingCartSerializer
 from shopping_cart.models import ShoppingCart
-from orders.pay import WXPay
+from orders.pay import WXPay, WalletPay
 import json
 
 
@@ -104,12 +104,14 @@ class PayOrdersAction(generics.GenericAPIView):
             # 清空购物车
             if cld['gateway'] == 'shopping_cart':
                 self.clean_shopping_cart(request, dishes_ids)
+
             orders_detail = serializer.data
             dishes_detail = json.loads(orders_detail.pop('dishes_ids'))
             orders_detail['dishes_ids'] = dishes_detail
             serializer_response = PayOrdersResponseSerializer(data=orders_detail)
             if serializer_response.is_valid():
                 return Response(serializer_response.data, status=status.HTTP_200_OK)
+
             return Response(serializer_response.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -132,7 +134,11 @@ class PayOrdersAction(generics.GenericAPIView):
             return Response({'Detail': _instance.args}, status=status.HTTP_400_BAD_REQUEST)
         # 钱包支付
         if payment_mode == 1:
-            pass
+            wallet_pay = WalletPay(request, _instance)
+            result = wallet_pay.wallet_pay()
+            if isinstance(result, Exception):
+                return Response({'Detail': result.args}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(result, status=status.HTTP_206_PARTIAL_CONTENT)
         elif payment_mode == 2:   # 微信支付
             _wxpay = WXPay(request, _instance)
             result = _wxpay.js_api()

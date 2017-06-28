@@ -51,6 +51,16 @@ class Wallet(models.Model):
         return self.user_id
 
     @classmethod
+    def has_enough_balance(cls, request, amount_of_money):
+        wallet = cls.get_object(**{'user_id': request.user.id})
+        if isinstance(wallet, Exception):
+            return False
+        try:
+            return Decimal(wallet.balance) >= Decimal(amount_of_money)
+        except:
+            return False
+
+    @classmethod
     def get_object(cls, **kwargs):
         try:
             return cls.objects.get(**kwargs)
@@ -64,34 +74,32 @@ class Wallet(models.Model):
         return _ins
 
     @classmethod
-    def update_balance(cls, orders_id=None, user_id=None, amount_of_money=None, method=None):
-        kwargs = {'user_id': user_id,
-                  'orders_id': orders_id,
-                  'amount_of_money': amount_of_money,
-                  'method': method}
-        form = WalletUpdateBalanceModelForm(kwargs)
-        if not form.is_valid():
-            return form.errors
-
+    def update_balance(cls, request, orders, method):
         verify_result = WalletActionBase().verify_action_params(
-            orders_id=orders_id,
-            user_id=user_id,
-            amount_of_money=amount_of_money,
+            orders=orders,
+            request=request,
             method=method,
         )
         if verify_result is not True:
             return verify_result
+        user_id = request.user.id
+        amount_of_money = orders.payable
+        _wallet = cls.get_object(**{'user_id': user_id})
 
-        _user = cls.get_object(**{'user_id': user_id})
         # 如果当前用户没有钱包，则创建钱包
-        if isinstance(_user, Exception):
-            cls.create_wallet(user_id)
+        if isinstance(_wallet, Exception):
+            _wallet = cls.create_wallet(user_id)
         try:
             total_fee = int(amount_of_money.split('.')[0])
         except Exception as e:
             return e
         if total_fee < 0:
             return ValueError('Amount of money Error')
+
+        # 判断当前余额是否够用
+        if method != WALLET_ACTION_METHOD[0]:
+            if Decimal(_wallet.balance) < Decimal(amount_of_money):
+                return ValueError('Balance is not enough')
 
         instance = None
         # 数据库加排它锁，保证更改信息是列队操作的，防止数据混乱
@@ -170,24 +178,18 @@ class WalletActionBase(object):
     def get_wallet_trade_detail(self, orders_id):
         return WalletTradeDetail.get_object(**{'orders_id': orders_id})
 
-    def verify_action_params(self, orders_id=None, user_id=None,
-                             amount_of_money=None, method=None):
-        _orders = self.get_orders_instance(orders_id)
-        if isinstance(_orders, Exception):
-            return _orders
-        _user = self.get_user(user_id)
-        if isinstance(_user, Exception):
-            return _user
-        _wallet_detail = self.get_wallet_trade_detail(orders_id)
-        if isinstance(_wallet_detail, Exception):
-            return _wallet_detail
-        if _wallet_detail.user_id != user_id:
+    def verify_action_params(self, request, orders, method=None):
+        if not isinstance(orders, PayOrders):
+            return TypeError('Params orders must be PayOrders instance')
+
+        wallet_detail = self.get_wallet_trade_detail(orders.orders_id)
+        if isinstance(wallet_detail, Exception):
+            return wallet_detail
+        if wallet_detail.user_id != request.user.id:
             return ValueError('The user ID and orders ID do not match')
-        if _wallet_detail.is_sync:
+        if wallet_detail.is_sync:
             return ValueError('Already recharged')
-        if amount_of_money != _orders.payable:
-            return ValueError('Amount of money is incorrect')
-        if _orders.orders_type != PAY_ORDERS_TYPE['wallet_%s' % method]:
+        if orders.orders_type != PAY_ORDERS_TYPE['wallet_%s' % method]:
             return ValueError('Cannot perform this action')
 
         return True
@@ -197,21 +199,31 @@ class WalletAction(object):
     """
     钱包相关功能
     """
-    def recharge(self, orders_id=None, user_id=None, amount_of_money=None):
+    def has_enough_balance(self, request, orders):
+        if not isinstance(orders, PayOrders):
+            return False
+        return Wallet.has_enough_balance(request, orders.payable)
+
+    def recharge(self, request, orders):
         """
         充值
         """
         # 去充值
-        result = Wallet.update_balance(user_id=user_id,
-                                       orders_id=orders_id,
-                                       amount_of_money=amount_of_money,
-                                       method='recharge')
+        result = Wallet.update_balance(request=request,
+                                       orders=orders,
+                                       method=WALLET_ACTION_METHOD[0])
         return result
 
-    def consume(self, orders_id=None, user_id=None, amount_of_money=None):
+    def consume(self, request, orders):
         """
         消费
         """
+        if not self.has_enough_balance(request, orders):
+            return ValueError('Balance is not enough')
+        result = Wallet.update_balance(request=request,
+                                       orders=orders,
+                                       method=WALLET_ACTION_METHOD[1])
+        return result
 
     def withdrawals(self, orders_id=None, user_id=None, amount_of_money=None):
         """

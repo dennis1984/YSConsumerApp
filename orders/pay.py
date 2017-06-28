@@ -2,6 +2,7 @@
 from PAY.wxpay.wxpay import WXPAYJsApi
 from PAY.wxpay import serializers as wx_serializers
 from PAY.wxpay import settings as wx_settings
+from PAY.wallet_pay.wallet_pay import WalletPay as Pay_WalletPay
 from orders.models import PayOrders
 from users.models import ConsumerUser
 from horizon import main
@@ -70,3 +71,20 @@ class WXPay(object):
         if maked_sign == _sign:
             return True
         return False
+
+
+class WalletPay(object):
+    def __init__(self, request, orders):
+        if not isinstance(orders, PayOrders):
+            raise Exception('Initialization Error')
+        self.orders = orders
+        self.request = request
+
+    def wallet_pay(self):
+        _wallet_pay = Pay_WalletPay(self.request, self.orders)
+        result = _wallet_pay.go_to_pay()
+        if isinstance(result, Exception):
+            return result
+
+        # 拆分订单为子订单
+        return

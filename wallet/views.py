@@ -70,63 +70,6 @@ class WalletDetail(generics.GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class WalletActionBase(object):
-    """
-    钱包相关功能
-    """
-    def get_orders_instance(self, orders_id):
-        kwargs = {'orders_id': orders_id}
-        return PayOrders.get_success_orders(**kwargs)
-
-    def get_user(self, user_id):
-        return ConsumerUser.get_object(**{'pk': user_id})
-
-    def get_wallet_trade_detail(self, orders_id):
-        return WalletTradeDetail.get_object(**{'orders_id': orders_id})
-
-    def recharge(self, orders_id=None, user_id=None, amount_of_money=None):
-        """
-        充值
-        """
-        _orders = self.get_orders_instance(orders_id)
-        if isinstance(_orders, Exception):
-            return _orders
-        _user = self.get_user(user_id)
-        if isinstance(_user, Exception):
-            return _user
-        _wallet_detail = self.get_wallet_trade_detail(orders_id)
-        if isinstance(_wallet_detail, Exception):
-            return _wallet_detail
-        if _wallet_detail.user_id != user_id:
-            return ValueError('The user ID and orders ID do not match')
-        if _wallet_detail.is_sync:
-            return ValueError('Already recharged')
-        if amount_of_money != _orders.payable:
-            return ValueError('Amount of money is incorrect')
-        if _orders.orders_type != PAY_ORDERS_TYPE['wallet_recharge']:
-            return ValueError('Cannot perform this action')
-        # 去充值
-        result = Wallet.update_balance(user_id=user_id,
-                                       amount_of_money=amount_of_money,
-                                       method='recharge')
-        return result
-
-    def consume(self, orders_id=None, user_id=None, amount_of_money=None):
-        """
-        消费
-        """
-
-    def withdrawals(self, orders_id=None, user_id=None, amount_of_money=None):
-        """
-        提现
-        """
-
-    def update(self, orders_id=None, user_id=None, amount_of_money=None, trade_type=None):
-        """
-        更新钱包金额
-        """
-
-
 class WalletTradeDetailList(generics.GenericAPIView):
     """
     钱包明细

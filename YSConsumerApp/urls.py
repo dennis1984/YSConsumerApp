@@ -36,6 +36,10 @@ urlpatterns = [
     url(r'^orders/', include('orders.urls', namespace='orders')),
     url(r'^shopping_cart/', include('shopping_cart.urls', namespace='shopping_cart')),
     url(r'^hot_sale/', include('hot_sale.urls', namespace='hot_sale')),
+
+    # 钱包
+    url(r'^wallet/', include('wallet.urls', namespace='wallet')),
+
     # 微信支付回调
     url(r'^wxpay/', include('PAY.wxpay.urls', namespace='wxpay')),
     # url(r'^alipay/', include('PAY.alipay.urls', namespace='alipay')),
