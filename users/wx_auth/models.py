@@ -1,9 +1,11 @@
-#-*- coding:utf8 -*-
+# -*- coding:utf8 -*-
 from django.db import models
 from django.utils.timezone import now
 from horizon.main import minutes_15_plus
-from hashlib import md5
+from oauth2_provider.models import Application as Oauth2_Application
+
 import datetime
+from hashlib import md5
 
 
 class WXAccessToken(models.Model):
@@ -53,5 +55,3 @@ class WXRandomString(models.Model):
             return instances[0]
         else:
             return None
-
-

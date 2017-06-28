@@ -204,5 +204,5 @@ class BaseConsumeOrders(object):
             serializer = ConsumeOrderSerializer(data=consume_data)
             if serializer.is_valid():
                 serializer.save()
-            else:
-                raise Exception(serializer.errors)
+                return serializer.data
+            return serializer.errors

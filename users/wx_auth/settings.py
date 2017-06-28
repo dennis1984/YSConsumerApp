@@ -26,8 +26,9 @@ GRANT_TYPE = {
 
 # 微信授权接口参数配置
 
-# 回调地址
-REDIRECT_URI = os.path.join(settings.WEB_URL_FIX, 'api-cs/auth/wxauth/callback/')
+# 微信授权登录回调地址 (前端页面)
+# REDIRECT_URI = os.path.join(settings.WEB_URL_FIX, 'api-cs/auth/wxauth/callback/')
+REDIRECT_URI = 'http://yinshi.weixin.city23.com/login/wexincallback/'
 
 # 网页授权登录链接
 WX_AUTH_WEB_LINK = 'https://open.weixin.qq.com/connect/oauth2/authorize'

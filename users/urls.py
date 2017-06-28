@@ -19,8 +19,8 @@ urlpatterns = [
     # 微信授权登录
     url(r'wx_login/$', users_view.WXAuthAction.as_view()),
     # url(r'wxauth/callback/$', wx_auth_views.AuthCallback.as_view()),
-    # 微信授权登录第三方回调地址
-    url(r'^wxauth/callback/$', wx_auth_views.AuthCallback.as_view()),
+    # 微信授权登录后获取token
+    url(r'^wxauth/token/$', wx_auth_views.AuthCallback.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
