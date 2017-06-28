@@ -2,8 +2,9 @@
 from django.db import models
 from django.utils.timezone import now
 from horizon.main import minutes_15_plus
-from oauth2_provider.models import Application as Oauth2_Application
-
+from oauth2_provider.models import (Application as Oauth2_Application,
+                                    AccessToken as Oauth2_AccessToken,
+                                    RefreshToken as Oauth2_RefreshToken)
 import datetime
 from hashlib import md5
 

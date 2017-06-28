@@ -7,7 +7,10 @@ from users.wx_auth.serializers import (AccessTokenSerializer,
                                        RandomStringSerializer,
                                        Oauth2AccessTokenSerializer,
                                        Oauth2RefreshTokenSerializer)
-from users.wx_auth.models import WXRandomString, Oauth2_Application
+from users.wx_auth.models import (WXRandomString,
+                                  Oauth2_Application,
+                                  Oauth2_RefreshToken,
+                                  Oauth2_AccessToken)
 from users.wx_auth.forms import AuthCallbackForm
 from users.wx_auth import settings as wx_auth_settings
 from users.serializers import WXUserSerializer
@@ -125,7 +128,7 @@ class Oauth2AccessToken(object):
     @property
     def application(self):
         try:
-            return Oauth2_Application.objects.get()
+            return Oauth2_Application.objects.filter()[0]
         except Exception as e:
             return e
 
@@ -142,19 +145,16 @@ class Oauth2AccessToken(object):
         access_token_data = {'token': token_dict['access_token'],
                              'expires': make_time_delta(seconds=token_dict['expires_in']),
                              'scope': token_dict['scope'],
-                             'application_id': self.application.id,
-                             'user_id': user.id}
-        serializer = Oauth2AccessTokenSerializer(data=access_token_data)
-        if not serializer.is_valid():
-            return serializer.errors
-        serializer.save()
-        access_token_id = serializer.data['id']
+                             'application': self.application,
+                             'user': user}
+        _access_token = Oauth2_AccessToken(**access_token_data)
+        if not _access_token.is_valid():
+            return ValueError('Access token is not valid')
+        _access_token.save()
         refresh_token_data = {'token': token_dict['refresh_token'],
-                              'access_token_id': access_token_id,
-                              'application_id': self.application.id,
-                              'user_id': user.id}
-        serializer = Oauth2RefreshTokenSerializer(data=refresh_token_data)
-        if not serializer.is_valid():
-            return serializer.errors
-        serializer.save()
+                              'access_token': _access_token,
+                              'application': self.application,
+                              'user': user}
+        _refresh_token = Oauth2_RefreshToken(**refresh_token_data)
+        _refresh_token.save()
         return token_dict

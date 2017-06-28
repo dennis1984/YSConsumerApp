@@ -52,3 +52,17 @@ class Oauth2RefreshTokenSerializer(serializers.ModelSerializer):
         model = Oauth2_RefreshToken
         fields = '__all__'
 
+
+# class Oauth2AccessTokenSerializer(serializers.Serializer):
+#     token = serializers.CharField(max_length=255)
+#     expires = serializers.DateTimeField()
+#     scope = serializers.CharField(max_length=255)
+#     application_id = serializers.IntegerField()
+#     user_id = serializers.IntegerField()
+#
+#
+# class Oauth2RefreshTokenSerializer(serializers.Serializer):
+#     token = serializers.CharField(max_length=255)
+#     access_token_id = serializers.IntegerField()
+#     application_id = serializers.IntegerField()
+#     user_id = serializers.IntegerField()
