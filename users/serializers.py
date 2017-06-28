@@ -83,6 +83,10 @@ class UserSerializer(serializers.ModelSerializer):
             validated_data['password'] = make_password(validated_data['password'])
         return super(UserSerializer, self).update(instance, validated_data)
 
+    def binding_phone_to_user(self, request, instance, validated_data):
+        _validated_data = {'phone': validated_data['phone']}
+        return super(UserSerializer, self).update(instance, validated_data)
+
 
 class UserInstanceSerializer(serializers.ModelSerializer):
     class Meta:

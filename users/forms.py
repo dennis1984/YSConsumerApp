@@ -67,7 +67,7 @@ class SetPasswordForm(CreateUserForm):
     """
 
 
-class WXAuthCreateUserForm(VerifyIdentifyingCodeForm, PasswordForm):
+class WXAuthCreateUserForm(VerifyIdentifyingCodeForm):
     """
     微信授权登录后绑定用户手机号
     """

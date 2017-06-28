@@ -19,6 +19,7 @@ from users.forms import (CreateUserForm,
                          UpdateUserInfoForm,
                          SetPasswordForm,
                          WXAuthCreateUserForm)
+from users.wx_auth.views import Oauth2AccessToken
 
 from horizon.views import APIView
 from horizon.main import make_random_number_of_string
@@ -180,7 +181,7 @@ class WXAuthUserNotLoggedAction(APIView):
 
     def post(self, request, *args, **kwargs):
         """
-        用户注册
+        用户注册（绑定手机号）
         """
         form = WXAuthCreateUserForm(request.data)
         if not form.is_valid():
@@ -196,12 +197,15 @@ class WXAuthUserNotLoggedAction(APIView):
             return Response({'Detail': user.args}, status=status.HTTP_400_BAD_REQUEST)
         serializer = UserSerializer(user)
         try:
-            serializer.update_userinfo(request, user, cld)
+            serializer.binding_phone_to_user(request, user, cld)
         except Exception as e:
             return Response({'Detail': e.args}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = UserInstanceSerializer(data=serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # 注册成功后返回token（即：登录状态）
+        _token_dict = Oauth2AccessToken().get_token(user)
+        if isinstance(_token_dict, Exception):
+            return Response({'Detail': _token_dict.args}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(_token_dict, status=status.HTTP_201_CREATED)
 
 
 class UserAction(generics.GenericAPIView):

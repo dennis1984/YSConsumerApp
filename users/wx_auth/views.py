@@ -107,7 +107,7 @@ class AuthCallback(APIView):
             if _user.phone.startswith('WX'):   # 已经创建的用户，但是没有绑定手机号
                 return Response({'is_binding': False}, status=status.HTTP_200_OK)
             else:                               # 绑定完手机号的用户
-                _token = Oauth2AccessToken().get_token(_user.id)
+                _token = Oauth2AccessToken().get_token(_user)
                 if isinstance(_token, Exception):
                     return Response({'Detail': _token.args},
                                     status=status.HTTP_400_BAD_REQUEST)
@@ -127,13 +127,13 @@ class Oauth2AccessToken(object):
         except Exception as e:
             return e
 
-    def get_token(self, user_id):
+    def get_token(self, user):
         token_dict = {"access_token": generate_token(),
                       "token_type": "Bearer",
                       "expires_in": settings.OAUTH2_PROVIDER['ACCESS_TOKEN_EXPIRE_SECONDS'],
                       "refresh_token": generate_token(),
-                      "scope": ' '.join(settings.OAUTH2_PROVIDER['SCOPES'].keys())}
-
+                      "scope": ' '.join(settings.OAUTH2_PROVIDER['SCOPES'].keys()),
+                      'out_open_id': user.out_open_id}
         if isinstance(self.application, Exception):
             return self.application
 
@@ -141,7 +141,7 @@ class Oauth2AccessToken(object):
                              'expires': make_time_delta(seconds=token_dict['expires_in']),
                              'scope': token_dict['scope'],
                              'application_id': self.application.id,
-                             'user_id': user_id}
+                             'user_id': user.id}
         serializer = Oauth2AccessTokenSerializer(data=access_token_data)
         if not serializer.is_valid():
             return serializer.errors
@@ -150,7 +150,7 @@ class Oauth2AccessToken(object):
         refresh_token_data = {'token': token_dict['refresh_token'],
                               'access_token_id': access_token_id,
                               'application_id': self.application.id,
-                              'user_id': user_id}
+                              'user_id': user.id}
         serializer = Oauth2RefreshTokenSerializer(data=refresh_token_data)
         if not serializer.is_valid():
             return serializer.errors
