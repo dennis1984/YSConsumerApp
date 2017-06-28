@@ -96,16 +96,18 @@ class AuthCallback(APIView):
 
         # 检查用户是否存在及是否绑定了手机号
         _user = self.get_user_by_open_id(userinfo_response_dict['openid'])
+        response_not_binding = {'is_binding': False,
+                                'out_open_id': _user.out_open_id}
         if isinstance(_user, Exception):       # 新用户
             serializer = WXUserSerializer(data=userinfo_response_dict)
             if serializer.is_valid():
                 serializer.save()
-                return Response({'is_binding': False}, status=status.HTTP_200_OK)
+                return Response(response_not_binding, status=status.HTTP_200_OK)
             return Response({'Detail': serializer.errors},
                             status=status.HTTP_400_BAD_REQUEST)
         else:
             if _user.phone.startswith('WX'):   # 已经创建的用户，但是没有绑定手机号
-                return Response({'is_binding': False}, status=status.HTTP_200_OK)
+                return Response(response_not_binding, status=status.HTTP_200_OK)
             else:                               # 绑定完手机号的用户
                 _token = Oauth2AccessToken().get_token(_user)
                 if isinstance(_token, Exception):
