@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     'shopping_cart',
     'PAY.wxpay',
     'hot_sale',
-    'dishes',
 ]
 
 MIDDLEWARE = [
