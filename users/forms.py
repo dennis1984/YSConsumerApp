@@ -71,5 +71,5 @@ class WXAuthCreateUserForm(VerifyIdentifyingCodeForm):
     """
     微信授权登录后绑定用户手机号
     """
-    out_open_id = forms.CharField(max_length=64)
+    # out_open_id = forms.CharField(max_length=64)
 

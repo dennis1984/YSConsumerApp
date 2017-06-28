@@ -7,6 +7,7 @@ from oauth2_provider.models import AccessToken
 from horizon.models import model_to_dict
 from horizon.main import minutes_15_plus
 import datetime
+import re
 
 
 class ConsumerUserManager(BaseUserManager):
@@ -68,6 +69,14 @@ class ConsumerUser(AbstractBaseUser):
 
     def set_password(self, raw_password):
         self.password = make_password(raw_password)
+
+    @property
+    def is_binding(self):
+        re_com = re.compile(r'^1[0-9]{10}$')
+        result = re_com.match(self.phone)
+        if result is None:
+            return False
+        return True
 
     @classmethod
     def get_object(cls, **kwargs):

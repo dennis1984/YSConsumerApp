@@ -6,11 +6,17 @@ from rest_framework import generics
 from django.utils.six import BytesIO
 from Business_App.bz_dishes.models import Dishes
 from Business_App.bz_users.models import FoodCourt
-from hot_sale.serializers import (HotSaleSerializer,DishesDetailSerializer,DishesSerializer,FoodCourtListSerializer,FoodCourtSerializer)
-from hot_sale.forms import (HotSaleListForm,DishesGetForm,FoodCourtListForm,FoodCourtGetForm,)
-from django.shortcuts import render
+from hot_sale.serializers import (HotSaleSerializer,
+                                  DishesDetailSerializer,
+                                  DishesSerializer,
+                                  FoodCourtListSerializer,
+                                  FoodCourtSerializer)
+from hot_sale.forms import (HotSaleListForm,
+                            DishesGetForm,
+                            FoodCourtListForm,
+                            FoodCourtGetForm,)
 
-# Create your views here.
+
 class HotSaleList(generics.GenericAPIView):
     queryset = Dishes.objects.all()
     serializer_class = HotSaleSerializer
@@ -36,13 +42,14 @@ class HotSaleList(generics.GenericAPIView):
         if isinstance(object_data, Exception):
             return Response({'Error': object_data.args}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = HotSaleSerializer(data = object_data)
+        serializer = HotSaleSerializer(data=object_data)
         if not serializer.is_valid():
             return Response({'Error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         results = serializer.list_data(**cld)
         if isinstance(results, Exception):
             return Response({'Error': results.args}, status=status.HTTP_400_BAD_REQUEST)
         return Response(results, status=status.HTTP_200_OK)
+
 
 class DishesDetail(generics.GenericAPIView):
     # queryset = Dishes.objects.all()
@@ -67,6 +74,7 @@ class DishesDetail(generics.GenericAPIView):
         object_data = self.get_object(**cld)
         return Response(object_data, status=status.HTTP_200_OK)
 
+
 class FoodCourtList(generics.GenericAPIView):
     queryset = FoodCourt.objects.all()
     serializer_class = FoodCourtSerializer
@@ -74,7 +82,6 @@ class FoodCourtList(generics.GenericAPIView):
 
     def get_object_list(self, **kwargs):
         return FoodCourt.get_object_list(**kwargs)
-
 
     def post(self, request, *args, **kwargs):
         """
@@ -111,7 +118,6 @@ class FoodCourtDetail(generics.GenericAPIView):
 
     def get_object_detail(self, **kwargs):
         return FoodCourt.get_object(**kwargs)
-
 
     def post(self, request, *args, **kwargs):
         """

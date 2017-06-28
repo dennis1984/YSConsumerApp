@@ -172,9 +172,9 @@ class UserNotLoggedAction(APIView):
         return Response(serializer_response.data, status=status.HTTP_206_PARTIAL_CONTENT)
 
 
-class WXAuthUserNotLoggedAction(APIView):
+class WXAuthUserNotLoggedAction(generics.GenericAPIView):
     """
-    微信用户注册
+    微信用户注册（处于登录状态）
     """
     def get_object_by_openid(self, out_open_id):
         return ConsumerUser.get_object(**{'out_open_id': out_open_id})
@@ -192,17 +192,17 @@ class WXAuthUserNotLoggedAction(APIView):
         if isinstance(result, Exception):
             return Response({'Detail': result.args}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = self.get_object_by_openid(cld['out_open_id'])
-        if isinstance(user, Exception):
-            return Response({'Detail': user.args}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = UserSerializer(user)
+        if request.user.is_binding:
+            return Response({'Detail': 'The phone is already binded'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        serializer = UserSerializer(request.user)
         try:
-            serializer.binding_phone_to_user(request, user, cld)
+            serializer.binding_phone_to_user(request, request.user, cld)
         except Exception as e:
             return Response({'Detail': e.args}, status=status.HTTP_400_BAD_REQUEST)
 
         # 注册成功后返回token（即：登录状态）
-        _token_dict = Oauth2AccessToken().get_token(user)
+        _token_dict = Oauth2AccessToken().get_token(request.user)
         if isinstance(_token_dict, Exception):
             return Response({'Detail': _token_dict.args}, status=status.HTTP_400_BAD_REQUEST)
         return Response(_token_dict, status=status.HTTP_201_CREATED)

@@ -85,7 +85,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def binding_phone_to_user(self, request, instance, validated_data):
         _validated_data = {'phone': validated_data['phone']}
-        return super(UserSerializer, self).update(instance, validated_data)
+        return super(UserSerializer, self).update(instance, _validated_data)
 
 
 class UserInstanceSerializer(serializers.ModelSerializer):

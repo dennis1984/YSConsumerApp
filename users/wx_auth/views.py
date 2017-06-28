@@ -106,19 +106,17 @@ class AuthCallback(APIView):
                                 status=status.HTTP_400_BAD_REQUEST)
             serializer.save()
             _user = self.get_user_by_open_id(userinfo_response_dict['openid'])
-            binding_info = {'is_binding': False,
-                            'out_open_id': _user.out_open_id}
+            is_binding = False
         else:
             if _user.phone.startswith('WX'):   # 已经创建的用户，但是没有绑定手机号
-                binding_info = {'is_binding': False,
-                                'out_open_id': _user.out_open_id}
+                is_binding = False
             else:                               # 绑定完手机号的用户
-                binding_info = {'is_binding': True}
+                is_binding = True
         _token = Oauth2AccessToken().get_token(_user)
         if isinstance(_token, Exception):
             return Response({'Detail': _token.args},
                             status=status.HTTP_400_BAD_REQUEST)
-        _token.update(**binding_info)
+        _token.update(**{'is_binding': is_binding})
         return Response(_token, status=status.HTTP_200_OK)
 
 
