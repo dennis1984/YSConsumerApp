@@ -23,5 +23,5 @@ redis>=2.10.5
 supervisor
 
 # 允许跨域请求
-corsheaders
+django-cors-headers
 

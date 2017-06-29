@@ -69,6 +69,10 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'YSConsumerApp.urls'
 
+CORS_ORIGIN_WHITELIST = (
+    'yinshi.weixin.city23.com',
+)
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
