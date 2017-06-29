@@ -46,11 +46,20 @@ INSTALLED_APPS = [
     'PAY.wxpay',
     'hot_sale',
     'wallet',
+
+    # 允许跨域请求
+    'corsheaders',
+    # end 跨域请求
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+
+    # 允许跨域请求中间件
+    'corsheaders.middleware.CorsMiddleware',
+    # end 允许跨域请求中间件
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
