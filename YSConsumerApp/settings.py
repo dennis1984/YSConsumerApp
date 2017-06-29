@@ -49,7 +49,6 @@ INSTALLED_APPS = [
 
     # 允许跨域请求
     'corsheaders',
-    # end 跨域请求
 ]
 
 MIDDLEWARE = [
@@ -58,7 +57,6 @@ MIDDLEWARE = [
 
     # 允许跨域请求中间件
     'corsheaders.middleware.CorsMiddleware',
-    # end 允许跨域请求中间件
 
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -69,8 +67,18 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'YSConsumerApp.urls'
 
+# 跨域请求配置
 CORS_ORIGIN_WHITELIST = (
     'yinshi.weixin.city23.com',
+)
+
+CORS_ALLOW_METHODS = (
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
 )
 
 TEMPLATES = [

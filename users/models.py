@@ -47,8 +47,8 @@ class ConsumerUser(AbstractBaseUser):
     province = models.CharField(u'所在省份或直辖市', max_length=16, null=True, blank=True)
     city = models.CharField(u'所在城市', max_length=32, null=True, blank=True)
     head_picture = models.ImageField(u'头像',
-                                     upload_to='static/picture/consume/head_picture/',
-                                     default='static/picture/consume/head_picture/noImage.png')
+                                     upload_to='static/consumer/picture/head_picture/',
+                                     default='static/consumer/picture/head_picture/noImage.png')
 
     # 注册渠道：客户端：YS，微信第三方：WX，QQ第三方：QQ，淘宝：TB
     #          新浪微博：SINA_WB

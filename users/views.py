@@ -244,7 +244,7 @@ class UserAction(generics.GenericAPIView):
 class UserDetail(generics.GenericAPIView):
     queryset = ConsumerUser.objects.all()
     serializer_class = UserDetailSerializer
-    # permission_classes = (IsAdminOrReadOnly, )
+    permission_classes = (IsOwnerOrReadOnly, )
 
     def post(self, request, *args, **kwargs):
         user = ConsumerUser.get_user_detail(request)
@@ -255,33 +255,6 @@ class UserDetail(generics.GenericAPIView):
         # if serializer.is_valid():
         return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# class UserList(generics.GenericAPIView):
-#     queryset = ConsumerUser.objects.all()
-#     serializer_class = UserDetailSerializer
-#     permission_classes = (IsOwnerOrReadOnly, )
-#
-#     def get_objects_list(self, request, **kwargs):
-#         return ConsumerUser.get_objects_list(request, **kwargs)
-#
-#     def post(self, request, *args, **kwargs):
-#         form = UserListForm(request.data)
-#         if not form.is_valid():
-#             return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
-#
-#         cld = form.cleaned_data
-#         _objects = self.get_objects_list(request, **kwargs)
-#         if isinstance(_objects, Exception):
-#             return Response({'detail': _objects.args}, status=status.HTTP_400_BAD_REQUEST)
-#
-#         serializer = UserListSerializer(data=_objects)
-#         if not serializer.is_valid():
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#         results = serializer.list_data(**cld)
-#         if isinstance(results, Exception):
-#             return Response({'Error': results.args}, status=status.HTTP_400_BAD_REQUEST)
-#         return Response(results, status=status.HTTP_200_OK)
 
 
 class AuthLogout(generics.GenericAPIView):

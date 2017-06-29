@@ -102,10 +102,11 @@ class UserDetailSerializer(serializers.Serializer):
     birthday = serializers.DateField(required=False)
     region = serializers.CharField(required=False)
     channel = serializers.CharField(default='YS')
+    province = serializers.CharField(max_length=16)
+    city = serializers.CharField(max_length=32)
     last_login = serializers.DateTimeField()
 
     head_picture = serializers.ImageField()
-
 
     # food_court_name = serializers.CharField(max_length=200, required=False)
     # city = serializers.CharField(max_length=100, required=False)
@@ -116,8 +117,10 @@ class UserDetailSerializer(serializers.Serializer):
     def data(self):
         _data = super(UserDetailSerializer, self).data
         if _data.get('pk', None):
+            _data['member_id'] = 'NO.%06d' % _data['pk']
             _data['last_login'] = timezoneStringTostring(_data['last_login'])
-            _data['head_picture_url'] = os.path.join(settings.WEB_URL_FIX, _data['head_picture'])
+            _data['head_picture_url'] = os.path.join(settings.WEB_URL_FIX,
+                                                     _data.pop('head_picture'))
         return _data
 
 
