@@ -28,15 +28,15 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
     @has_permission_to_update
     def update_instance_count(self, request, instance, validated_data):
-        if 'method' not in validated_data:
-            raise KeyError('Method does not existed in validated_data')
+        # if 'method' not in validated_data:
+        #     raise KeyError('Method does not existed in validated_data')
         count = validated_data['count']
-        if validated_data['method'] == 'sub':
-            count = -count
-        instance_count = instance.count + count
-        if instance_count < 1:
+        # if validated_data['method'] == 'sub':
+        #     count = -count
+        # instance_count = instance.count + count
+        if count < 1:
             raise ValueError('Instance count must be more than 0')
-        kwargs = {'count': instance_count}
+        kwargs = {'count': count}
         return super(ShoppingCartSerializer, self).update(instance, kwargs)
 
     @has_permission_to_update

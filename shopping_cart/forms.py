@@ -27,10 +27,10 @@ class ShoppingCartUpdateForm(DishesIdForm, DishesCountForm):
     """
     更新购物车中某个菜品的数量
     """
-    method = forms.ChoiceField(choices=(('add', 1), ('sub', 2)),
-                               error_messages={
-                                   'required': u'更新菜品数量的方法不能为空'
-                               })
+    # method = forms.ChoiceField(choices=(('add', 1), ('sub', 2)),
+    #                            error_messages={
+    #                                'required': u'更新菜品数量的方法不能为空'
+    #                            })
 
 
 class ShoppingCartDeleteForm(DishesIdForm):
