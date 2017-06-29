@@ -22,3 +22,12 @@ class PayOrdersUpdateForm(forms.Form):
     orders_id = forms.CharField(max_length=32)
     # 支付模式 1：钱包 2：微信支付 3：支付宝支付
     payment_mode = forms.IntegerField(min_value=1, max_value=3)
+
+
+class ConsumeOrdersListForm(forms.Form):
+    page_size = forms.IntegerField(min_value=1, required=False)
+    page_index = forms.IntegerField(min_value=1, required=False)
+
+
+class ConsumeOrdersDetailForm(forms.Form):
+    consume_orders_id = forms.CharField(max_length=32)

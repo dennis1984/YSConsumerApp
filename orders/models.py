@@ -35,8 +35,8 @@ PAY_ORDERS_TYPE = {
     'business': 102,
     'take-out': 103,
     'wallet_recharge': 201,
-    'wallet_consume': 202,
-    'wallet_withdrawals': 203,
+    # 'wallet_consume': 202,
+    # 'wallet_withdrawals': 203,
 }
 
 
@@ -65,7 +65,7 @@ class PayOrders(models.Model):
     # 支付方式：0:未指定支付方式 1：钱包 2：微信支付 3：支付宝支付
     payment_mode = models.IntegerField('订单支付方式', default=0)
     # 订单类型 0: 未指定 101: 在线订单 102：堂食订单 103：外卖订单
-    #         201: 钱包充值订单 202：钱包消费订单 203: 钱包提现
+    #         201: 钱包充值订单  (预留：202：钱包消费订单 203: 钱包提现)
     orders_type = models.IntegerField('订单类型', default=101)
 
     created = models.DateTimeField('创建时间', default=now)
@@ -84,7 +84,7 @@ class PayOrders(models.Model):
 
     @property
     def is_expired(self):
-        if now() <= self.expires:
+        if now() >= self.expires:
             return True
         return False
 
@@ -93,7 +93,27 @@ class PayOrders(models.Model):
         """
         是否是可支付订单
         """
+        if self.is_expired:
+            return False
         if self.payment_status == 0:
+            return True
+        return False
+
+    @property
+    def is_wallet_payment_mode(self):
+        """
+        是否是钱包支付模式
+        """
+        if self.payment_mode == 1:
+            return True
+        return False
+
+    @property
+    def has_payment_mode(self):
+        """
+        支付模式是否为：未指定
+        """
+        if self.payment_mode != 0:
             return True
         return False
 
@@ -304,7 +324,7 @@ class ConsumeOrders(models.Model):
     expires = models.DateTimeField('订单过期时间', default=minutes_30_plus)
     extend = models.TextField('扩展信息', default='', blank=True)
 
-    objects = OrdersManager()
+    # objects = OrdersManager()
 
     class Meta:
         db_table = 'ys_consume_orders'
@@ -313,7 +333,41 @@ class ConsumeOrders(models.Model):
     def __unicode__(self):
         return self.orders_id
 
-#
+    @classmethod
+    def get_object(cls, **kwargs):
+        try:
+            return cls.objects.get(**kwargs)
+        except Exception as e:
+            return e
+
+    @classmethod
+    def filter_objects(cls, **kwargs):
+        try:
+            return cls.objects.filter(**kwargs)
+        except Exception as e:
+            return e
+
+    @classmethod
+    def get_object_detail(cls, **kwargs):
+        _object = cls.get_object(**kwargs)
+        if isinstance(_object, Exception):
+            return _object
+        result = model_to_dict(_object)
+        result['dishes_ids'] = json.loads(result['dishes_ids'])
+        return result
+
+    @classmethod
+    def filter_objects_detail(cls, **kwargs):
+        _objects = cls.filter_objects(**kwargs)
+        if isinstance(_objects, Exception):
+            return _objects
+        results = []
+        for item in _objects:
+            item_dict = model_to_dict(item)
+            item_dict['dishes_ids'] = json.loads(item_dict['dishes_ids'])
+            results.append(item_dict)
+        return results
+
 #     @classmethod
 #     def update_payment_status_by_pay_callback(cls, orders_id, validated_data):
 #         if not isinstance(validated_data, dict):
@@ -341,6 +395,64 @@ class ConsumeOrders(models.Model):
 #         return instance
 
 
+class BaseConsumeOrders(object):
+    """
+    子订单
+    """
+    def get_pay_orders_by_orders_id(self, pay_orders_id):
+        return PayOrders.get_object(**{'orders_id': pay_orders_id})
+
+    def make_consume_orders_id(self, pay_orders_id, index):
+        return 'Z%s%03d' % (pay_orders_id, index)
+
+    def create(self, pay_orders_id):
+        """
+        创建子订单
+        return: None: 成功
+                Exception：失败
+        """
+        from decimal import Decimal
+
+        _instance = self.get_pay_orders_by_orders_id(pay_orders_id)
+        if isinstance(_instance, Exception):
+            return _instance
+        pay_orders = _instance
+
+        if pay_orders.payment_status != 200:
+            return ValueError('The orders payment status must be 200!')
+
+        dishes_detail_list = json.loads(pay_orders.dishes_ids)
+        for index, business_dishes in enumerate(dishes_detail_list, 1):
+            member_discount = 0
+            other_discount = 0
+            total_amount = 0
+            for item in business_dishes['dishes_detail']:
+                total_amount = Decimal(total_amount) + Decimal(item['price']) * item['count']
+            payable = Decimal(total_amount) - Decimal(member_discount) - Decimal(other_discount)
+            consume_data = {
+                'orders_id': self.make_consume_orders_id(pay_orders_id, index),
+                'user_id': pay_orders.user_id,
+                'dishes_ids': json.dumps(business_dishes['dishes_detail']),
+                'total_amount': str(total_amount),
+                'member_discount': member_discount,
+                'other_discount': other_discount,
+                'payable': str(payable),
+                'business_name': business_dishes['business_name'],
+                'business_id': business_dishes['business_id'],
+                'food_court_id': pay_orders.food_court_id,
+                'food_court_name': pay_orders.food_court_name,
+                'payment_mode': pay_orders.payment_mode,
+                'orders_type': pay_orders.orders_type,
+                'master_orders_id': pay_orders_id
+            }
+            try:
+                obj = ConsumeOrders(**consume_data)
+                obj.save()
+            except Exception as e:
+                return e
+        return None
+
+
 class TradeRecord(models.Model):
     """
     交易记录
@@ -365,7 +477,12 @@ class TradeRecord(models.Model):
     created = models.DateTimeField('创建时间', default=now)
     extend = models.TextField('扩展信息', default='', blank=True)
 
-    objects = OrdersManager()
+    class Meta:
+        db_table = 'ys_trade_record'
+        ordering = ['-created']
+
+    def __unicode__(self):
+        return self.serial_number
 
 
 def date_for_model():

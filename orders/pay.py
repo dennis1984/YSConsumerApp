@@ -3,7 +3,7 @@ from PAY.wxpay.wxpay import WXPAYJsApi
 from PAY.wxpay import serializers as wx_serializers
 from PAY.wxpay import settings as wx_settings
 from PAY.wallet_pay.wallet_pay import WalletPay as Pay_WalletPay
-from orders.models import PayOrders
+from orders.models import PayOrders, BaseConsumeOrders
 from users.models import ConsumerUser
 from horizon import main
 from django.conf import settings
@@ -86,5 +86,8 @@ class WalletPay(object):
         if isinstance(result, Exception):
             return result
 
-        # 拆分订单为子订单
-        return
+        # 支付成功后，拆分主订单为子订单
+        consume_result = BaseConsumeOrders().create(self.orders)
+        if isinstance(consume_result, Exception):
+            return consume_result
+        return result

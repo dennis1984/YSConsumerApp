@@ -5,10 +5,10 @@ from django.db import models
 from django.utils.timezone import now
 from django.db import transaction
 from decimal import Decimal
-from wallet.forms import WalletUpdateBalanceModelForm
 
 from orders.models import PayOrders, PAY_ORDERS_TYPE
 from users.models import ConsumerUser
+from horizon.models import model_to_dict
 
 import json
 import datetime
@@ -48,7 +48,7 @@ class Wallet(models.Model):
         db_table = 'ys_wallet'
 
     def __unicode__(self):
-        return self.user_id
+        return str(self.user_id)
 
     @classmethod
     def has_enough_balance(cls, request, amount_of_money):
@@ -129,11 +129,11 @@ class WalletTradeDetail(models.Model):
     amount_of_money = models.CharField('金额', max_length=16)
 
     # 交易状态：0:未完成 200:已完成 500:交易失败
-    trade_status = models.IntegerField('订单支付状态', default=0)
+    trade_status = models.IntegerField('订单支付状态', default=200)
     # 交易类型 0: 未指定 1: 充值 2：消费 3: 取现
     trade_type = models.IntegerField('订单类型', default=0)
     # 金额是否同步到了钱包 0: 未同步 1: 已同步
-    is_sync = models.IntegerField('金额是否同步', default=0)
+    is_sync = models.IntegerField('金额是否同步', default=1)
 
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
@@ -168,13 +168,6 @@ class WalletActionBase(object):
     """
     钱包相关功能
     """
-    def get_orders_instance(self, orders_id):
-        kwargs = {'orders_id': orders_id}
-        return PayOrders.get_success_orders(**kwargs)
-
-    def get_user(self, user_id):
-        return ConsumerUser.get_object(**{'pk': user_id})
-
     def get_wallet_trade_detail(self, orders_id):
         return WalletTradeDetail.get_object(**{'orders_id': orders_id})
 
@@ -183,14 +176,28 @@ class WalletActionBase(object):
             return TypeError('Params orders must be PayOrders instance')
 
         wallet_detail = self.get_wallet_trade_detail(orders.orders_id)
-        if isinstance(wallet_detail, Exception):
-            return wallet_detail
-        if wallet_detail.user_id != request.user.id:
+        if not isinstance(wallet_detail, Exception):
+            return TypeError('Cannot perform this action')
+        if orders.user_id != request.user.id:
             return ValueError('The user ID and orders ID do not match')
-        if wallet_detail.is_sync:
-            return ValueError('Already recharged')
-        if orders.orders_type != PAY_ORDERS_TYPE['wallet_%s' % method]:
-            return ValueError('Cannot perform this action')
+
+        if method == WALLET_ACTION_METHOD[0]:  # 充值操作
+            if not orders.is_success:
+                return ValueError('Orders Data is Error')
+            if not orders.is_recharge_orders:
+                return ValueError('Orders Type is Error')
+        else:
+            if not orders.is_payable:
+                return ValueError('Orders status is incorrect')
+            if orders.has_payment_mode:
+                return ValueError('Orders status is incorrect')
+
+        if ('wallet_%s' % method) in PAY_ORDERS_TYPE:
+            if orders.orders_type != PAY_ORDERS_TYPE['wallet_%s' % method]:
+                return ValueError('Cannot perform this action')
+        else:
+            if orders.orders_type not in PAY_ORDERS_TYPE.values():
+                return ValueError('Orders Type is incorrect')
 
         return True
 
@@ -212,6 +219,10 @@ class WalletAction(object):
         result = Wallet.update_balance(request=request,
                                        orders=orders,
                                        method=WALLET_ACTION_METHOD[0])
+        # 生成消费记录
+        _trade = WalletTradeAction().create(request, orders)
+        if isinstance(_trade, Exception):
+            return _trade
         return result
 
     def consume(self, request, orders):
@@ -220,12 +231,65 @@ class WalletAction(object):
         """
         if not self.has_enough_balance(request, orders):
             return ValueError('Balance is not enough')
-        result = Wallet.update_balance(request=request,
-                                       orders=orders,
-                                       method=WALLET_ACTION_METHOD[1])
-        return result
+        _ins = Wallet.update_balance(request=request,
+                                     orders=orders,
+                                     method=WALLET_ACTION_METHOD[1])
+        if isinstance(_ins, Exception):
+            return _ins
+        # 回写订单状态
+        kwargs = {'orders_id': orders.orders_id,
+                  'validated_data':
+                      {'payment_status': 200,
+                       'payment_mode': 1},
+                  }
+        try:
+            orders = PayOrders.update_payment_status_by_pay_callback(**kwargs)
+        except Exception as e:
+            return e
+
+        # 生成消费记录
+        _trade = WalletTradeAction().create(request, orders)
+        if isinstance(_trade, Exception):
+            return _trade
+
+        wallet_dict = model_to_dict(_ins)
+        wallet_dict.pop('password')
+        return wallet_dict
 
     def withdrawals(self, orders_id=None, user_id=None, amount_of_money=None):
         """
         提现
         """
+
+
+class WalletTradeAction(object):
+    """
+    钱包明细相关功能
+    """
+    def create(self, request, orders):
+        """
+        创建交易明细（包含：充值、消费和提现（暂不支持）的交易明细）
+        """
+        if not isinstance(orders, PayOrders):
+            return TypeError('Orders data error')
+        if orders.orders_type not in PAY_ORDERS_TYPE.values():
+            return ValueError('Orders data error')
+        if not orders.is_success:
+            return ValueError('Orders data error')
+
+        if orders.orders_type == 201:  # 交易类型：充值
+            trade_type = WALLET_TRADE_DETAIL_TRADE_TYPE_DICT['recharge']
+        else:                          # 交易类型：消费
+            trade_type = WALLET_TRADE_DETAIL_TRADE_TYPE_DICT['consume']
+
+        kwargs = {'orders_id': orders.orders_id,
+                  'user_id': request.user.id,
+                  'trade_type': trade_type,
+                  'amount_of_money': orders.payable}
+
+        wallet_detail = WalletTradeDetail(**kwargs)
+        try:
+            wallet_detail.save()
+        except Exception as e:
+            return e
+        return wallet_detail

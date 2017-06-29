@@ -7,8 +7,7 @@ from rest_framework.settings import APISettings, DEFAULTS, IMPORT_STRINGS
 from horizon import main
 from PAY.wxpay.models import WXPayResult
 from PAY.wxpay.serializers import ResponseSerializer
-from orders.models import PayOrders
-from orders.views import BaseConsumeOrders
+from orders.models import PayOrders, BaseConsumeOrders
 import json
 import copy
 

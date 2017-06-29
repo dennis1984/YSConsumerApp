@@ -51,7 +51,8 @@ class UpdateUserInfoForm(forms.Form):
     nickname = forms.CharField(max_length=100, required=False)
     gender = forms.IntegerField(min_value=1, max_value=2, required=False)
     birthday = forms.DateField(required=False)
-    region = forms.CharField(max_length=64, required=False)
+    province = forms.CharField(max_length=16, required=False)
+    city = forms.CharField(max_length=32, required=False)
     head_picture = forms.ImageField(required=False)
 
 

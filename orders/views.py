@@ -4,14 +4,19 @@ from rest_framework.response import Response
 from rest_framework import status
 from orders.serializers import (PayOrdersSerializer,
                                 PayOrdersResponseSerializer,
-                                ConsumeOrderSerializer)
+                                ConsumeOrderSerializer,
+                                ConsumeOrdersListSerializer,
+                                ConsumeOrdersResponseSerializer)
 from orders.permissions import IsOwnerOrReadOnly
 from orders.models import (PayOrders, ConsumeOrders)
 from orders.forms import (PayOrdersCreateForm,
-                          PayOrdersUpdateForm)
+                          PayOrdersUpdateForm,
+                          ConsumeOrdersListForm,
+                          ConsumeOrdersDetailForm)
 from shopping_cart.serializers import ShoppingCartSerializer
 from shopping_cart.models import ShoppingCart
 from orders.pay import WXPay, WalletPay
+
 import json
 
 
@@ -132,83 +137,68 @@ class PayOrdersAction(generics.GenericAPIView):
         _instance = self.get_orders_by_orders_id(cld['orders_id'])
         if isinstance(_instance, Exception):
             return Response({'Detail': _instance.args}, status=status.HTTP_400_BAD_REQUEST)
-        # 钱包支付
-        if payment_mode == 1:
+
+        if payment_mode == 1:      # 钱包支付
             wallet_pay = WalletPay(request, _instance)
             result = wallet_pay.wallet_pay()
             if isinstance(result, Exception):
                 return Response({'Detail': result.args}, status=status.HTTP_400_BAD_REQUEST)
             return Response(result, status=status.HTTP_206_PARTIAL_CONTENT)
+
         elif payment_mode == 2:   # 微信支付
             _wxpay = WXPay(request, _instance)
             result = _wxpay.js_api()
             if isinstance(result, Exception):
                 return Response({'Detail': result.args}, status=status.HTTP_400_BAD_REQUEST)
             return Response(result, status=status.HTTP_206_PARTIAL_CONTENT)
+
         else:   # 支付宝支付
             pass
         return Response({}, status=status.HTTP_206_PARTIAL_CONTENT)
 
 
-class BaseConsumeOrders(object):
+class ConsumeOrdersList(generics.GenericAPIView):
     """
-    子订单
+    用户子订单展示
     """
-    def get_pay_orders_by_orders_id(self, pay_orders_id):
-        return PayOrders.get_object(**{'orders_id': pay_orders_id})
+    def get_consume_orders_list(self, request):
+        kwargs = {'user_id': request.user.id}
+        return ConsumeOrders.filter_objects_detail(**kwargs)
 
-    def make_consume_orders_id(self, pay_orders_id, index):
-        return 'Z%s%03d' % (pay_orders_id, index)
+    def post(self, request, *args, **kwargs):
+        form = ConsumeOrdersListForm(request.data)
+        if not form.is_valid():
+            return Response({"Detail": form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-    def create(self, pay_orders):
-        """
-        创建子订单
-        """
-        from decimal import Decimal
+        cld = form.cleaned_data
+        consume_orders = self.get_consume_orders_list(request)
+        if isinstance(consume_orders, Exception):
+            return Response({'Detail': consume_orders.args},
+                            status=status.HTTP_400_BAD_REQUEST)
+        serializer = ConsumeOrdersListSerializer(data=consume_orders)
+        if not serializer.is_valid():
+            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return_list = serializer.list_data(**cld)
+        if isinstance(return_list, Exception):
+            return Response({'Detail': return_list.args}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(return_list, status=status.HTTP_200_OK)
 
-        if isinstance(pay_orders, PayOrders):
-            serializer = PayOrdersSerializer(pay_orders)
-        elif isinstance(pay_orders, dict):
-            serializer = PayOrdersSerializer(data=pay_orders)
-        else:
-            _instance = self.get_pay_orders_by_orders_id(pay_orders)
-            if isinstance(_instance, Exception):
-                return TypeError('pay_orders must be PayOrders instance, dict or orders_id')
-            serializer = PayOrdersSerializer(_instance)
 
-        if hasattr(serializer, 'initial_data') and not serializer.is_valid():
-            return serializer.errors
-        _data = serializer.data
-        if _data['payment_status'] != 200:
-            return ValueError('The orders payment status must be 200!')
+class ConsumeOrdersDetail(generics.GenericAPIView):
+    def get_consume_orders_detail(self, request, cld):
+        kwargs = {'orders_id': cld['consume_orders_id']}
+        return ConsumeOrders.get_object_detail(**kwargs)
 
-        pay_orders_id = _data['orders_id']
-        dishes_detail_list = json.loads(_data['dishes_ids'])
-        for index, business_dishes in enumerate(dishes_detail_list, 1):
-            member_discount = 0
-            other_discount = 0
-            total_amount = 0
-            for item in business_dishes['dishes_detail']:
-                total_amount = Decimal(total_amount) + Decimal(item['price']) * item['count']
-            payable = Decimal(total_amount) - Decimal(member_discount) - Decimal(other_discount)
-            consume_data = {
-                'orders_id': self.make_consume_orders_id(pay_orders_id, index),
-                'user_id': _data['user_id'],
-                'dishes_ids': json.dumps(business_dishes['dishes_detail']),
-                'total_amount': str(total_amount),
-                'member_discount': member_discount,
-                'other_discount': other_discount,
-                'payable': str(payable),
-                'business_name': business_dishes['business_name'],
-                'business_id': business_dishes['business_id'],
-                'food_court_id': _data['food_court_id'],
-                'food_court_name': _data['food_court_name'],
-                'payment_mode': _data['payment_mode'],
-                'orders_type': _data['orders_type'],
-                'master_orders_id': pay_orders_id
-            }
-            serializer = ConsumeOrderSerializer(data=consume_data)
-            if serializer.is_valid():
-                serializer.save()
-                return serializer.data
-            return serializer.errors
+    def post(self, request, *args, **kwargs):
+        form = ConsumeOrdersDetailForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        _result = self.get_consume_orders_detail(request, cld)
+        if isinstance(_result, Exception):
+            return Response({'Detail': _result.args}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = ConsumeOrdersResponseSerializer(data=_result)
+        if not serializer.is_valid():
+            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_200_OK)

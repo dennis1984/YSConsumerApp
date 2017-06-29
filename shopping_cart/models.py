@@ -66,8 +66,8 @@ class ShoppingCart(models.Model):
 
     @classmethod
     def get_object_by_dishes_id(cls, request, dishes_id, **kwargs):
-        kwargs.update({'user_id': request.user.id,
-                       'dishes_id': dishes_id})
+        kwargs.update(**{'user_id': request.user.id,
+                         'dishes_id': dishes_id})
         try:
             return cls.objects.get(**kwargs)
         except Exception as e:
