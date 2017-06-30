@@ -1,5 +1,7 @@
 # -*- coding:utf8 -*-
 from __future__ import unicode_literals
+from rest_framework.request import Request
+from django.http.request import HttpRequest
 
 from django.db import models
 from django.utils.timezone import now
@@ -211,10 +213,16 @@ class WalletAction(object):
             return False
         return Wallet.has_enough_balance(request, orders.payable)
 
-    def recharge(self, request, orders):
+    def recharge(self, request, orders, gateway='auth'):
         """
         充值
         """
+        if gateway == 'pay_callback':
+            request = Request(HttpRequest)
+            try:
+                setattr(request.user, 'id', orders.user_id)
+            except Exception as e:
+                return e
         # 去充值
         result = Wallet.update_balance(request=request,
                                        orders=orders,

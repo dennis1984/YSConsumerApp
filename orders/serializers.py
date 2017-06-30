@@ -120,7 +120,7 @@ class OrdersDetailForListSerializer(BaseSerializer):
     payment_mode = serializers.IntegerField()
     orders_type = serializers.IntegerField()
 
-    # 交易类型：1：支付订单  2：核销订单
+    # 交易类型：'pay'：支付订单  'consume'：核销订单
     trade_type = serializers.CharField()
 
     master_orders_id = serializers.CharField(max_length=32, required=False)
