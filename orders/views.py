@@ -253,13 +253,43 @@ class OrdersDetail(generics.GenericAPIView):
 
 
 class OrdersList(generics.GenericAPIView):
-    def get_orders_list(self, request, cld):
+    def get_all_list(self, request, cld):
         kwargs = {'user_id': request.user.id}
-        pay_orders = PayOrders.filter_objects_detail(**kwargs)
+        pay_orders = PayOrders.filter_valid_orders_detail(**kwargs)
         consume_orders = ConsumeOrders.filter_objects_detail(**kwargs)
-        orders_list = pay_orders + pay_orders
+        pay_expired = PayOrders.filter_expired_orders_detail(**kwargs)
+        orders_list = pay_orders + consume_orders
         orders_list.sort(key=lambda x: x['updated'], reverse=True)
-        return orders_list
+        return orders_list + pay_expired
+
+    def get_pay_list(self, request, cld):
+        kwargs = {'user_id': request.user.id}
+        return PayOrders.filter_valid_orders_detail(**kwargs)
+
+    def get_consume_list(self, request, cld):
+        kwargs = {'user_id': request.user.id}
+        return ConsumeOrders.filter_consume_objects_detail(**kwargs)
+
+    def get_finished_list(self, request, cld):
+        kwargs = {'user_id': request.user.id}
+        return ConsumeOrders.filter_finished_objects_detail(**kwargs)
+
+    def get_expired_list(self, request, cld):
+        kwargs = {'user_id': request.user.id}
+        return PayOrders.filter_expired_orders_detail(**kwargs)
+
+    def get_orders_list(self, request, cld):
+        _filter = cld.get('filter', 'all')
+        if _filter == 'all':
+            return self.get_all_list(request, cld)
+        elif _filter == 'pay':
+            return self.get_pay_list(request, cld)
+        elif _filter == 'consume':
+            return self.get_consume_list(request, cld)
+        elif _filter == 'finished':
+            return self.get_finished_list(request, cld)
+        elif _filter == 'expired':
+            return self.get_expired_list(request, cld)
 
     def post(self, request, *args, **kwargs):
         form = OrdersListForm(request.data)

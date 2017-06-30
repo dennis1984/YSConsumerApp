@@ -106,8 +106,9 @@ class OrdersDetailForListSerializer(BaseSerializer):
     user_id = serializers.IntegerField()
     food_court_id = serializers.IntegerField()
     food_court_name = serializers.CharField(max_length=200)
-    business_name = serializers.CharField(max_length=200, required=False)
-    business_id = serializers.IntegerField(required=False)
+    business_name = serializers.CharField(max_length=200, required=False,
+                                          allow_blank=True, allow_null=True)
+    business_id = serializers.IntegerField(required=False, allow_null=True)
 
     dishes_ids = serializers.ListField()
 
@@ -123,13 +124,14 @@ class OrdersDetailForListSerializer(BaseSerializer):
     # 交易类型：'pay'：支付订单  'consume'：核销订单
     trade_type = serializers.CharField()
 
-    master_orders_id = serializers.CharField(max_length=32, required=False)
+    master_orders_id = serializers.CharField(max_length=32, required=False,
+                                             allow_null=True, allow_blank=True)
     created = serializers.DateTimeField()
     updated = serializers.DateTimeField()
     expires = serializers.DateTimeField()
 
     # 是否过期
-    is_expired = serializers.BooleanField(required=False)
+    is_expired = serializers.NullBooleanField(required=False)
 
     extend = serializers.CharField(allow_blank=True)
 

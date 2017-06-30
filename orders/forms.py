@@ -38,6 +38,12 @@ class ConsumeOrdersDetailForm(forms.Form):
 
 
 class OrdersListForm(forms.Form):
+    filter = forms.ChoiceField(choices=(('all', 1),
+                                        ('pay', 2),
+                                        ('consume', 3),
+                                        ('finished', 4),
+                                        ('expired', 5)),
+                               required=False)
     page_size = forms.IntegerField(min_value=1, required=False)
     page_index = forms.IntegerField(min_value=1, required=False)
 

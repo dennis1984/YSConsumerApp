@@ -24,15 +24,19 @@ PAY_ORDERS_TYPE = {
     # 'wallet_withdrawals': 203,
 }
 
+FILTER_IN_ORDERS_TYPE = [101, 102, 103]
+
 
 class OrdersManager(models.Manager):
     def get(self, *args, **kwargs):
+        kwargs['orders_type__in'] = FILTER_IN_ORDERS_TYPE
         object_data = super(OrdersManager, self).get(*args, **kwargs)
         if now() >= object_data.expires and object_data.payment_status == 0:
             object_data.payment_status = 400
         return object_data
 
     def filter(self, *args, **kwargs):
+        kwargs['orders_type__in'] = FILTER_IN_ORDERS_TYPE
         object_data = super(OrdersManager, self).filter(*args, **kwargs)
         for item in object_data:
             if now() >= item.expires and item.payment_status == 0:
@@ -180,6 +184,9 @@ class PayOrders(models.Model):
             item_dict['dishes_ids'] = json.loads(item_dict['dishes_ids'])
             item_dict['is_expired'] = item.is_expired
             item_dict['trade_type'] = 'pay'
+            item_dict['business_id'] = None
+            item_dict['business_name'] = None
+            item_dict['master_orders_id'] = None
             results.append(item_dict)
         return results
 
@@ -188,7 +195,6 @@ class PayOrders(models.Model):
         detail = model_to_dict(self)
         detail['dishes_ids'] = json.loads(detail['dishes_ids'])
         detail['is_expired'] = self.is_expired
-        detail['trade_type'] = 'pay'
         return detail
 
     @classmethod
@@ -200,6 +206,18 @@ class PayOrders(models.Model):
         except Exception as e:
             setattr(e, 'args', ('Orders %s does not existed or is expired' % kwargs['orders_id'],))
             return e
+
+    @classmethod
+    def filter_valid_orders_detail(cls, **kwargs):
+        kwargs['payment_status'] = 0
+        kwargs['expires__gt'] = now()
+        return cls.filter_objects_detail(**kwargs)
+
+    @classmethod
+    def filter_expired_orders_detail(cls, **kwargs):
+        kwargs['payment_status'] = 0
+        kwargs['expires__lte'] = now()
+        return cls.filter_objects_detail(**kwargs)
 
     @classmethod
     def get_success_orders(cls, **kwargs):
@@ -406,8 +424,19 @@ class ConsumeOrders(models.Model):
             item_dict = model_to_dict(item)
             item_dict['dishes_ids'] = json.loads(item_dict['dishes_ids'])
             item_dict['trade_type'] = 'consume'
+            item_dict['is_expired'] = None
             results.append(item_dict)
         return results
+
+    @classmethod
+    def filter_consume_objects_detail(cls, **kwargs):
+        kwargs['payment_status'] = 201
+        return cls.filter_objects_detail(**kwargs)
+
+    @classmethod
+    def filter_finished_objects_detail(cls, **kwargs):
+        kwargs['payment_status'] = 206
+        return cls.filter_objects_detail(**kwargs)
 
 
 class BaseConsumeOrders(object):
