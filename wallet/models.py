@@ -146,7 +146,7 @@ class WalletTradeDetail(models.Model):
         ordering = ['-updated']
 
     def __unicode__(self):
-        return self.user_id
+        return str(self.user_id)
 
     @classmethod
     def get_object(cls, **kwargs):

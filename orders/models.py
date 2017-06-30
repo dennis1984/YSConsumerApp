@@ -15,6 +15,16 @@ import json
 import datetime
 
 
+PAY_ORDERS_TYPE = {
+    'online': 101,
+    'business': 102,
+    'take-out': 103,
+    'wallet_recharge': 201,
+    # 'wallet_consume': 202,
+    # 'wallet_withdrawals': 203,
+}
+
+
 class OrdersManager(models.Manager):
     def get(self, *args, **kwargs):
         object_data = super(OrdersManager, self).get(*args, **kwargs)
@@ -28,16 +38,6 @@ class OrdersManager(models.Manager):
             if now() >= item.expires and item.payment_status == 0:
                 item.payment_status = 400
         return object_data
-
-
-PAY_ORDERS_TYPE = {
-    'online': 101,
-    'business': 102,
-    'take-out': 103,
-    'wallet_recharge': 201,
-    # 'wallet_consume': 202,
-    # 'wallet_withdrawals': 203,
-}
 
 
 class PayOrders(models.Model):

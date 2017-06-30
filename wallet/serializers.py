@@ -33,7 +33,7 @@ class WalletResponseSerializer(BaseModelSerializer):
         fields = ('user_id', 'balance', 'created', 'updated', 'extend')
 
 
-class WalletDetailSerializer(BaseSerializer):
+class WalletDetailSerializer(BaseModelSerializer):
     def __init__(self, instance=None, data=None, **kwargs):
         if data:
             if '_request' in kwargs:
@@ -49,4 +49,4 @@ class WalletDetailSerializer(BaseSerializer):
 
 
 class WalletDetailListSerializer(BaseListSerializer):
-    child = WalletDetailSerializer
+    child = WalletDetailSerializer()

@@ -7,7 +7,9 @@ from rest_framework.settings import APISettings, DEFAULTS, IMPORT_STRINGS
 from horizon import main
 from PAY.wxpay.models import WXPayResult
 from PAY.wxpay.serializers import ResponseSerializer
-from orders.models import PayOrders, BaseConsumeOrders
+from orders.models import (PayOrders,
+                           BaseConsumeOrders,
+                           PAY_ORDERS_TYPE)
 import json
 import copy
 
@@ -68,14 +70,15 @@ class JsApiCallback(APIView):
         return_xml = main.make_dict_to_xml(success_message, use_cdata=True)
         if data_dict['result_code'] == 'SUCCESS':
             try:
-                PayOrders.update_payment_status_by_pay_callback(
+                orders = PayOrders.update_payment_status_by_pay_callback(
                     orders_id=self._orders_id,
                     validated_data=success_data)
             except:
                 return Response(return_xml, status=status.HTTP_200_OK)
             else:
-                # 支付成功后，拆分主订单为子订单
-                BaseConsumeOrders().create(self._orders_id)
+                if orders.orders_type != PAY_ORDERS_TYPE['wallet_recharge']:
+                    # 支付成功后，拆分主订单为子订单
+                    BaseConsumeOrders().create(self._orders_id)
         else:
             try:
                 PayOrders.update_payment_status_by_pay_callback(
