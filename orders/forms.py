@@ -35,3 +35,12 @@ class ConsumeOrdersListForm(forms.Form):
 
 class ConsumeOrdersDetailForm(forms.Form):
     orders_id = forms.CharField(max_length=32)
+
+
+class OrdersListForm(forms.Form):
+    page_size = forms.IntegerField(min_value=1, required=False)
+    page_index = forms.IntegerField(min_value=1, required=False)
+
+
+class OrdersDetailForm(forms.Form):
+    orders_id = forms.CharField(max_length=32)

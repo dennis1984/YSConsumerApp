@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils.timezone import now
 from horizon.models import model_to_dict
-from horizon.main import minutes_30_plus, DatetimeEncode
+from horizon.main import minutes_15_plus, DatetimeEncode
 from django.db import transaction
 from decimal import Decimal
 
@@ -70,7 +70,7 @@ class PayOrders(models.Model):
 
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
-    expires = models.DateTimeField('订单过期时间', default=minutes_30_plus)
+    expires = models.DateTimeField('订单过期时间', default=minutes_15_plus)
     extend = models.TextField('扩展信息', default='', blank=True)
 
     objects = OrdersManager()
@@ -159,6 +159,36 @@ class PayOrders(models.Model):
             return _object
         detail = model_to_dict(_object)
         detail['dishes_ids'] = json.loads(detail['dishes_ids'])
+        detail['is_expired'] = _object.is_expired
+        return detail
+
+    @classmethod
+    def filter_objects(cls, **kwargs):
+        try:
+            return cls.objects.filter(**kwargs)
+        except Exception as e:
+            return e
+
+    @classmethod
+    def filter_objects_detail(cls, **kwargs):
+        _objects = cls.filter_objects(**kwargs)
+        if isinstance(_objects, Exception):
+            return _objects
+        results = []
+        for item in _objects:
+            item_dict = model_to_dict(item)
+            item_dict['dishes_ids'] = json.loads(item_dict['dishes_ids'])
+            item_dict['is_expired'] = item.is_expired
+            item_dict['trade_type'] = 'pay'
+            results.append(item_dict)
+        return results
+
+    @property
+    def orders_detail(self):
+        detail = model_to_dict(self)
+        detail['dishes_ids'] = json.loads(detail['dishes_ids'])
+        detail['is_expired'] = self.is_expired
+        detail['trade_type'] = 'pay'
         return detail
 
     @classmethod
@@ -330,7 +360,7 @@ class ConsumeOrders(models.Model):
 
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
-    expires = models.DateTimeField('订单过期时间', default=minutes_30_plus)
+    expires = models.DateTimeField('订单过期时间', default=minutes_15_plus)
     extend = models.TextField('扩展信息', default='', blank=True)
 
     # objects = OrdersManager()
@@ -363,6 +393,7 @@ class ConsumeOrders(models.Model):
             return _object
         result = model_to_dict(_object)
         result['dishes_ids'] = json.loads(result['dishes_ids'])
+        result['trade_type'] = 'consume'
         return result
 
     @classmethod
@@ -374,34 +405,9 @@ class ConsumeOrders(models.Model):
         for item in _objects:
             item_dict = model_to_dict(item)
             item_dict['dishes_ids'] = json.loads(item_dict['dishes_ids'])
+            item_dict['trade_type'] = 'consume'
             results.append(item_dict)
         return results
-
-#     @classmethod
-#     def update_payment_status_by_pay_callback(cls, orders_id, validated_data):
-#         if not isinstance(validated_data, dict):
-#             raise ValueError('Parameter error')
-#
-#         payment_status = validated_data.get('payment_status')
-#         payment_mode = validated_data.get('payment_mode')
-#         if payment_status not in (200, 400, 500):
-#             raise ValueError('Payment status must in range [200, 400, 500]')
-#         if payment_mode not in [2, 3]:    # 微信支付和支付宝支付
-#             raise ValueError('Payment mode must in range [2, 3]')
-#         instance = None
-#         # 数据库加排它锁，保证更改信息是列队操作的，防止数据混乱
-#         with transaction.atomic():
-#             try:
-#                 _instance = cls.objects.select_for_update().get(orders_id=orders_id)
-#             except cls.DoesNotExist:
-#                 raise cls.DoesNotExist
-#             if _instance.payment_status != 0:
-#                 raise Exception('Cannot perform this action')
-#             _instance.payment_status = payment_status
-#             _instance.payment_mode = payment_mode
-#             _instance.save()
-#             instance = _instance
-#         return instance
 
 
 class BaseConsumeOrders(object):

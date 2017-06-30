@@ -6,14 +6,18 @@ from orders.serializers import (PayOrdersSerializer,
                                 PayOrdersResponseSerializer,
                                 ConsumeOrderSerializer,
                                 ConsumeOrdersListSerializer,
-                                ConsumeOrdersResponseSerializer)
+                                ConsumeOrdersResponseSerializer,
+                                OrdersDetailSerializer,
+                                OrdersListSerializer)
 from orders.permissions import IsOwnerOrReadOnly
 from orders.models import (PayOrders, ConsumeOrders)
 from orders.forms import (PayOrdersCreateForm,
                           PayOrdersUpdateForm,
                           PayOrdersDetailForm,
                           ConsumeOrdersListForm,
-                          ConsumeOrdersDetailForm)
+                          ConsumeOrdersDetailForm,
+                          OrdersListForm,
+                          OrdersDetailForm)
 from shopping_cart.serializers import ShoppingCartSerializer
 from shopping_cart.models import ShoppingCart
 from orders.pay import WXPay, WalletPay
@@ -111,9 +115,7 @@ class PayOrdersAction(generics.GenericAPIView):
             if cld['gateway'] == 'shopping_cart':
                 self.clean_shopping_cart(request, dishes_ids)
 
-            orders_detail = serializer.data
-            dishes_detail = json.loads(orders_detail.pop('dishes_ids'))
-            orders_detail['dishes_ids'] = dishes_detail
+            orders_detail = serializer.instance.orders_detail
             serializer_response = PayOrdersResponseSerializer(data=orders_detail)
             if serializer_response.is_valid():
                 return Response(serializer_response.data, status=status.HTTP_200_OK)
@@ -176,7 +178,7 @@ class PayOrdersDetail(generics.GenericAPIView):
         serializer = PayOrdersResponseSerializer(data=orders)
         if not serializer.is_valid():
             return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ConsumeOrdersList(generics.GenericAPIView):
@@ -224,3 +226,52 @@ class ConsumeOrdersDetail(generics.GenericAPIView):
         if not serializer.is_valid():
             return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class OrdersDetail(generics.GenericAPIView):
+    def get_orders_detail(self, request, cld):
+        kwargs = {'user_id': request.user.id,
+                  'orders_id': cld['orders_id']}
+        if cld['orders_id'].startswith('Z'):
+            return ConsumeOrders.get_object_detail(**kwargs)
+        return PayOrders.get_object_detail(**kwargs)
+
+    def post(self, request, *args, **kwargs):
+        form = OrdersDetailForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        orders_detail = self.get_orders_detail(request, cld)
+        if isinstance(orders_detail, Exception):
+            return Response({'Detail': orders_detail.args}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = OrdersDetailSerializer(data=orders_detail)
+        if not serializer.instance.is_valid():
+            return Response({'Detail': serializer.instance.errors},
+                            status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.instance.data, status=status.HTTP_200_OK)
+
+
+class OrdersList(generics.GenericAPIView):
+    def get_orders_list(self, request, cld):
+        kwargs = {'user_id': request.user.id}
+        pay_orders = PayOrders.filter_objects_detail(**kwargs)
+        consume_orders = ConsumeOrders.filter_objects_detail(**kwargs)
+        orders_list = pay_orders + pay_orders
+        orders_list.sort(key=lambda x: x['updated'], reverse=True)
+        return orders_list
+
+    def post(self, request, *args, **kwargs):
+        form = OrdersListForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        orders_list = self.get_orders_list(request, cld)
+        serializer = OrdersListSerializer(data=orders_list)
+        if not serializer.is_valid():
+            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        result_list = serializer.list_data(**cld)
+        if isinstance(result_list, Exception):
+            return Response({'Detail': result_list.args}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(result_list, status=status.HTTP_200_OK)

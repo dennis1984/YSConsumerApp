@@ -42,6 +42,7 @@ class PayOrdersResponseSerializer(BaseSerializer):
     payment_status = serializers.IntegerField()
     payment_mode = serializers.IntegerField()
     orders_type = serializers.IntegerField()
+    is_expired = serializers.BooleanField()
     created = serializers.DateTimeField()
     updated = serializers.DateTimeField()
     expires = serializers.DateTimeField()
@@ -82,3 +83,56 @@ class ConsumeOrdersResponseSerializer(BaseSerializer):
 
 class ConsumeOrdersListSerializer(BaseListSerializer):
     child = ConsumeOrdersResponseSerializer()
+
+
+class OrdersDetailSerializer(object):
+    def __init__(self, instance=None, data=None, **kwargs):
+        self.instance = None
+        if data:
+            if 'master_orders_id' in data:
+                self.instance = ConsumeOrdersResponseSerializer(data=data, **kwargs)
+            else:
+                self.instance = PayOrdersResponseSerializer(data=data, **kwargs)
+        else:
+            if hasattr(instance, 'master_orders_id'):
+                self.instance = ConsumeOrdersResponseSerializer(instance, **kwargs)
+            else:
+                self.instance = PayOrdersResponseSerializer(instance, **kwargs)
+
+
+class OrdersDetailForListSerializer(BaseSerializer):
+    id = serializers.IntegerField()
+    orders_id = serializers.CharField(max_length=32)
+    user_id = serializers.IntegerField()
+    food_court_id = serializers.IntegerField()
+    food_court_name = serializers.CharField(max_length=200)
+    business_name = serializers.CharField(max_length=200, required=False)
+    business_id = serializers.IntegerField(required=False)
+
+    dishes_ids = serializers.ListField()
+
+    total_amount = serializers.CharField(max_length=16)
+    member_discount = serializers.CharField(max_length=16)
+    other_discount = serializers.CharField(max_length=16)
+    payable = serializers.CharField(max_length=16)
+
+    payment_status = serializers.IntegerField()
+    payment_mode = serializers.IntegerField()
+    orders_type = serializers.IntegerField()
+
+    # 交易类型：1：支付订单  2：核销订单
+    trade_type = serializers.CharField()
+
+    master_orders_id = serializers.CharField(max_length=32, required=False)
+    created = serializers.DateTimeField()
+    updated = serializers.DateTimeField()
+    expires = serializers.DateTimeField()
+
+    # 是否过期
+    is_expired = serializers.BooleanField(required=False)
+
+    extend = serializers.CharField(allow_blank=True)
+
+
+class OrdersListSerializer(BaseListSerializer):
+    child = OrdersDetailForListSerializer()
