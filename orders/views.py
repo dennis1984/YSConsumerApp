@@ -11,6 +11,7 @@ from orders.permissions import IsOwnerOrReadOnly
 from orders.models import (PayOrders, ConsumeOrders)
 from orders.forms import (PayOrdersCreateForm,
                           PayOrdersUpdateForm,
+                          PayOrdersDetailForm,
                           ConsumeOrdersListForm,
                           ConsumeOrdersDetailForm)
 from shopping_cart.serializers import ShoppingCartSerializer
@@ -116,8 +117,8 @@ class PayOrdersAction(generics.GenericAPIView):
             serializer_response = PayOrdersResponseSerializer(data=orders_detail)
             if serializer_response.is_valid():
                 return Response(serializer_response.data, status=status.HTTP_200_OK)
-
             return Response(serializer_response.errors, status=status.HTTP_400_BAD_REQUEST)
+
         return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, *args, **kwargs):
@@ -157,6 +158,27 @@ class PayOrdersAction(generics.GenericAPIView):
         return Response({}, status=status.HTTP_206_PARTIAL_CONTENT)
 
 
+class PayOrdersDetail(generics.GenericAPIView):
+    def get_orders_detail(self, request, orders_id):
+        kwargs = {'user_id': request.user.id,
+                  'orders_id': orders_id}
+        return PayOrders.get_object_detail(**kwargs)
+
+    def post(self, request, *args, **kwargs):
+        form = PayOrdersDetailForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        orders = self.get_orders_detail(request, cld['orders_id'])
+        if isinstance(orders, Exception):
+            return Response({'Detail': orders.args}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = PayOrdersResponseSerializer(data=orders)
+        if not serializer.is_valid():
+            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+
+
 class ConsumeOrdersList(generics.GenericAPIView):
     """
     用户子订单展示
@@ -186,7 +208,7 @@ class ConsumeOrdersList(generics.GenericAPIView):
 
 class ConsumeOrdersDetail(generics.GenericAPIView):
     def get_consume_orders_detail(self, request, cld):
-        kwargs = {'orders_id': cld['consume_orders_id']}
+        kwargs = {'orders_id': cld['orders_id']}
         return ConsumeOrders.get_object_detail(**kwargs)
 
     def post(self, request, *args, **kwargs):

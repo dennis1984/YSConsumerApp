@@ -153,6 +153,15 @@ class PayOrders(models.Model):
             return e
 
     @classmethod
+    def get_object_detail(cls, **kwargs):
+        _object = cls.get_object(**kwargs)
+        if isinstance(_object, Exception):
+            return _object
+        detail = model_to_dict(_object)
+        detail['dishes_ids'] = json.loads(detail['dishes_ids'])
+        return detail
+
+    @classmethod
     def get_valid_orders(cls, **kwargs):
         kwargs['payment_status'] = 0
         kwargs['expires__gt'] = now()
