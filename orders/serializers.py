@@ -1,8 +1,9 @@
 # -*- coding:utf8 -*-
-from django.contrib.auth.models import User, Group
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
-from orders.models import PayOrders, ConsumeOrders
+from orders.models import (PayOrders,
+                           ConsumeOrders,
+                           ConfirmConsume)
 from horizon.serializers import (BaseListSerializer,
                                  BaseModelSerializer,
                                  BaseSerializer)
@@ -12,7 +13,7 @@ from horizon.decorators import has_permission_to_update
 import os
 
 
-class PayOrdersSerializer(serializers.ModelSerializer):
+class PayOrdersSerializer(BaseModelSerializer):
     class Meta:
         model = PayOrders
         fields = '__all__'
@@ -49,12 +50,6 @@ class PayOrdersResponseSerializer(BaseSerializer):
     extend = serializers.CharField(allow_blank=True)
 
 
-class ConsumeOrderSerializer(BaseModelSerializer):
-    class Meta:
-        model = ConsumeOrders
-        fields = '__all__'
-
-
 class ConsumeOrdersResponseSerializer(BaseSerializer):
     id = serializers.IntegerField()
     orders_id = serializers.CharField(max_length=32)
@@ -79,10 +74,6 @@ class ConsumeOrdersResponseSerializer(BaseSerializer):
     updated = serializers.DateTimeField()
     expires = serializers.DateTimeField()
     extend = serializers.CharField(allow_blank=True)
-
-
-class ConsumeOrdersListSerializer(BaseListSerializer):
-    child = ConsumeOrdersResponseSerializer()
 
 
 class OrdersDetailSerializer(object):
@@ -138,3 +129,9 @@ class OrdersDetailForListSerializer(BaseSerializer):
 
 class OrdersListSerializer(BaseListSerializer):
     child = OrdersDetailForListSerializer()
+
+
+class ConfirmConsumeSerializer(BaseModelSerializer):
+    class Meta:
+        model = ConfirmConsume
+        fields = '__all__'

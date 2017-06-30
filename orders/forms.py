@@ -24,19 +24,6 @@ class PayOrdersUpdateForm(forms.Form):
     payment_mode = forms.IntegerField(min_value=1, max_value=3)
 
 
-class PayOrdersDetailForm(forms.Form):
-    orders_id = forms.CharField(max_length=32)
-
-
-class ConsumeOrdersListForm(forms.Form):
-    page_size = forms.IntegerField(min_value=1, required=False)
-    page_index = forms.IntegerField(min_value=1, required=False)
-
-
-class ConsumeOrdersDetailForm(forms.Form):
-    orders_id = forms.CharField(max_length=32)
-
-
 class OrdersListForm(forms.Form):
     filter = forms.ChoiceField(choices=(('all', 1),
                                         ('pay', 2),
@@ -49,4 +36,8 @@ class OrdersListForm(forms.Form):
 
 
 class OrdersDetailForm(forms.Form):
+    orders_id = forms.CharField(max_length=32)
+
+
+class ConfirmConsumeForm(forms.Form):
     orders_id = forms.CharField(max_length=32)

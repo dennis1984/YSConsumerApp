@@ -5,6 +5,7 @@ from django.db import models
 from django.utils.timezone import now
 from horizon.models import model_to_dict
 from horizon.main import minutes_15_plus, DatetimeEncode
+from horizon import main
 from django.db import transaction
 from decimal import Decimal
 
@@ -565,3 +566,17 @@ class SerialNumberGenerator(models.Model):
                 _instance.save()
         serial_no_str = cls.int_to_string(serial_no)
         return 'LS%s%s' % (date_day.strftime('%Y%m%d'), serial_no_str)
+
+
+class ConfirmConsume(models.Model):
+    user_id = models.IntegerField('用户ID')
+    orders_id = models.CharField('订单ID', max_length=32)
+    random_string = models.CharField('随机字符串', db_index=True, max_length=64)
+    expires = models.DateTimeField('过期时间', default=main.minutes_5_plus)
+    created = models.DateTimeField('创建日期', default=now)
+
+    class Meta:
+        db_table = 'ys_confirm_consume_qrcode'
+
+    def __unicode__(self):
+        return self.orders_id

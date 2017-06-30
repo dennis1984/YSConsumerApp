@@ -1,6 +1,6 @@
 # -*- coding:utf8 -*-
 from PAY.wxpay import settings as wx_settings
-# from PAY.alipay import settings as ali_settings
+from oauthlib.common import generate_token
 from django.conf import settings
 from django.utils.timezone import now
 from lxml import etree
@@ -14,9 +14,9 @@ import base64
 import random
 import time
 
-from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
-from Crypto.Hash import SHA256
+
+def minutes_5_plus():
+    return now() + datetime.timedelta(minutes=5)
 
 
 def minutes_15_plus():
@@ -71,7 +71,8 @@ def timezoneStringTostring(timezone_string):
     return str(timezone)
 
 
-def make_qrcode(source_data, version=5):
+def make_qrcode(source_data, save_path=settings.PICTURE_DIRS['business']['qrcode'],
+                version=5):
     """
     生成二维码图片
     """
@@ -81,15 +82,19 @@ def make_qrcode(source_data, version=5):
                        border=4)
     qr.add_data(source_data)
     qr.make(fit=True)
-    fname = "%s.png" % uuid.uuid4()
-    qrcode_dir = settings.PICTURE_DIRS['qrcode']
-    fname_path = os.path.join(qrcode_dir, fname)
+    fname = "%s.png" % make_random_char_and_number_of_string(20)
+    fname_path = os.path.join(save_path, fname)
 
-    if not os.path.isdir(qrcode_dir):
-        os.makedirs(qrcode_dir)
+    if not os.path.isdir(save_path):
+        os.makedirs(save_path)
     image = qr.make_image()
     image.save(fname_path)
     return fname_path
+
+
+def make_static_url_by_file_path(file_path):
+    path_list = file_path.split('static/', 1)
+    return os.path.join(settings.WEB_URL_FIX, 'static', path_list[1])
 
 
 def anaysize_xml_to_dict(source):
@@ -196,11 +201,7 @@ def make_random_char_and_number_of_string(str_length=32):
     """
     if str_length > 128:
         str_length = 128
-    random_str = _random_str = ''.join(str(uuid.uuid4()).split('-'))
-    for i in range(str_length / len(_random_str)):
-        random_str += ''.join(str(uuid.uuid4()).split('-'))
-    index_start = random.randint(0, len(random_str) - str_length)
-    return random_str[index_start: index_start + str_length]
+    return generate_token(length=str_length)
 
 
 def get_time_stamp():

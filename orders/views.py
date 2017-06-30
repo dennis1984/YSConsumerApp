@@ -2,26 +2,24 @@
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
+from django.conf import settings
 from orders.serializers import (PayOrdersSerializer,
                                 PayOrdersResponseSerializer,
-                                ConsumeOrderSerializer,
-                                ConsumeOrdersListSerializer,
-                                ConsumeOrdersResponseSerializer,
                                 OrdersDetailSerializer,
-                                OrdersListSerializer)
+                                OrdersListSerializer,
+                                ConfirmConsumeSerializer)
 from orders.permissions import IsOwnerOrReadOnly
 from orders.models import (PayOrders, ConsumeOrders)
 from orders.forms import (PayOrdersCreateForm,
                           PayOrdersUpdateForm,
-                          PayOrdersDetailForm,
-                          ConsumeOrdersListForm,
-                          ConsumeOrdersDetailForm,
                           OrdersListForm,
-                          OrdersDetailForm)
+                          OrdersDetailForm,
+                          ConfirmConsumeForm)
 from shopping_cart.serializers import ShoppingCartSerializer
 from shopping_cart.models import ShoppingCart
 from orders.pay import WXPay, WalletPay
 
+from horizon import main
 import json
 
 
@@ -160,74 +158,6 @@ class PayOrdersAction(generics.GenericAPIView):
         return Response({}, status=status.HTTP_206_PARTIAL_CONTENT)
 
 
-class PayOrdersDetail(generics.GenericAPIView):
-    def get_orders_detail(self, request, orders_id):
-        kwargs = {'user_id': request.user.id,
-                  'orders_id': orders_id}
-        return PayOrders.get_object_detail(**kwargs)
-
-    def post(self, request, *args, **kwargs):
-        form = PayOrdersDetailForm(request.data)
-        if not form.is_valid():
-            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-        cld = form.cleaned_data
-        orders = self.get_orders_detail(request, cld['orders_id'])
-        if isinstance(orders, Exception):
-            return Response({'Detail': orders.args}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = PayOrdersResponseSerializer(data=orders)
-        if not serializer.is_valid():
-            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class ConsumeOrdersList(generics.GenericAPIView):
-    """
-    用户子订单展示
-    """
-    def get_consume_orders_list(self, request):
-        kwargs = {'user_id': request.user.id}
-        return ConsumeOrders.filter_objects_detail(**kwargs)
-
-    def post(self, request, *args, **kwargs):
-        form = ConsumeOrdersListForm(request.data)
-        if not form.is_valid():
-            return Response({"Detail": form.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-        cld = form.cleaned_data
-        consume_orders = self.get_consume_orders_list(request)
-        if isinstance(consume_orders, Exception):
-            return Response({'Detail': consume_orders.args},
-                            status=status.HTTP_400_BAD_REQUEST)
-        serializer = ConsumeOrdersListSerializer(data=consume_orders)
-        if not serializer.is_valid():
-            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        return_list = serializer.list_data(**cld)
-        if isinstance(return_list, Exception):
-            return Response({'Detail': return_list.args}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(return_list, status=status.HTTP_200_OK)
-
-
-class ConsumeOrdersDetail(generics.GenericAPIView):
-    def get_consume_orders_detail(self, request, cld):
-        kwargs = {'orders_id': cld['orders_id']}
-        return ConsumeOrders.get_object_detail(**kwargs)
-
-    def post(self, request, *args, **kwargs):
-        form = ConsumeOrdersDetailForm(request.data)
-        if not form.is_valid():
-            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-        cld = form.cleaned_data
-        _result = self.get_consume_orders_detail(request, cld)
-        if isinstance(_result, Exception):
-            return Response({'Detail': _result.args}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = ConsumeOrdersResponseSerializer(data=_result)
-        if not serializer.is_valid():
-            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
 class OrdersDetail(generics.GenericAPIView):
     def get_orders_detail(self, request, cld):
         kwargs = {'user_id': request.user.id,
@@ -305,3 +235,27 @@ class OrdersList(generics.GenericAPIView):
         if isinstance(result_list, Exception):
             return Response({'Detail': result_list.args}, status=status.HTTP_400_BAD_REQUEST)
         return Response(result_list, status=status.HTTP_200_OK)
+
+
+class ConfirmConsumeDetail(generics.GenericAPIView):
+    def post(self, request, *args, **kwargs):
+        form = ConfirmConsumeForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        random_str = main.make_random_char_and_number_of_string()
+        _data = {'user_id': request.user.id,
+                 'orders_id': cld['orders_id'],
+                 'random_string': random_str}
+        serializer = ConfirmConsumeSerializer(data=_data)
+        if not serializer.is_valid():
+            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+
+        qrcode_path = settings.PICTURE_DIRS['business']['qrcode']
+        file_name = main.make_qrcode(qrcode_path)
+        static_url = main.make_static_url_by_file_path(file_name)
+        return Response({'qrcode_url': static_url}, status=status.HTTP_200_OK)
+
+
