@@ -15,17 +15,31 @@ from Business_App.bz_orders.models import OrdersIdGenerator
 import json
 import datetime
 
+FILTER_IN_ORDERS_TYPE = [101, 102, 103]
 
-PAY_ORDERS_TYPE = {
-    'online': 101,
-    'business': 102,
-    'take-out': 103,
-    'wallet_recharge': 201,
-    # 'wallet_consume': 202,
-    # 'wallet_withdrawals': 203,
+ORDERS_PAYMENT_STATUS = {
+    'unpaid': 0,
+    'paid': 200,
+    'consuming': 201,
+    'finished': 206,
+    'expired': 400,
+    'failed': 500,
 }
 
-FILTER_IN_ORDERS_TYPE = [101, 102, 103]
+ORDERS_ORDERS_TYPE = {
+    'unknown': 0,
+    'online': 101,
+    'business': 102,
+    'take_out': 103,
+    'wallet_recharge': 201,
+}
+
+ORDERS_PAYMENT_MODE = {
+    'unknown': 0,
+    'wallet': 1,
+    'wxpay': 2,
+    'alipay': 3,
+}
 
 
 class OrdersManager(models.Manager):
@@ -71,7 +85,7 @@ class PayOrders(models.Model):
     payment_mode = models.IntegerField('订单支付方式', default=0)
     # 订单类型 0: 未指定 101: 在线订单 102：堂食订单 103：外卖订单
     #         201: 钱包充值订单  (预留：202：钱包消费订单 203: 钱包提现)
-    orders_type = models.IntegerField('订单类型', default=101)
+    orders_type = models.IntegerField('订单类型', default=0)
 
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
@@ -137,7 +151,7 @@ class PayOrders(models.Model):
         """
         充值订单
         """
-        if self.orders_type == PAY_ORDERS_TYPE['wallet_recharge']:
+        if self.orders_type == ORDERS_ORDERS_TYPE['wallet_recharge']:
             return True
         return False
 
@@ -146,7 +160,7 @@ class PayOrders(models.Model):
         """
         消费订单
         """
-        if self.orders_type != PAY_ORDERS_TYPE['wallet_recharge']:
+        if self.orders_type != ORDERS_ORDERS_TYPE['wallet_recharge']:
             return True
         return False
 
@@ -265,7 +279,7 @@ class PayOrders(models.Model):
         return food_court_id, food_court_name, dishes_details_list
 
     @classmethod
-    def make_orders_by_dishes_ids(cls, request, dishes_ids):
+    def make_orders_by_consume(cls, request, dishes_ids):
         meal_ids = []
         total_amount = '0'
         try:
@@ -280,18 +294,13 @@ class PayOrders(models.Model):
         # 会员优惠及其他优惠
         member_discount = 0
         other_discount = 0
-        orders_data = {'user_id': request.user.id,
-                       'orders_id': OrdersIdGenerator.get_orders_id(),
-                       'food_court_id': food_court_id,
-                       'food_court_name': food_court_name,
-                       'dishes_ids': json.dumps(dishes_details, ensure_ascii=False, cls=DatetimeEncode),
-                       'total_amount': total_amount,
-                       'member_discount': str(member_discount),
-                       'other_discount': str(other_discount),
-                       'payable': str(Decimal(total_amount) -
-                                      Decimal(member_discount) -
-                                      Decimal(other_discount))
-                       }
+        orders_data = cls.make_orders_base(request=request, food_court_id=food_court_id,
+                                           food_court_name=food_court_name,
+                                           dishes_details=dishes_details,
+                                           total_amount=total_amount,
+                                           member_discount=member_discount,
+                                           other_discount=other_discount,
+                                           orders_type=ORDERS_ORDERS_TYPE['online'])
         return orders_data
 
     @classmethod
@@ -306,20 +315,36 @@ class PayOrders(models.Model):
         # 会员优惠及其他优惠
         member_discount = 0
         other_discount = 0
-        orders_data = {'user_id': request.user.id,
-                       'orders_id': OrdersIdGenerator.get_orders_id(),
-                       'food_court_id': food_court_id,
-                       'food_court_name': food_court_name,
-                       'dishes_ids': json.dumps(dishes_details,
-                                                ensure_ascii=False,
-                                                cls=DatetimeEncode),
-                       'total_amount': total_amount,
-                       'member_discount': str(member_discount),
-                       'other_discount': str(other_discount),
-                       'payable': str(Decimal(total_amount) -
-                                      Decimal(member_discount) -
-                                      Decimal(other_discount))
-                       }
+        orders_data = cls.make_orders_base(request=request, food_court_id=food_court_id,
+                                           food_court_name=food_court_name,
+                                           dishes_details=dishes_details,
+                                           total_amount=total_amount,
+                                           member_discount=member_discount,
+                                           other_discount=other_discount,
+                                           orders_type=ORDERS_ORDERS_TYPE['wallet_recharge'])
+        return orders_data
+
+    @classmethod
+    def make_orders_base(cls, request, food_court_id, food_court_name,
+                         dishes_details, total_amount, member_discount,
+                         other_discount, orders_type):
+        try:
+            orders_data = {'user_id': request.user.id,
+                           'orders_id': OrdersIdGenerator.get_orders_id(),
+                           'food_court_id': food_court_id,
+                           'food_court_name': food_court_name,
+                           'dishes_ids': json.dumps(dishes_details,
+                                                    ensure_ascii=False, cls=DatetimeEncode),
+                           'total_amount': total_amount,
+                           'member_discount': str(member_discount),
+                           'other_discount': str(other_discount),
+                           'payable': str(Decimal(total_amount) -
+                                          Decimal(member_discount) -
+                                          Decimal(other_discount)),
+                           'orders_type': orders_type,
+                           }
+        except Exception as e:
+            return e
         return orders_data
 
     @classmethod
@@ -372,8 +397,9 @@ class ConsumeOrders(models.Model):
     payment_status = models.IntegerField('订单支付状态', default=201)
     # 支付方式：0:未指定支付方式 1：现金支付 2：微信支付 3：支付宝支付
     payment_mode = models.IntegerField('订单支付方式', default=0)
-    # 订单类型 1: 在线订单 2：堂食订单
-    orders_type = models.IntegerField('订单类型', default=1)
+    # 订单类型 0: 未指定 101: 在线订单 102：堂食订单 103：外卖订单
+    #         201: 钱包充值订单  (预留：202：钱包消费订单 203: 钱包提现)
+    orders_type = models.IntegerField('订单类型', default=ORDERS_ORDERS_TYPE['online'])
     # 所属主订单
     master_orders_id = models.CharField('所属主订单订单ID', max_length=32)
 
@@ -390,6 +416,18 @@ class ConsumeOrders(models.Model):
 
     def __unicode__(self):
         return self.orders_id
+
+    @classmethod
+    def is_consume_of_payment_status(cls, request, orders_id):
+        kwargs = {'user_id': request.user.id,
+                  'orders_id': orders_id}
+        _object = cls.get_object(**kwargs)
+        if isinstance(_object, Exception):
+            return False
+        if _object.orders_type == ORDERS_ORDERS_TYPE['online']:
+            if _object.payment_status == ORDERS_PAYMENT_STATUS['consuming']:
+                return True
+        return False
 
     @classmethod
     def get_object(cls, **kwargs):
@@ -570,7 +608,7 @@ class SerialNumberGenerator(models.Model):
 
 class ConfirmConsume(models.Model):
     user_id = models.IntegerField('用户ID')
-    orders_id = models.CharField('订单ID', max_length=32)
+    # orders_id = models.CharField('订单ID', max_length=32)
     random_string = models.CharField('随机字符串', db_index=True, max_length=64)
     expires = models.DateTimeField('过期时间', default=main.minutes_5_plus)
     created = models.DateTimeField('创建日期', default=now)

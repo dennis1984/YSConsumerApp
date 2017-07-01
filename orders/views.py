@@ -34,8 +34,8 @@ class PayOrdersAction(generics.GenericAPIView):
     def get_orders_by_orders_id(self, orders_id):
         return PayOrders.get_valid_orders(orders_id=orders_id)
 
-    def make_orders_by_dishes_ids(self, request, dishes_ids):
-        return PayOrders.make_orders_by_dishes_ids(request, dishes_ids)
+    def make_orders_by_consume(self, request, dishes_ids):
+        return PayOrders.make_orders_by_consume(request, dishes_ids)
 
     def make_orders_by_recharge(self, request, orders_type, payable):
         return PayOrders.make_orders_by_recharge(request, orders_type, payable)
@@ -100,8 +100,9 @@ class PayOrdersAction(generics.GenericAPIView):
             if cld['gateway'] == 'shopping_cart':
                 results = self.check_shopping_cart(request, dishes_ids)
                 if not results[0]:
-                    return Response({'Detail': results[1].args}, status=status.HTTP_400_BAD_REQUEST)
-            _data = self.make_orders_by_dishes_ids(request, dishes_ids)
+                    return Response({'Detail': results[1].args},
+                                    status=status.HTTP_400_BAD_REQUEST)
+            _data = self.make_orders_by_consume(request, dishes_ids)
 
         if isinstance(_data, Exception):
             return Response({'Detail': _data.args}, status=status.HTTP_400_BAD_REQUEST)
@@ -238,15 +239,22 @@ class OrdersList(generics.GenericAPIView):
 
 
 class ConfirmConsumeDetail(generics.GenericAPIView):
+    def is_valid_orders(self, request, orders_id):
+        return ConsumeOrders.is_consume_of_payment_status(request, orders_id)
+
     def post(self, request, *args, **kwargs):
         form = ConfirmConsumeForm(request.data)
         if not form.is_valid():
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         cld = form.cleaned_data
-        random_str = main.make_random_char_and_number_of_string()
+        if not self.is_valid_orders(request, cld['orders_id']):
+            return Response({'Detail': 'Cannot perform this action'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        random_str = main.make_random_number_of_string(12)
         _data = {'user_id': request.user.id,
-                 'orders_id': cld['orders_id'],
+                 # 'orders_id': cld['orders_id'],
                  'random_string': random_str}
         serializer = ConfirmConsumeSerializer(data=_data)
         if not serializer.is_valid():
@@ -256,6 +264,7 @@ class ConfirmConsumeDetail(generics.GenericAPIView):
         qrcode_path = settings.PICTURE_DIRS['business']['qrcode']
         file_name = main.make_qrcode(qrcode_path)
         static_url = main.make_static_url_by_file_path(file_name)
-        return Response({'qrcode_url': static_url}, status=status.HTTP_200_OK)
+        return Response({'qrcode_url': static_url,
+                         'code': random_str}, status=status.HTTP_200_OK)
 
 

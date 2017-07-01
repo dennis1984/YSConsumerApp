@@ -8,8 +8,7 @@ from django.utils.timezone import now
 from django.db import transaction
 from decimal import Decimal
 
-from orders.models import PayOrders, PAY_ORDERS_TYPE
-from users.models import ConsumerUser
+from orders.models import PayOrders, ORDERS_ORDERS_TYPE
 from horizon.models import model_to_dict
 
 import json
@@ -194,11 +193,11 @@ class WalletActionBase(object):
             if orders.has_payment_mode:
                 return ValueError('Orders status is incorrect')
 
-        if ('wallet_%s' % method) in PAY_ORDERS_TYPE:
-            if orders.orders_type != PAY_ORDERS_TYPE['wallet_%s' % method]:
+        if ('wallet_%s' % method) in ORDERS_ORDERS_TYPE:
+            if orders.orders_type != ORDERS_ORDERS_TYPE['wallet_%s' % method]:
                 return ValueError('Cannot perform this action')
         else:
-            if orders.orders_type not in PAY_ORDERS_TYPE.values():
+            if orders.orders_type not in ORDERS_ORDERS_TYPE.values():
                 return ValueError('Orders Type is incorrect')
 
         return True
@@ -280,7 +279,7 @@ class WalletTradeAction(object):
         """
         if not isinstance(orders, PayOrders):
             return TypeError('Orders data error')
-        if orders.orders_type not in PAY_ORDERS_TYPE.values():
+        if orders.orders_type not in ORDERS_ORDERS_TYPE.values():
             return ValueError('Orders data error')
         if not orders.is_success:
             return ValueError('Orders data error')

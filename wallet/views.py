@@ -8,15 +8,9 @@ from wallet.serializers import (WalletSerializer,
                                 WalletResponseSerializer)
 from wallet.permissions import IsOwnerOrReadOnly
 from wallet.models import (Wallet,
-                           WalletTradeDetail,
-                           WALLET_TRADE_DETAIL_TRADE_TYPE_DICT)
+                           WalletTradeDetail)
 from wallet.forms import (WalletDetailListForm,
-                          WalletCreateForm,
-                          WalletTradeActionForm)
-from orders.models import (PayOrders,
-                           ConsumeOrders,
-                           PAY_ORDERS_TYPE)
-from users.models import ConsumerUser
+                          WalletCreateForm,)
 
 
 class WalletAction(generics.GenericAPIView):
