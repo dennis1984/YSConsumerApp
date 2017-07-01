@@ -8,6 +8,7 @@ from django.conf import settings
 from horizon.models import model_to_dict
 from horizon import main
 from horizon.decorators import has_permission_to_update
+import urllib
 import os
 import json
 import re
@@ -30,9 +31,18 @@ class WXUserSerializer(serializers.ModelSerializer):
         fields = ('phone', 'out_open_id', 'nickname', 'gender',
                   'province', 'city', 'head_picture')
 
+    def is_valid(self, raise_exception=False):
+        result = super(WXUserSerializer, self).is_valid(raise_exception)
+        if not result:
+            if self.errors.keys() == ['head_picture']:
+                return True
+            return False
+        return True
+
     def save(self, **kwargs):
         kwargs['channel'] = 'WX'
         kwargs['password'] = make_password(self.validated_data['out_open_id'])
+        kwargs['head_picture'] = self.initial_data['headimgurl']
         return super(WXUserSerializer, self).save(**kwargs)
 
     def make_correct_params(self, source_dict):
@@ -119,8 +129,12 @@ class UserDetailSerializer(serializers.Serializer):
         if _data.get('pk', None):
             _data['member_id'] = 'NO.%06d' % _data['pk']
             _data['last_login'] = timezoneStringTostring(_data['last_login'])
-            _data['head_picture_url'] = os.path.join(settings.WEB_URL_FIX,
-                                                     _data.pop('head_picture'))
+            head_picture = _data.pop('head_picture')
+            if head_picture.startswith('http'):
+                _data['head_picture_url'] = urllib.unquote(head_picture)
+            else:
+                _data['head_picture_url'] = os.path.join(settings.WEB_URL_FIX,
+                                                         head_picture)
         return _data
 
 
