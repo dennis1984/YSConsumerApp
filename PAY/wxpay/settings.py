@@ -19,9 +19,9 @@ SIGN_TYPE = 'MD5'
 SPBILL_CREATE_IP = '121.42.249.43'
 
 # 回调地址
-NOTIFY_URL_DICT = {'NATIVE': os.path.join(settings.WEB_URL_FIX, 'wxpay/native_callback/'),
-                   'JSAPI': os.path.join(settings.WEB_URL_FIX, 'wxpay/jsapi_callback/'),
-                   'APP': os.path.join(settings.WEB_URL_FIX, 'wxpay/app_callback/'),
+NOTIFY_URL_DICT = {'NATIVE': os.path.join(settings.WEB_URL_FIX, 'api-cs/wxpay/native_callback/'),
+                   'JSAPI': os.path.join(settings.WEB_URL_FIX, 'api-cs/wxpay/jsapi_callback/'),
+                   'APP': os.path.join(settings.WEB_URL_FIX, 'api-cs/wxpay/app_callback/'),
                    }
 # NOTIFY_URL = reverse('WXPay:native_callback',
 #                      current_app=self.request.resolver_match.namespace)
