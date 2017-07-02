@@ -209,15 +209,23 @@ def get_time_stamp():
     return stamp
 
 
-def send_identifying_code_to_phone(params, receive_phones, template):
+def send_identifying_code_to_phone(params, receive_phones, template_name=None):
     """
     使用阿里云的短信服务发送短信
     """
     from horizon.http_requests import send_http_request
     import urllib
     url = 'http://sms.market.alicloudapi.com/singleSendSms'
-    AppCode = '2e8a1a8a3e22486b9be6ac46c3d2c6ec	'
+    AppCode = '2e8a1a8a3e22486b9be6ac46c3d2c6ec'
+    sign_names = ('吟食',)
+    template_dict = {'register': 'SMS_71365776'}
 
+    if not template_name:
+        template = template_dict['register']
+    else:
+        if template_name not in template_dict.keys():
+            return ValueError('Params template incorrect')
+        template = template_dict[template_name]
     if isinstance(params, (str, unicode)):
         params_query = params
     elif isinstance(params, dict):
@@ -227,8 +235,9 @@ def send_identifying_code_to_phone(params, receive_phones, template):
 
     if not isinstance(receive_phones, (tuple, list)):
         return TypeError('receive phones type must be list or tuple')
-    query = {'ParamString': params_query,
-             'RecNum': ','.join(receive_phones),
-             'TemplateCode': template}
+    query = {'RecNum': ','.join(receive_phones),
+             'TemplateCode': template,
+             'SignName': sign_names[0]}
+    query_str = '%s&ParamString=%s' % (urllib.urlencode(query), params_query)
 
-    return send_http_request(url, query, add_header={'Authorization:': 'APPCODE %s' % AppCode})
+    return send_http_request(url, query_str, add_header={'Authorization': 'APPCODE %s' % AppCode})
