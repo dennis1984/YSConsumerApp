@@ -71,7 +71,7 @@ def timezoneStringTostring(timezone_string):
     return str(timezone)
 
 
-def make_qrcode(source_data, save_path=settings.PICTURE_DIRS['business']['qrcode'],
+def make_qrcode(source_data, save_path=settings.PICTURE_DIRS['consumer']['qrcode'],
                 version=5):
     """
     生成二维码图片
