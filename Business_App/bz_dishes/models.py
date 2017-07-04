@@ -30,7 +30,9 @@ class Dishes(models.Model):
     title = models.CharField('菜品名称', null=False, max_length=200)
     subtitle = models.CharField('菜品副标题', max_length=200, default='')
     description = models.TextField('菜品描述', default='')
-    size = models.IntegerField('菜品规格', default=10)         # 默认：10，小份：11，中份：12，大份：13
+    # 默认：10，小份：11，中份：12，大份：13，自定义：20
+    size = models.IntegerField('菜品规格', default=10)
+    size_detail = models.CharField('菜品规格详情', max_length=30, null=True, blank=True)
     price = models.CharField('价格', max_length=50, null=False)
     image = models.ImageField('菜品图片',
                               upload_to=DISHES_PICTURE_DIR,
@@ -47,7 +49,8 @@ class Dishes(models.Model):
 
     class Meta:
         db_table = 'ys_dishes'
-        unique_together = ('title', 'user_id', 'size')
+        unique_together = ('user_id', 'title', 'size',
+                           'size_detail', 'status')
         app_label = 'Business_App.bz_dishes.models.Dishes'
 
     def __unicode__(self):

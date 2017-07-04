@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'PAY.wxpay',
     'hot_sale',
     'wallet',
+    'collect',
 
     # 允许跨域请求
     'corsheaders',
