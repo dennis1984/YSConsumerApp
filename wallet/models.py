@@ -8,7 +8,9 @@ from django.utils.timezone import now
 from django.db import transaction
 from decimal import Decimal
 
-from orders.models import PayOrders, ORDERS_ORDERS_TYPE
+from orders.models import (PayOrders,
+                           TradeRecordAction,
+                           ORDERS_ORDERS_TYPE)
 from horizon.models import model_to_dict
 
 import json
@@ -258,6 +260,8 @@ class WalletAction(object):
         _trade = WalletTradeAction().create(request, orders)
         if isinstance(_trade, Exception):
             return _trade
+        # 添加交易记录
+        TradeRecordAction().create(request, orders)
 
         wallet_dict = model_to_dict(_ins)
         wallet_dict.pop('password')

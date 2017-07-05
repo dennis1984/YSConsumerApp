@@ -9,6 +9,7 @@ from PAY.wxpay.models import WXPayResult
 from PAY.wxpay.serializers import ResponseSerializer
 from orders.models import (PayOrders,
                            BaseConsumeOrders,
+                           TradeRecordAction,
                            ORDERS_ORDERS_TYPE)
 from wallet.models import WalletAction
 import json
@@ -77,6 +78,9 @@ class JsApiCallback(APIView):
             except:
                 return Response(return_xml, status=status.HTTP_200_OK)
             else:
+                # 添加交易记录
+                TradeRecordAction().create(None, orders, gateway='pay_callback',
+                                           out_orders_id=data_dict['transaction_id'])
                 if orders.orders_type == ORDERS_ORDERS_TYPE['wallet_recharge']:
                     # 支付订单，支付完成后去充值
                     WalletAction().recharge(None, orders, gateway='pay_callback')

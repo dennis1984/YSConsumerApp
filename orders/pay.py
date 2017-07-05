@@ -81,6 +81,9 @@ class WalletPay(object):
         self.request = request
 
     def wallet_pay(self):
+        """
+        钱包支付
+        """
         _wallet_pay = Pay_WalletPay(self.request, self.orders)
         result = _wallet_pay.go_to_pay()
         if isinstance(result, Exception):

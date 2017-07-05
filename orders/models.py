@@ -550,7 +550,7 @@ class TradeRecord(models.Model):
     payment = models.CharField('实付金额', max_length=16)
 
     # 支付结果: SUCCESS: 成功 FAIL：失败 UNKNOWN: 未知
-    payment_result = models.IntegerField('支付结果', default='UNKNOWN')
+    payment_result = models.CharField('支付结果', max_length=16, default='SUCCESS')
     # 支付方式：0:未指定支付方式 1：钱包支付 2：微信支付 3：支付宝支付
     payment_mode = models.IntegerField('订单支付方式', default=0)
 
@@ -566,6 +566,52 @@ class TradeRecord(models.Model):
 
     def __unicode__(self):
         return self.serial_number
+
+
+class TradeRecordAction(object):
+    def verify_orders(self, request, orders):
+        if request.user.id != orders.user_id:
+            return False, Exception('Orders and The user do not match')
+        if orders.payment_status != ORDERS_PAYMENT_STATUS['paid']:
+            return False, ValueError('Orders payment status is incorrect')
+        if orders.payment_mode == ORDERS_PAYMENT_MODE['unknown']:
+            return False, ValueError('Orders payment mode is incorrect')
+        if orders.orders_type == ORDERS_ORDERS_TYPE['unknown']:
+            return False, ValueError('Orders orders type is incorrect')
+        return True, None
+
+    def create(self, request, orders, gateway='auth', **kwargs):
+        """
+        创建交易记录
+        """
+        from rest_framework.request import Request
+        from django.http import HttpRequest
+
+        if gateway == 'pay_callback':
+            request = Request(HttpRequest)
+            try:
+                setattr(request.user, 'id', orders.user_id)
+            except Exception as e:
+                return e
+        result, error = self.verify_orders(request, orders)
+        if not result:
+            return error
+        record_data = {'serial_number': SerialNumberGenerator.get_serial_number(),
+                       'orders_id': orders.orders_id,
+                       'user_id': request.user.id,
+                       'total_amount': orders.total_amount,
+                       'member_discount': orders.member_discount,
+                       'other_discount': orders.other_discount,
+                       'payment': orders.payable,
+                       'payment_mode': orders.payment_mode,
+                       'out_orders_id': kwargs.get('out_orders_id'),
+                       }
+        try:
+            obj = TradeRecord(**record_data)
+            obj.save()
+        except Exception as e:
+            return e
+        return obj
 
 
 def date_for_model():
@@ -617,4 +663,4 @@ class ConfirmConsume(models.Model):
         db_table = 'ys_confirm_consume_qrcode'
 
     def __unicode__(self):
-        return self.orders_id
+        return str(self.user_id)
