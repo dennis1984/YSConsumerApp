@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'hot_sale',
     'wallet',
     'collect',
+    'comment',
 
     # 允许跨域请求
     'corsheaders',

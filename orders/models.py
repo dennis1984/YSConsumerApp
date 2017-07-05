@@ -402,6 +402,8 @@ class ConsumeOrders(models.Model):
     orders_type = models.IntegerField('订单类型', default=ORDERS_ORDERS_TYPE['online'])
     # 所属主订单
     master_orders_id = models.CharField('所属主订单订单ID', max_length=32)
+    # 是否点评过  0: 未点评过  1： 已经完成点评
+    is_commented = models.IntegerField('是否点评过', default=0)
 
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)

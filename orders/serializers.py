@@ -50,6 +50,19 @@ class PayOrdersResponseSerializer(BaseSerializer):
     extend = serializers.CharField(allow_blank=True)
 
 
+class ConsumeOrdersSerializer(BaseModelSerializer):
+    class Meta:
+        model = ConsumeOrders
+        fields = '__all__'
+
+    def set_commented(self, instance):
+        validated_data = {'is_commented': 1}
+        try:
+            return self.update(instance, validated_data)
+        except Exception as e:
+            return e
+
+
 class ConsumeOrdersResponseSerializer(BaseSerializer):
     id = serializers.IntegerField()
     orders_id = serializers.CharField(max_length=32)
@@ -123,6 +136,8 @@ class OrdersDetailForListSerializer(BaseSerializer):
 
     # 是否过期
     is_expired = serializers.NullBooleanField(required=False)
+    # 是否评价过
+    is_commented = serializers.IntegerField(required=False)
 
     extend = serializers.CharField(allow_blank=True)
 
