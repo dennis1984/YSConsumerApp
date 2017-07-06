@@ -15,7 +15,7 @@ from Business_App.bz_orders.models import OrdersIdGenerator
 import json
 import datetime
 
-FILTER_IN_ORDERS_TYPE = [101, 102, 103]
+FILTER_IN_ORDERS_TYPE = [0, 101, 102, 103]
 
 ORDERS_PAYMENT_STATUS = {
     'unpaid': 0,
