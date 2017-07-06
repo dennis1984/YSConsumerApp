@@ -15,8 +15,15 @@ class DishesSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+# class DishesDetailSerializer(BaseSerializer):
+#     id = serializers.IntegerField()
+#     title = serializers.CharField()
+#     business_name = serializers.CharField()
+#     price = serializers.CharField()
+#     image_url = serializers.CharField()
+
 class DishesDetailSerializer(BaseDishesDetailSerializer):
-    is_collected = serializers.BooleanField()
+    is_collected = serializers.NullBooleanField(required=False)
 
 
 class HotSaleSerializer(BaseListSerializer):
