@@ -85,7 +85,7 @@ class CollectList(generics.GenericAPIView):
 
     def get_collects_list(self, request):
         collects = Collect.get_collect_list_with_user(request)
-        if not collects or isinstance(collects, Exception):
+        if isinstance(collects, Exception):
             return collects
         collect_details = []
         for item in collects:
