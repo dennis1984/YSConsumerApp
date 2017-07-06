@@ -243,14 +243,14 @@ class ConfirmConsumeDetail(generics.GenericAPIView):
         return ConsumeOrders.is_consume_of_payment_status(request, orders_id)
 
     def post(self, request, *args, **kwargs):
-        form = ConfirmConsumeForm(request.data)
-        if not form.is_valid():
-            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-        cld = form.cleaned_data
-        if not self.is_valid_orders(request, cld['orders_id']):
-            return Response({'Detail': 'Cannot perform this action'},
-                            status=status.HTTP_400_BAD_REQUEST)
+        # form = ConfirmConsumeForm(request.data)
+        # if not form.is_valid():
+        #     return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+        #
+        # cld = form.cleaned_data
+        # if not self.is_valid_orders(request, cld['orders_id']):
+        #     return Response({'Detail': 'Cannot perform this action'},
+        #                     status=status.HTTP_400_BAD_REQUEST)
 
         random_str = main.make_random_number_of_string(12)
         _data = {'user_id': request.user.id,

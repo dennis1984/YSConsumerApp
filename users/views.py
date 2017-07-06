@@ -98,7 +98,7 @@ class IdentifyingCodeVerify(APIView):
 
 
 class WXAuthAction(APIView):
-    def post(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         """
         微信第三方登录授权
         """
