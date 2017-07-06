@@ -219,7 +219,7 @@ WEB_URL_FIX = os.path.join('http://', DOMAIN_NAME)
 
 # 图片根目录
 BUSINESS_PICTURE_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static', 'business', 'picture')
-CONSUMER_PICTURE_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static', 'consume', 'picture')
+CONSUMER_PICTURE_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static', 'consumer', 'picture')
 
 PICTURE_DIRS = {
     'consumer': {

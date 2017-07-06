@@ -1,13 +1,15 @@
-#-*- coding:utf8 -*-
+# -*- coding:utf8 -*-
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.utils.timezone import now
 from django.contrib.auth.hashers import make_password
+from django.conf import settings
 from oauth2_provider.models import AccessToken
 from horizon.models import model_to_dict
 from horizon.main import minutes_15_plus
 import datetime
 import re
+import os
 
 
 class ConsumerUserManager(BaseUserManager):
@@ -36,6 +38,9 @@ class ConsumerUserManager(BaseUserManager):
         return user
 
 
+HEAD_PICTURE_PATH = settings.PICTURE_DIRS['consumer']['head_picture']
+
+
 class ConsumerUser(AbstractBaseUser):
     phone = models.CharField(u'手机号', max_length=20, unique=True, db_index=True)
     out_open_id = models.CharField(u'第三方唯一标识', max_length=64, unique=True, db_index=True, null=True)
@@ -47,8 +52,8 @@ class ConsumerUser(AbstractBaseUser):
     province = models.CharField(u'所在省份或直辖市', max_length=16, null=True, blank=True)
     city = models.CharField(u'所在城市', max_length=32, null=True, blank=True)
     head_picture = models.ImageField(u'头像', max_length=200,
-                                     upload_to='static/consumer/picture/head_picture/',
-                                     default='static/consumer/picture/head_picture/noImage.png')
+                                     upload_to=HEAD_PICTURE_PATH,
+                                     default=os.path.join(HEAD_PICTURE_PATH, 'noImage.png'))
 
     # 注册渠道：客户端：YS，微信第三方：WX，QQ第三方：QQ，淘宝：TB
     #          新浪微博：SINA_WB
