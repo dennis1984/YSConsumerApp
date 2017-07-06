@@ -137,7 +137,7 @@ class OrdersDetailForListSerializer(BaseSerializer):
     # 是否过期
     is_expired = serializers.NullBooleanField(required=False)
     # 是否评价过
-    is_commented = serializers.IntegerField(required=False)
+    is_commented = serializers.IntegerField(required=False, allow_null=True)
 
     extend = serializers.CharField(allow_blank=True)
 

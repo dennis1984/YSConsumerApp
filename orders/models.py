@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.db.models import Q
 from django.utils.timezone import now
 from horizon.models import model_to_dict
 from horizon.main import minutes_15_plus, DatetimeEncode
@@ -16,6 +17,7 @@ import json
 import datetime
 
 FILTER_IN_ORDERS_TYPE = [101, 102, 103]
+FILTER_IN_PAYMENT_STATUS = [200, 400, 500]
 
 ORDERS_PAYMENT_STATUS = {
     'unpaid': 0,
@@ -43,16 +45,22 @@ ORDERS_PAYMENT_MODE = {
 
 
 class OrdersManager(models.Manager):
+    query1 = Q(payment_status=ORDERS_PAYMENT_STATUS['unpaid'])
+    query2 = Q(payment_status__in=FILTER_IN_PAYMENT_STATUS,
+               orders_type__in=FILTER_IN_ORDERS_TYPE)
+
     def get(self, *args, **kwargs):
-        # kwargs['orders_type__in'] = FILTER_IN_ORDERS_TYPE
-        object_data = super(OrdersManager, self).get(*args, **kwargs)
+        object_data = super(OrdersManager, self).get(
+            self.query1 | self.query1, *args, **kwargs
+        )
         if now() >= object_data.expires and object_data.payment_status == 0:
             object_data.payment_status = 400
         return object_data
 
     def filter(self, *args, **kwargs):
-        # kwargs['orders_type__in'] = FILTER_IN_ORDERS_TYPE
-        object_data = super(OrdersManager, self).filter(*args, **kwargs)
+        object_data = super(OrdersManager, self).filter(
+            self.query1 | self.query2, *args, **kwargs
+        )
         for item in object_data:
             if now() >= item.expires and item.payment_status == 0:
                 item.payment_status = 400
@@ -202,6 +210,7 @@ class PayOrders(models.Model):
             item_dict['business_id'] = None
             item_dict['business_name'] = None
             item_dict['master_orders_id'] = None
+            item_dict['is_commented'] = None
             results.append(item_dict)
         return results
 
@@ -639,7 +648,7 @@ class SerialNumberGenerator(models.Model):
     @classmethod
     def get_serial_number(cls):
         date_day = date_for_model()
-        # 数据库加排它锁，保证订单号是唯一的
+        # 数据库加排它锁，保证交易流水号是唯一的
         with transaction.atomic():
             try:
                 _instance = cls.objects.select_for_update().get(pk=date_day)
