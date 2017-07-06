@@ -6,6 +6,7 @@ from rest_framework import generics
 from django.utils.six import BytesIO
 from Business_App.bz_dishes.models import Dishes
 from Business_App.bz_users.models import FoodCourt
+from Business_App.bz_dishes.caches import DishesDetailCache
 from hot_sale.serializers import (HotSaleSerializer,
                                   DishesDetailSerializer,
                                   DishesSerializer,
@@ -15,6 +16,7 @@ from hot_sale.forms import (HotSaleListForm,
                             DishesGetForm,
                             FoodCourtListForm,
                             FoodCourtGetForm,)
+from collect.models import Collect
 
 
 class HotSaleList(generics.GenericAPIView):
@@ -54,8 +56,14 @@ class HotSaleList(generics.GenericAPIView):
 class DishesDetail(generics.GenericAPIView):
     # permissions = (IsOwnerOrReadOnly,)
 
-    def get_object(self, *args, **kwargs):
-        return Dishes.get_hot_sale_object(**kwargs)
+    def get_dishes_detail(self, request, dishes_id):
+        kwargs = {'dishes_id': dishes_id}
+        result = DishesDetailCache().get_dishes_detail(**kwargs)
+        if isinstance(result, Exception):
+            return result
+        is_collected = Collect.is_collected(request, dishes_id)
+        result['is_collected'] = is_collected
+        return result
 
     def post(self, request, *args, **kwargs):
         """
@@ -69,7 +77,11 @@ class DishesDetail(generics.GenericAPIView):
         if not form.is_valid():
             return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
         cld = form.cleaned_data
-        object_data = self.get_object(**cld)
+        object_data = self.get_dishes_detail(request, cld['pk'])
+
+        serializer = DishesDetailSerializer(data=object_data)
+        if not serializer.is_valid():
+            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         return Response(object_data, status=status.HTTP_200_OK)
 
 

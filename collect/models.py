@@ -44,6 +44,15 @@ class Collect(models.Model):
         return '%s:%s' % (self.user_id, self.dishes_id)
 
     @classmethod
+    def is_collected(cls, request, dishes_id):
+        kwargs = {'user_id': request.user.id,
+                  'dishes_id': dishes_id}
+        result = cls.get_object(**kwargs)
+        if isinstance(result, Exception):
+            return False
+        return True
+
+    @classmethod
     def get_object(cls, **kwargs):
         try:
             return cls.objects.get(**kwargs)

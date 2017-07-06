@@ -1,4 +1,4 @@
-#-*- coding:utf8 -*-
+# -*- coding:utf8 -*-
 from rest_framework import serializers
 from rest_framework import fields as Fields
 from django.core.paginator import Paginator
@@ -83,3 +83,25 @@ def perfect_result(self, _data):
         if isinstance(_fields[key], Fields.ImageField):
             _data['%s_url' % key] = os.path.join(settings.WEB_URL_FIX, _data[key])
     return _data
+
+
+class BaseDishesDetailSerializer(BaseSerializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField(max_length=200)
+    subtitle = serializers.CharField(max_length=200, required=False,
+                                     allow_blank=True, allow_null=True)
+    description = serializers.CharField(max_length=500, required=False,
+                                        allow_null=True, allow_blank=True)
+    # 默认：10，小份：11，中份：12，大份：13，自定义：20
+    size = serializers.IntegerField()
+    size_detail = serializers.CharField(max_length=30, required=False,
+                                        allow_null=True, allow_blank=True)
+    price = serializers.CharField(max_length=50)
+    image_url = serializers.CharField(max_length=200)
+    user_id = serializers.IntegerField()
+
+    updated = serializers.DateTimeField()
+    business_id = serializers.IntegerField()
+    business_name = serializers.CharField(max_length=100)
+    food_court_id = serializers.IntegerField()
+    food_court_name = serializers.CharField(max_length=200)
