@@ -38,6 +38,7 @@ class Collect(models.Model):
     class Meta:
         db_table = 'ys_collect'
         unique_together = ('user_id', 'dishes_id', 'status')
+        ordering = ['-created']
 
     def __unicode__(self):
         return '%s:%s' % (self.user_id, self.dishes_id)

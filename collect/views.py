@@ -84,7 +84,16 @@ class CollectList(generics.GenericAPIView):
     permission_classes = (IsOwnerOrReadOnly, )
 
     def get_collects_list(self, request):
-        return Collect.get_collect_list_with_user(request)
+        collects = Collect.get_collect_list_with_user(request)
+        if not collects or isinstance(collects, Exception):
+            return collects
+        collect_details = []
+        for item in collects:
+            dishes_detail = DishesDetailCache().get_dishes_detail(item.dishes_id)
+            if isinstance(dishes_detail, Exception):
+                continue
+            collect_details.append(dishes_detail)
+        return collect_details
 
     def post(self, request, *args, **kwargs):
         form = CollectListForm(request.data)
@@ -95,7 +104,9 @@ class CollectList(generics.GenericAPIView):
         _instances = self.get_collects_list(request)
         if isinstance(_instances, Exception):
             return Response({'Detail': _instances.args}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = CollectListSerializer(_instances)
+        serializer = CollectListSerializer(data=_instances)
+        if not serializer.is_valid():
+            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         result = serializer.list_data(**cld)
         if isinstance(result, Exception):
             return Response({'Detail': result.args}, status=status.HTTP_400_BAD_REQUEST)

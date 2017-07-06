@@ -32,7 +32,7 @@ class DishesDetailCache(object):
         key = self.get_dishes_id_key(dishes_id)
         instance = self.handle.get(key)
         if not instance:
-            instance = Dishes.get_object(**{'pk': dishes_id})
+            instance = Dishes.get_dishes_detail_dict_with_user_info(**{'pk': dishes_id})
             if isinstance(instance, Exception):
                 return instance
             self.set_dishes_to_cache(key, instance)

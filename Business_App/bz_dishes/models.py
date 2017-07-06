@@ -33,7 +33,7 @@ class Dishes(models.Model):
     # 默认：10，小份：11，中份：12，大份：13，自定义：20
     size = models.IntegerField('菜品规格', default=10)
     size_detail = models.CharField('菜品规格详情', max_length=30, null=True, blank=True)
-    price = models.CharField('价格', max_length=50, null=False)
+    price = models.CharField('价格', max_length=50, null=False, blank=False)
     image = models.ImageField('菜品图片',
                               upload_to=DISHES_PICTURE_DIR,
                               default=os.path.join(DISHES_PICTURE_DIR, 'noImage.png'),)

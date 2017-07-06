@@ -7,7 +7,7 @@ class CollectActionForm(forms.Form):
 
 
 class CollectDeleteForm(forms.Form):
-    pk = forms.IntegerField(min_value=1)
+    dishes_id = forms.IntegerField(min_value=1)
 
 
 class CollectListForm(forms.Form):

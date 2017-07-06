@@ -52,8 +52,6 @@ class HotSaleList(generics.GenericAPIView):
 
 
 class DishesDetail(generics.GenericAPIView):
-    # queryset = Dishes.objects.all()
-    serializer_class = DishesDetailSerializer
     # permissions = (IsOwnerOrReadOnly,)
 
     def get_object(self, *args, **kwargs):
@@ -112,7 +110,6 @@ class FoodCourtList(generics.GenericAPIView):
 
 
 class FoodCourtDetail(generics.GenericAPIView):
-
     serializer_class = FoodCourtSerializer
     # permission_classes = (IsAdminOrReadOnly, )
 
