@@ -46,7 +46,7 @@ class ConsumerUser(AbstractBaseUser):
     birthday = models.DateField(u'生日', null=True)
     province = models.CharField(u'所在省份或直辖市', max_length=16, null=True, blank=True)
     city = models.CharField(u'所在城市', max_length=32, null=True, blank=True)
-    head_picture = models.ImageField(u'头像',
+    head_picture = models.ImageField(u'头像', max_length=200,
                                      upload_to='static/consumer/picture/head_picture/',
                                      default='static/consumer/picture/head_picture/noImage.png')
 
