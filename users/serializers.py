@@ -1,4 +1,4 @@
-#-*- coding:utf8 -*-
+# -*- coding:utf8 -*-
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
@@ -12,17 +12,19 @@ import urllib
 import os
 import json
 import re
+import copy
 
 
 class WXUserSerializer(serializers.ModelSerializer):
     def __init__(self, instance=None, data=None, **kwargs):
         if data:
-            data['gender'] = data.pop('sex')
-            data['out_open_id'] = data.pop('openid')
+            _data = copy.deepcopy(data)
+            _data['gender'] = _data.pop('sex')
+            _data['out_open_id'] = _data.pop('openid')
             # data['head_picture'] = data.pop('headimgurl')
-            data['phone'] = 'WX%s' % main.make_random_char_and_number_of_string(18)
-            self.make_correct_params(data)
-            super(WXUserSerializer, self).__init__(data=data, **kwargs)
+            _data['phone'] = 'WX%s' % main.make_random_char_and_number_of_string(18)
+            self.make_correct_params(_data)
+            super(WXUserSerializer, self).__init__(data=_data, **kwargs)
         else:
             super(WXUserSerializer, self).__init__(instance, **kwargs)
 
