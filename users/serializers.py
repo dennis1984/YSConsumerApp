@@ -108,7 +108,8 @@ class UserInstanceSerializer(serializers.ModelSerializer):
 
 class UserDetailSerializer(serializers.Serializer):
     pk = serializers.IntegerField()
-    phone = serializers.CharField(max_length=20)
+    phone = serializers.CharField(max_length=20, allow_blank=True,
+                                  allow_null=True)
     nickname = serializers.CharField(max_length=100, required=False)
     gender = serializers.IntegerField(default=0)
     birthday = serializers.DateField(required=False)

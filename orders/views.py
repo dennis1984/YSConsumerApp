@@ -87,7 +87,7 @@ class PayOrdersAction(generics.GenericAPIView):
         dishes_ids = None
         # 充值订单
         if cld['orders_type'] == 'recharge':
-            if not cld['payable']:
+            if not cld.get('payable'):
                 return Response({'Detail': '[payable] params error'},
                                 status=status.HTTP_400_BAD_REQUEST)
             _data = self.make_orders_by_recharge(request, cld['orders_type'], cld['payable'])
