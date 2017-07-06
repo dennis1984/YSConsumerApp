@@ -15,7 +15,7 @@ from Business_App.bz_orders.models import OrdersIdGenerator
 import json
 import datetime
 
-FILTER_IN_ORDERS_TYPE = [0, 101, 102, 103]
+FILTER_IN_ORDERS_TYPE = [101, 102, 103]
 
 ORDERS_PAYMENT_STATUS = {
     'unpaid': 0,
@@ -44,14 +44,14 @@ ORDERS_PAYMENT_MODE = {
 
 class OrdersManager(models.Manager):
     def get(self, *args, **kwargs):
-        kwargs['orders_type__in'] = FILTER_IN_ORDERS_TYPE
+        # kwargs['orders_type__in'] = FILTER_IN_ORDERS_TYPE
         object_data = super(OrdersManager, self).get(*args, **kwargs)
         if now() >= object_data.expires and object_data.payment_status == 0:
             object_data.payment_status = 400
         return object_data
 
     def filter(self, *args, **kwargs):
-        kwargs['orders_type__in'] = FILTER_IN_ORDERS_TYPE
+        # kwargs['orders_type__in'] = FILTER_IN_ORDERS_TYPE
         object_data = super(OrdersManager, self).filter(*args, **kwargs)
         for item in object_data:
             if now() >= item.expires and item.payment_status == 0:
