@@ -243,28 +243,23 @@ class ConfirmConsumeDetail(generics.GenericAPIView):
         return ConsumeOrders.is_consume_of_payment_status(request, orders_id)
 
     def post(self, request, *args, **kwargs):
-        # form = ConfirmConsumeForm(request.data)
-        # if not form.is_valid():
-        #     return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
-        #
-        # cld = form.cleaned_data
-        # if not self.is_valid_orders(request, cld['orders_id']):
-        #     return Response({'Detail': 'Cannot perform this action'},
-        #                     status=status.HTTP_400_BAD_REQUEST)
-
-        random_str = main.make_random_number_of_string(12)
+        random_str = main.make_random_number_of_string(13)
         _data = {'user_id': request.user.id,
-                 # 'orders_id': cld['orders_id'],
                  'random_string': random_str}
         serializer = ConfirmConsumeSerializer(data=_data)
         if not serializer.is_valid():
             return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
 
-        qrcode_path = settings.PICTURE_DIRS['business']['qrcode']
-        file_name = main.make_qrcode(qrcode_path)
+        # 二维码
+        file_name = main.make_qrcode(random_str)
         static_url = main.make_static_url_by_file_path(file_name)
+        # 条形码
+        barcode_fname = main.make_barcode(random_str)
+        barcode_static_url = main.make_static_url_by_file_path(barcode_fname)
         return Response({'qrcode_url': static_url,
-                         'code': random_str}, status=status.HTTP_200_OK)
+                         'barcode_url': barcode_static_url,
+                         'code': random_str},
+                        status=status.HTTP_200_OK)
 
 

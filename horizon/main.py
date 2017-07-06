@@ -10,6 +10,9 @@ import json
 import os
 import uuid
 from hashlib import md5
+import barcode
+from barcode import generate
+from barcode.writer import ImageWriter
 import base64
 import random
 import time
@@ -91,6 +94,27 @@ def make_qrcode(source_data, save_path=QRCODE_PICTURE_PATH, version=5):
         os.makedirs(save_path)
     image = qr.make_image()
     image.save(fname_path)
+    return fname_path
+
+
+def make_barcode(source_data, save_path=QRCODE_PICTURE_PATH):
+    if not isinstance(source_data, (str, unicode)):
+        return TypeError('Params [source_data] type must be string or unicode')
+    if len(source_data) != 13:
+        return ValueError('Params [source_data] data format is incorrect')
+    try:
+        int(source_data)
+    except Exception as e:
+        return e
+
+    fname = '%s.png' % make_random_char_and_number_of_string(20)
+    fname_path = os.path.join(save_path, fname)
+    if not os.path.isdir(save_path):
+        os.makedirs(save_path)
+    fp = open(fname_path, 'wb')
+    generate('EAN13', source_data, writer=ImageWriter(), output=fp)
+    fp.close()
+
     return fname_path
 
 
