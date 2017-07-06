@@ -22,7 +22,7 @@ class WXUserSerializer(serializers.ModelSerializer):
             _data['gender'] = _data.pop('sex')
             _data['out_open_id'] = _data.pop('openid')
             # data['head_picture'] = data.pop('headimgurl')
-            _data['phone'] = 'WX%s' % main.make_random_char_and_number_of_string(18)
+            # _data['phone'] = 'WX%s' % main.make_random_char_and_number_of_string(18)
             self.make_correct_params(_data)
             super(WXUserSerializer, self).__init__(data=_data, **kwargs)
         else:

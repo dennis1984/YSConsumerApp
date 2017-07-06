@@ -42,9 +42,10 @@ HEAD_PICTURE_PATH = settings.PICTURE_DIRS['consumer']['head_picture']
 
 
 class ConsumerUser(AbstractBaseUser):
-    phone = models.CharField(u'手机号', max_length=20, unique=True, db_index=True)
-    out_open_id = models.CharField(u'第三方唯一标识', max_length=64, unique=True, db_index=True, null=True)
-    nickname = models.CharField(u'昵称', max_length=100, unique=True, null=True, blank=True)
+    phone = models.CharField(u'手机号', max_length=20, unique=True, db_index=True, null=True)
+    out_open_id = models.CharField(u'第三方唯一标识', max_length=64, unique=True,
+                                   db_index=True, null=True)
+    nickname = models.CharField(u'昵称', max_length=100, null=True, blank=True)
 
     # 性别，0：未设定，1：男，2：女
     gender = models.IntegerField(u'性别', default=0)
