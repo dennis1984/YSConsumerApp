@@ -108,9 +108,9 @@ class AuthCallback(APIView):
             _user = self.get_user_by_open_id(userinfo_response_dict['openid'])
             is_binding = False
         else:
-            if _user.phone.startswith('WX'):   # 已经创建的用户，但是没有绑定手机号
+            if not _user.phone:        # 已经创建的用户，但是没有绑定手机号
                 is_binding = False
-            else:                               # 绑定完手机号的用户
+            else:                      # 绑定完手机号的用户
                 is_binding = True
         _token = Oauth2AccessToken().get_token(_user)
         if isinstance(_token, Exception):
