@@ -11,8 +11,7 @@ from django.db import transaction
 from decimal import Decimal
 
 from Business_App.bz_dishes.models import Dishes
-from Business_App.bz_orders.models import (OrdersIdGenerator,
-                                           VerifyOrdersAction)
+from Business_App.bz_orders.models import OrdersIdGenerator
 
 import json
 import datetime
@@ -404,7 +403,7 @@ class ConsumeOrders(models.Model):
 
     # 0:未支付 200:已支付 201:待消费 206:已完成 400: 已过期 500:支付失败
     payment_status = models.IntegerField('订单支付状态', default=201)
-    # 支付方式：0:未指定支付方式 1：钱包支付 2：微信支付 3：支付宝支付
+    # 支付方式：0:未指定支付方式 1：现金支付 2：微信支付 3：支付宝支付
     payment_mode = models.IntegerField('订单支付方式', default=0)
     # 订单类型 0: 未指定 101: 在线订单 102：堂食订单 103：外卖订单
     #         201: 钱包充值订单  (预留：202：钱包消费订单 203: 钱包提现)
@@ -515,7 +514,6 @@ class BaseConsumeOrders(object):
         if pay_orders.payment_status != 200:
             return ValueError('The orders payment status must be 200!')
 
-        orders = []
         dishes_detail_list = json.loads(pay_orders.dishes_ids)
         for index, business_dishes in enumerate(dishes_detail_list, 1):
             member_discount = 0
@@ -545,13 +543,7 @@ class BaseConsumeOrders(object):
                 obj.save()
             except Exception as e:
                 return e
-            else:
-                # 同步子订单到商户端
-                result = VerifyOrdersAction().create(obj)
-                if isinstance(result, Exception):
-                    return result
-                orders.append(obj)
-        return orders
+        return None
 
 
 class TradeRecord(models.Model):
