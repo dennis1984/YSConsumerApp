@@ -9,8 +9,7 @@ from comment.models import (Comment, )
 from comment.forms import (CommentInputForm,
                            CommentListForm)
 from orders.models import ConsumeOrders
-from orders.serializers import (ConsumeOrdersSerializer,
-                                OrdersListSerializer)
+from orders.serializers import (ConsumeOrdersSerializer,)
 
 import json
 
