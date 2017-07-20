@@ -1,4 +1,5 @@
 # -*- coding:utf8 -*-
+from rest_framework import serializers
 from comment.models import Comment
 from orders.models import ConsumeOrders
 from horizon.decorators import has_permission_to_update
@@ -59,5 +60,18 @@ class CommentSerializer(BaseModelSerializer):
             return e
 
 
+class CommentDetailSerializer(BaseSerializer):
+    user_id = serializers.IntegerField()
+    orders_id = serializers.CharField(max_length=32)
+    business_id = serializers.IntegerField()
+    business_name = serializers.CharField(max_length=100)
+    business_comment = serializers.ListField()
+    dishes_comment = serializers.ListField()
+
+    messaged = serializers.CharField(max_length=2048,
+                                     allow_null=True, allow_blank=True)
+    created = serializers.DateTimeField()
+
+
 class CommentListSerializer(BaseListSerializer):
-    child = CommentSerializer()
+    child = CommentDetailSerializer()

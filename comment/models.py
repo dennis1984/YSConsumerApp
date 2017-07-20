@@ -56,3 +56,16 @@ class Comment(models.Model):
             return cls.objects.filter(**kwargs)
         except Exception as e:
             return e
+
+    @classmethod
+    def filter_comment_details(cls, **kwargs):
+        instances = cls.filter_objects(**kwargs)
+        if isinstance(instances, Exception):
+            return instances
+        details = []
+        for instance in instances:
+            ins_dict = model_to_dict(instance)
+            ins_dict['business_comment'] = json.loads(ins_dict['business_comment'])
+            ins_dict['dishes_comment'] = json.loads(ins_dict['dishes_comment'])
+            details.append(ins_dict)
+        return details
