@@ -44,4 +44,4 @@ class ConfirmConsumeForm(forms.Form):
 
 
 class ConfirmConsumeListForm(forms.Form):
-    random_string = forms.CharField(min_length=13, max_length=32)
+    confirm_code = forms.CharField(min_length=13, max_length=32)

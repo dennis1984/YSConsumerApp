@@ -293,9 +293,9 @@ class ConfirmConsumeList(generics.GenericAPIView):
             return False
         return True
 
-    def get_confirm_consume_list(self, request, random_string):
+    def get_confirm_consume_list(self, request, confirm_code):
         kwargs = {'user_id': request.user.id,
-                  'random_string': random_string}
+                  'confirm_code': confirm_code}
         return ConsumeOrders.filter_finished_objects_detail(**kwargs)
 
     def post(self, request, *args, **kwargs):
@@ -304,11 +304,11 @@ class ConfirmConsumeList(generics.GenericAPIView):
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         cld = form.cleaned_data
-        if not self.is_random_string_valid(request, cld['random_string']):
+        if not self.is_random_string_valid(request, cld['confirm_code']):
             return Response({'Detail': 'Random string does not exist or expired.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        instances = self.get_confirm_consume_list(request, cld['random_string'])
+        instances = self.get_confirm_consume_list(request, cld['confirm_code'])
         if isinstance(instances, Exception):
             return Response({'Detail': instances.args}, status=status.HTTP_400_BAD_REQUEST)
         serializer = ConsumeOrdersListSerializer(data=instances)
