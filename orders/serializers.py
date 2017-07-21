@@ -89,6 +89,10 @@ class ConsumeOrdersResponseSerializer(BaseSerializer):
     extend = serializers.CharField(allow_blank=True)
 
 
+class ConsumeOrdersListSerializer(BaseListSerializer):
+    child = ConsumeOrdersResponseSerializer()
+
+
 class OrdersDetailSerializer(object):
     def __init__(self, instance=None, data=None, **kwargs):
         self.instance = None

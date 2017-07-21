@@ -41,3 +41,7 @@ class OrdersDetailForm(forms.Form):
 
 class ConfirmConsumeForm(forms.Form):
     orders_id = forms.CharField(max_length=32)
+
+
+class ConfirmConsumeListForm(forms.Form):
+    random_string = forms.CharField(min_length=13, max_length=32)

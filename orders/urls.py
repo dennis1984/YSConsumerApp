@@ -7,7 +7,7 @@ urlpatterns = [
     url(r'pay_orders_action/$', views.PayOrdersAction.as_view()),
     url(r'orders_list/$', views.OrdersList.as_view()),
     url(r'orders_detail/$', views.OrdersDetail.as_view()),
-    url(r'confirm_consume/$', views.ConfirmConsumeDetail.as_view()),
+    url(r'confirm_consume/$', views.ConfirmConsumeAction.as_view()),
 
 ]
 

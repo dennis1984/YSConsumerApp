@@ -7,14 +7,17 @@ from orders.serializers import (PayOrdersSerializer,
                                 PayOrdersResponseSerializer,
                                 OrdersDetailSerializer,
                                 OrdersListSerializer,
-                                ConfirmConsumeSerializer)
+                                ConfirmConsumeSerializer,
+                                ConsumeOrdersListSerializer)
 from orders.permissions import IsOwnerOrReadOnly
-from orders.models import (PayOrders, ConsumeOrders)
+from orders.models import (PayOrders,
+                           ConsumeOrders,
+                           ConfirmConsume)
 from orders.forms import (PayOrdersCreateForm,
                           PayOrdersUpdateForm,
                           OrdersListForm,
                           OrdersDetailForm,
-                          ConfirmConsumeForm)
+                          ConfirmConsumeListForm)
 from shopping_cart.serializers import ShoppingCartSerializer
 from shopping_cart.models import ShoppingCart
 from orders.pay import WXPay, WalletPay
@@ -27,8 +30,6 @@ class PayOrdersAction(generics.GenericAPIView):
     """
     支付订单类
     """
-    queryset = PayOrders.objects.all()
-    serializer_class = PayOrdersSerializer
     permission_classes = (IsOwnerOrReadOnly, )
 
     def get_orders_by_orders_id(self, orders_id):
@@ -160,6 +161,11 @@ class PayOrdersAction(generics.GenericAPIView):
 
 
 class OrdersDetail(generics.GenericAPIView):
+    """
+    订单详情
+    """
+    permission_classes = (IsOwnerOrReadOnly,)
+
     def get_orders_detail(self, request, cld):
         kwargs = {'user_id': request.user.id,
                   'orders_id': cld['orders_id']}
@@ -184,6 +190,11 @@ class OrdersDetail(generics.GenericAPIView):
 
 
 class OrdersList(generics.GenericAPIView):
+    """
+    订单列表
+    """
+    permission_classes = (IsOwnerOrReadOnly,)
+
     def get_all_list(self, request, cld):
         kwargs = {'user_id': request.user.id}
         pay_orders = PayOrders.filter_valid_orders_detail(**kwargs)
@@ -238,7 +249,12 @@ class OrdersList(generics.GenericAPIView):
         return Response(result_list, status=status.HTTP_200_OK)
 
 
-class ConfirmConsumeDetail(generics.GenericAPIView):
+class ConfirmConsumeAction(generics.GenericAPIView):
+    """
+    核销
+    """
+    permission_classes = (IsOwnerOrReadOnly,)
+
     def is_valid_orders(self, request, orders_id):
         return ConsumeOrders.is_consume_of_payment_status(request, orders_id)
 
@@ -262,4 +278,44 @@ class ConfirmConsumeDetail(generics.GenericAPIView):
                          'code': random_str},
                         status=status.HTTP_200_OK)
 
+
+class ConfirmConsumeList(generics.GenericAPIView):
+    """
+    获取核销结果
+    """
+    permission_classes = (IsOwnerOrReadOnly,)
+
+    def is_random_string_valid(self, request, random_string):
+        kwargs = {'user_id': request.user.id,
+                  'random_string': random_string}
+        instance = ConfirmConsume.get_object(**kwargs)
+        if isinstance(instance, Exception):
+            return False
+        return True
+
+    def get_confirm_consume_list(self, request, random_string):
+        kwargs = {'user_id': request.user.id,
+                  'random_string': random_string}
+        return ConsumeOrders.filter_finished_objects_detail(**kwargs)
+
+    def post(self, request, *args, **kwargs):
+        form = ConfirmConsumeListForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        if not self.is_random_string_valid(request, cld['random_string']):
+            return Response({'Detail': 'Random string does not exist or expired.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        instances = self.get_confirm_consume_list(request, cld['random_string'])
+        if isinstance(instances, Exception):
+            return Response({'Detail': instances.args}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = ConsumeOrdersListSerializer(data=instances)
+        if not serializer.is_valid():
+            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        datas = serializer.list_data()
+        if isinstance(datas, Exception):
+            return Response({'Detail': datas.args}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(datas, status=status.HTTP_200_OK)
 
