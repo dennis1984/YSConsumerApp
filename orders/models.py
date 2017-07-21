@@ -414,7 +414,7 @@ class ConsumeOrders(models.Model):
     # 是否点评过  0: 未点评过  1： 已经完成点评
     is_commented = models.IntegerField('是否点评过', default=0)
     # 核销码：如果已经核销，该字段不为空，如果没有核销，该字段为空
-    confirm_code = models.CharField('核销码', default='', blank=True)
+    confirm_code = models.CharField('核销码', max_length=32, default='', blank=True)
 
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
