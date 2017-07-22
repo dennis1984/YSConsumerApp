@@ -9,7 +9,8 @@ from comment.models import (Comment, )
 from comment.forms import (CommentInputForm,
                            CommentListForm)
 from orders.models import ConsumeOrders
-from orders.serializers import (ConsumeOrdersSerializer,)
+from orders.serializers import (ConsumeOrdersSerializer,
+                                OrdersListSerializer)
 
 import json
 
@@ -100,7 +101,7 @@ class CommentList(generics.GenericAPIView):
     permission_classes = (IsOwnerOrReadOnly, )
 
     def get_consume_orders_list(self, request):
-        return Comment.filter_comment_details(
+        return ConsumeOrders.filter_finished_objects_detail(
             **{'user_id': request.user.id}
         )
 
@@ -113,7 +114,7 @@ class CommentList(generics.GenericAPIView):
         details = self.get_consume_orders_list(request)
         if isinstance(details, Exception):
             return Response({'Detail': details.args}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = CommentListSerializer(data=details)
+        serializer = OrdersListSerializer(data=details)
         if not serializer.is_valid():
             return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         result = serializer.list_data(**cld)
