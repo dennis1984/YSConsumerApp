@@ -21,3 +21,6 @@ class CommentListForm(forms.Form):
     page_index = forms.IntegerField(min_value=1, required=False)
     page_size = forms.IntegerField(min_value=1, required=False)
 
+
+class CommentDetailForm(forms.Form):
+    orders_id = forms.CharField(min_length=10, max_length=32)

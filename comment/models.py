@@ -69,3 +69,13 @@ class Comment(models.Model):
             ins_dict['dishes_comment'] = json.loads(ins_dict['dishes_comment'])
             details.append(ins_dict)
         return details
+
+    @classmethod
+    def get_comment_detail(cls, **kwargs):
+        instance = cls.get_object(**kwargs)
+        if isinstance(instance, Exception):
+            return instance
+        detail = model_to_dict(instance)
+        detail['business_comment'] = json.loads(detail['business_comment'])
+        detail['dishes_comment'] = json.loads(detail['dishes_comment'])
+        return detail
