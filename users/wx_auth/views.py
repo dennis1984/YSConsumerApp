@@ -20,6 +20,7 @@ from horizon.http_requests import send_http_request
 from horizon.main import make_time_delta
 
 from oauthlib.common import generate_token
+from django.utils.timezone import now
 import json
 
 
@@ -40,6 +41,14 @@ class AuthCallback(APIView):
     def get_user_by_open_id(self, out_open_id):
         kwargs = {'out_open_id': out_open_id}
         return ConsumerUser.get_object(**kwargs)
+
+    def mark_user_login(self, user):
+        """
+        标记用户已经登录
+        """
+        user.last_login = now()
+        user.save()
+        return user
 
     def post(self, request, *args, **kwargs):
         """
@@ -117,6 +126,10 @@ class AuthCallback(APIView):
             return Response({'Detail': _token.args},
                             status=status.HTTP_400_BAD_REQUEST)
         _token.update(**{'is_binding': is_binding})
+
+        # 标记用户已经登录
+        self.mark_user_login(_user)
+
         return Response(_token, status=status.HTTP_200_OK)
 
 
