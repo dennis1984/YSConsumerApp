@@ -72,6 +72,9 @@ class ConsumerUser(AbstractBaseUser):
         db_table = 'ys_auth_user'
         # unique_together = ('nickname', 'food_court_id')
 
+    def __unicode__(self):
+        return self.phone
+
     def set_password(self, raw_password):
         self.password = make_password(raw_password)
 
