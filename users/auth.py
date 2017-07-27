@@ -5,7 +5,7 @@ from django.utils.timezone import now
 class ConsumerUserBackend(object):
     def authenticate(self, username=None, password=None):
         try:
-            user = ConsumerUser.objects.get(phone=username)
+            user = ConsumerUser.objects.get(phone=username, is_active=1)
         except ConsumerUser.DoesNotExist:
             pass
         else:
@@ -17,6 +17,6 @@ class ConsumerUserBackend(object):
 
     def get_user(self, user_id):
         try:
-            return ConsumerUser.objects.get(pk=user_id)
+            return ConsumerUser.objects.get(pk=user_id, is_active=1)
         except ConsumerUser.DoesNotExist:
             return None
