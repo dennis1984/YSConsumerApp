@@ -69,3 +69,28 @@ class Comment(models.Model):
             ins_dict['dishes_comment'] = json.loads(ins_dict['dishes_comment'])
             details.append(ins_dict)
         return details
+
+
+class ReplyComment(models.Model):
+    """
+    管理员回复点评
+    """
+    comment_id = models.IntegerField(u'被回复点评的记录ID', unique=True, db_index=True)
+    user_id = models.IntegerField('管理员用户ID')
+    orders_id = models.CharField('订单ID', max_length=32)
+
+    messaged = models.TextField('评价留言', null=True, blank=True)
+    created = models.DateTimeField('创建时间', default=now)
+
+    class Meta:
+        db_table = 'ys_reply_comment'
+
+    def __unicode__(self):
+        return self.orders_id
+
+    @classmethod
+    def get_object(cls, **kwargs):
+        try:
+            return cls.objects.get(**kwargs)
+        except Exception as e:
+            return e
