@@ -37,7 +37,6 @@ class ConsumerUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-
 HEAD_PICTURE_PATH = settings.PICTURE_DIRS['consumer']['head_picture']
 
 
@@ -72,6 +71,9 @@ class ConsumerUser(AbstractBaseUser):
     class Meta:
         db_table = 'ys_auth_user'
         # unique_together = ('nickname', 'food_court_id')
+
+    def __unicode__(self):
+        return self.phone
 
     def set_password(self, raw_password):
         self.password = make_password(raw_password)

@@ -136,6 +136,7 @@ class VerifyOrdersAction(object):
         orders_data['user_id'] = business_id
         orders_data['consumer_id'] = consumer_id
         orders_data.pop('business_id')
+        orders_data.pop('confirm_code')
 
         try:
             obj = VerifyOrders(**orders_data)
