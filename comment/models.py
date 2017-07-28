@@ -70,7 +70,16 @@ class Comment(models.Model):
             details.append(ins_dict)
         return details
 
-<<<<<<< HEAD
+    @classmethod
+    def get_comment_detail(cls, **kwargs):
+        instance = cls.get_object(**kwargs)
+        if isinstance(instance, Exception):
+            return instance
+        detail = model_to_dict(instance)
+        detail['business_comment'] = json.loads(detail['business_comment'])
+        detail['dishes_comment'] = json.loads(detail['dishes_comment'])
+        return detail
+
 
 class ReplyComment(models.Model):
     """
@@ -95,14 +104,3 @@ class ReplyComment(models.Model):
             return cls.objects.get(**kwargs)
         except Exception as e:
             return e
-=======
-    @classmethod
-    def get_comment_detail(cls, **kwargs):
-        instance = cls.get_object(**kwargs)
-        if isinstance(instance, Exception):
-            return instance
-        detail = model_to_dict(instance)
-        detail['business_comment'] = json.loads(detail['business_comment'])
-        detail['dishes_comment'] = json.loads(detail['dishes_comment'])
-        return detail
->>>>>>> 15e3ed2ebb3f6c3bfbf6a2a54dd5b25ef9832437
