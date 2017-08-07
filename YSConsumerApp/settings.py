@@ -244,3 +244,6 @@ REDIS_SETTINGS = {
         'consumer': 1,
         }
 }
+
+# 默认文件存储器
+DEFAULT_FILE_STORAGE = 'horizon.storage.YSFileSystemStorage'
