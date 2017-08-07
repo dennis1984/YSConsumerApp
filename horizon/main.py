@@ -10,7 +10,6 @@ import json
 import os
 import uuid
 from hashlib import md5
-import barcode
 from barcode import generate
 from barcode.writer import ImageWriter
 import base64
@@ -98,6 +97,9 @@ def make_qrcode(source_data, save_path=QRCODE_PICTURE_PATH, version=5):
 
 
 def make_barcode(source_data, save_path=QRCODE_PICTURE_PATH):
+    """
+    生成条形码
+    """
     if not isinstance(source_data, (str, unicode)):
         return TypeError('Params [source_data] type must be string or unicode')
     if len(source_data) != 13:
