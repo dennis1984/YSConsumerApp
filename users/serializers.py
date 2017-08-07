@@ -3,11 +3,17 @@ from django.contrib.auth.models import User, Group
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from users.models import ConsumerUser, IdentifyingCode
-from horizon.serializers import BaseListSerializer, timezoneStringTostring
 from django.conf import settings
+
 from horizon.models import model_to_dict
 from horizon import main
 from horizon.decorators import has_permission_to_update
+from horizon.serializers import (BaseListSerializer,
+                                 BaseModelSerializer,
+                                 BaseSerializer,
+                                 timezoneStringTostring)
+from Business_App.bz_users.models import AdvertPicture
+
 import urllib
 import os
 import json
@@ -156,3 +162,12 @@ class IdentifyingCodeSerializer(serializers.ModelSerializer):
         model = IdentifyingCode
         fields = '__all__'
 
+
+class AdvertPictureSerializer(BaseModelSerializer):
+    class Meta:
+        model = AdvertPicture
+        fields = '__all__'
+
+
+class AdvertPictureListSerializer(BaseListSerializer):
+    child = AdvertPictureSerializer()

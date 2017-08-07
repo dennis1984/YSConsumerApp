@@ -8,7 +8,8 @@ from users.serializers import (UserSerializer,
                                UserInstanceSerializer,
                                UserDetailSerializer,
                                UserListSerializer,
-                               IdentifyingCodeSerializer)
+                               IdentifyingCodeSerializer,
+                               AdvertPictureListSerializer)
 from users.permissions import IsOwnerOrReadOnly
 from users.models import (ConsumerUser,
                           make_token_expire,
@@ -18,8 +19,11 @@ from users.forms import (CreateUserForm,
                          VerifyIdentifyingCodeForm,
                          UpdateUserInfoForm,
                          SetPasswordForm,
-                         WXAuthCreateUserForm)
+                         WXAuthCreateUserForm,
+                         AdvertListForm)
 from users.wx_auth.views import Oauth2AccessToken
+
+from Business_App.bz_users.models import AdvertPicture
 
 from horizon.views import APIView
 from horizon.main import make_random_number_of_string
@@ -255,6 +259,31 @@ class UserDetail(generics.GenericAPIView):
         # if serializer.is_valid():
         return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AdvertPictureList(generics.GenericAPIView):
+    """
+    广告位图片列表
+    """
+    permission_classes = (IsOwnerOrReadOnly,)
+
+    def get_advert_objects(self, **kwargs):
+        return AdvertPicture.filter_objects(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        form = AdvertListForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        advert_instances = self.get_advert_objects(**cld)
+        if isinstance(advert_instances, Exception):
+            return Response({'Detail': advert_instances.args},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = AdvertPictureListSerializer(advert_instances)
+        datas = serializer.list_data()
+        return Response(datas, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AuthLogout(generics.GenericAPIView):

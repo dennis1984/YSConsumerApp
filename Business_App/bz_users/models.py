@@ -157,3 +157,62 @@ class FoodCourt(models.Model):
     def get_object_list(cls, **kwargs):
         kwargs = get_perfect_filter_params(cls, **kwargs)
         return cls.objects.filter(**kwargs)
+
+
+ADVERT_OWNER_DICT = {
+    'business': 1,
+    'consumer': 2,
+}
+ADVERT_PICTURE_DIR = settings.PICTURE_DIRS['business']['advert']
+
+
+class AdvertPictureManager(models.Manager):
+    def get(self, *args, **kwargs):
+        kwargs.update(**{'status': 1,
+                         'owner': ADVERT_OWNER_DICT['consumer']})
+        return super(AdvertPictureManager, self).get(*args, **kwargs)
+
+    def filter(self, *args, **kwargs):
+        kwargs.update(**{'status': 1,
+                         'owner': ADVERT_OWNER_DICT['consumer']})
+        return super(AdvertPictureManager, self).filter(*args, **kwargs)
+
+
+class AdvertPicture(models.Model):
+    food_court_id = models.IntegerField(u'美食城ID')
+    # owner取值： 1: 商户端  2: 用户端
+    owner = models.IntegerField(u'广告所属设备端', default=1)
+    name = models.CharField(u'图片名称', max_length=60, unique=True, db_index=True)
+    image = models.ImageField(u'图片', upload_to=ADVERT_PICTURE_DIR,)
+    ad_position_name = models.CharField(u'广告位名称', max_length=60)
+    ad_link = models.CharField(u'广告链接', max_length=100)
+
+    # 数据状态：1：有效 2：已删除
+    status = models.IntegerField(u'数据状态', default=1)
+    created = models.DateTimeField(u'创建时间', default=now)
+    updated = models.DateTimeField(u'更新时间', auto_now=True)
+
+    objects = AdvertPictureManager()
+
+    class Meta:
+        db_table = 'ys_advert_picture'
+        ordering = ['-created']
+        app_label = 'Business_App.bz_users.models.AdvertPicture'
+
+    def __unicode__(self):
+        return self.name
+
+    @classmethod
+    def get_object(cls, **kwargs):
+        try:
+            return cls.objects.get(**kwargs)
+        except Exception as e:
+            return e
+
+    @classmethod
+    def filter_objects(cls, **kwargs):
+        kwargs = get_perfect_filter_params(cls, **kwargs)
+        try:
+            return cls.objects.filter(**kwargs)
+        except Exception as e:
+            return e

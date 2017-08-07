@@ -74,3 +74,7 @@ class WXAuthCreateUserForm(VerifyIdentifyingCodeForm):
     """
     # out_open_id = forms.CharField(max_length=64)
 
+
+class AdvertListForm(forms.Form):
+    food_court_id = forms.IntegerField(min_value=1)
+
