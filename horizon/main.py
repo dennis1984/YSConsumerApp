@@ -244,7 +244,10 @@ def send_identifying_code_to_phone(params, receive_phones, template_name=None):
     url = 'http://sms.market.alicloudapi.com/singleSendSms'
     AppCode = '2e8a1a8a3e22486b9be6ac46c3d2c6ec'
     sign_names = ('吟食',)
-    template_dict = {'register': 'SMS_71365776'}
+    template_dict = {'register': 'SMS_71365776',
+                     'recharge': 'SMS_82105108'}
+    params_key_dict = {'register': 'code',
+                       'recharge': 'count'}
 
     if not template_name:
         template = template_dict['register']
@@ -252,8 +255,9 @@ def send_identifying_code_to_phone(params, receive_phones, template_name=None):
         if template_name not in template_dict.keys():
             return ValueError('Params template incorrect')
         template = template_dict[template_name]
-    if isinstance(params, (str, unicode)):
-        params_query = params
+    if isinstance(params, (str, unicode, int, float)):
+        params_dict = {params_key_dict[template_name]: params}
+        params_query = urllib.quote(json.dumps(params_dict))
     elif isinstance(params, dict):
         params_query = urllib.quote(json.dumps(params))
     else:

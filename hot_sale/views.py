@@ -4,25 +4,24 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics
 from django.utils.six import BytesIO
-from Business_App.bz_dishes.models import Dishes
+from Business_App.bz_dishes.models import Dishes, City
 from Business_App.bz_users.models import FoodCourt
 from Business_App.bz_dishes.caches import DishesDetailCache
 from hot_sale.serializers import (HotSaleSerializer,
                                   DishesDetailSerializer,
                                   DishesSerializer,
                                   FoodCourtListSerializer,
-                                  FoodCourtSerializer)
+                                  FoodCourtSerializer,)
 from hot_sale.forms import (HotSaleListForm,
                             DishesGetForm,
                             FoodCourtListForm,
                             FoodCourtGetForm,)
+from hot_sale.permissions import IsOwnerOrReadOnly
 from collect.models import Collect
 
 
 class HotSaleList(generics.GenericAPIView):
-    queryset = Dishes.objects.all()
-    serializer_class = HotSaleSerializer
-    # permissions = (IsOwnerOrReadOnly,)
+    permissions = (IsOwnerOrReadOnly,)
 
     def get_hot_sale_list(self, request, **kwargs):
         return Dishes.get_hot_sale_list(request, **kwargs)
@@ -42,19 +41,19 @@ class HotSaleList(generics.GenericAPIView):
         cld = form.cleaned_data
         object_data = self.get_hot_sale_list(request, **cld)
         if isinstance(object_data, Exception):
-            return Response({'Error': object_data.args}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'Detail': object_data.args}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = HotSaleSerializer(data=object_data)
         if not serializer.is_valid():
-            return Response({'Error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         results = serializer.list_data(**cld)
         if isinstance(results, Exception):
-            return Response({'Error': results.args}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'Detail': results.args}, status=status.HTTP_400_BAD_REQUEST)
         return Response(results, status=status.HTTP_200_OK)
 
 
 class DishesDetail(generics.GenericAPIView):
-    # permissions = (IsOwnerOrReadOnly,)
+    permissions = (IsOwnerOrReadOnly,)
 
     def get_dishes_detail(self, request, dishes_id):
         kwargs = {'dishes_id': dishes_id}
@@ -86,9 +85,7 @@ class DishesDetail(generics.GenericAPIView):
 
 
 class FoodCourtList(generics.GenericAPIView):
-    queryset = FoodCourt.objects.all()
-    serializer_class = FoodCourtSerializer
-    # permission_classes = (IsAdminOrReadOnly, )
+    permission_classes = (IsOwnerOrReadOnly, )
 
     def get_object_list(self, **kwargs):
         return FoodCourt.get_object_list(**kwargs)
@@ -122,8 +119,7 @@ class FoodCourtList(generics.GenericAPIView):
 
 
 class FoodCourtDetail(generics.GenericAPIView):
-    serializer_class = FoodCourtSerializer
-    # permission_classes = (IsAdminOrReadOnly, )
+    permission_classes = (IsOwnerOrReadOnly, )
 
     def get_object_detail(self, **kwargs):
         return FoodCourt.get_object(**kwargs)
@@ -143,3 +139,23 @@ class FoodCourtDetail(generics.GenericAPIView):
             return Response({'Error': e.args}, status=status.HTTP_400_BAD_REQUEST)
         serializer = FoodCourtSerializer(obj)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CityList(generics.GenericAPIView):
+    """
+    城市列表
+    """
+    permission_classes = (IsOwnerOrReadOnly,)
+
+    def get_city_list(self):
+        city_list = City.filter_objects()
+        if isinstance(city_list, Exception):
+            return []
+        city_set = set([city.city for city in city_list])
+        return sorted(list(city_set))
+
+    def post(self, request, *args, **kwargs):
+        city_list = self.get_city_list()
+        return Response(city_list, status=status.HTTP_200_OK)
+
+

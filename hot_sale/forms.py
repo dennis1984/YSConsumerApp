@@ -4,7 +4,12 @@ from django.conf import settings
 
 
 class HotSaleListForm(forms.Form):
-    food_court_id = forms.IntegerField()
+    food_court_id = forms.IntegerField(min_value=1)
+    mark = forms.ChoiceField(choices=(10, 1,
+                                      20, 2,
+                                      30, 3),
+                             error_messages={
+                                 'required': 'Field "mark" must in [10,20,30].'})
     page_size = forms.IntegerField(min_value=1,
                                    max_value=settings.MAX_PAGE_SIZE,
                                    required=False)
@@ -27,4 +32,3 @@ class FoodCourtListForm(forms.Form):
                                    max_value=settings.MAX_PAGE_SIZE,
                                    required=False)
     page_index = forms.IntegerField(min_value=1, required=False)
-

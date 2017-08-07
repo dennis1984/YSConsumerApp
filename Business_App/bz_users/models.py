@@ -3,7 +3,9 @@ from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.utils.timezone import now
 from django.contrib.auth.hashers import make_password
-from horizon.models import model_to_dict
+from horizon.models import (model_to_dict,
+                            BaseManager,
+                            get_perfect_filter_params)
 from django.conf import settings
 import datetime
 import os
@@ -112,17 +114,29 @@ class BusinessUser(AbstractBaseUser):
 
         return cls.join_user_and_food_court(business_user, food_court)
 
+FOOD_COURT_DIR = settings.PICTURE_DIRS['business']['food_court']
+
 
 class FoodCourt(models.Model):
     """
     美食城数据表
     """
-    name = models.CharField('美食城名字', max_length=200)
+    name = models.CharField('美食城名字', max_length=200, db_index=True)
+    # 美食城类别 10: 公元铭 20：食代铭
+    type = models.IntegerField('美食城类别', default=10)
+    city_id = models.IntegerField('所属城市ID')
     city = models.CharField('所属城市', max_length=100, null=False)
     district = models.CharField('所属市区', max_length=100, null=False)
     mall = models.CharField('所属购物中心', max_length=200, default='')
     address = models.CharField('购物中心地址', max_length=256, null=True, blank=True)
+    image = models.ImageField('美食城平面图',
+                              upload_to=FOOD_COURT_DIR,
+                              default=os.path.join(FOOD_COURT_DIR, 'noImage.png'), )
+    # 状态：1：有效 2：已删除
+    status = models.IntegerField('数据状态', default=1)
     extend = models.TextField('扩展信息', default='', blank=True, null=True)
+
+    objects = BaseManager()
 
     class Meta:
         db_table = 'ys_food_court'
@@ -141,9 +155,5 @@ class FoodCourt(models.Model):
 
     @classmethod
     def get_object_list(cls, **kwargs):
-        if 'page_size' in kwargs:
-            kwargs.pop('page_size')
-        if 'page_index' in kwargs:
-            kwargs.pop('page_index')
+        kwargs = get_perfect_filter_params(cls, **kwargs)
         return cls.objects.filter(**kwargs)
-

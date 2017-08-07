@@ -8,6 +8,7 @@ from horizon.main import timezoneStringTostring
 from horizon.models import model_to_dict
 import os
 import datetime
+import urllib
 
 
 class BaseListSerializer(serializers.ListSerializer):
@@ -57,7 +58,14 @@ class BaseListSerializer(serializers.ListSerializer):
                 if isinstance(dict_format[key], datetime.datetime):
                     item[key] = timezoneStringTostring(item[key])
                 if isinstance(dict_format[key], models.fields.files.ImageFieldFile):
-                    item['%s_url' % key] = os.path.join(settings.WEB_URL_FIX, item[key])
+                    image_str = urllib.unquote(item[key])
+                    if image_str.startswith('http://') or image_str.startswith('https://'):
+                        item['%s_url' % key] = image_str
+                    else:
+                        item['%s_url' % key] = os.path.join(settings.WEB_URL_FIX,
+                                                            'static',
+                                                            image_str.split('static/', 1)[1])
+                    item.pop(key)
         return ordered_dict
 
 
@@ -81,7 +89,14 @@ def perfect_result(self, _data):
         if isinstance(_fields[key], Fields.DateTimeField):
             _data[key] = timezoneStringTostring(_data[key])
         if isinstance(_fields[key], Fields.ImageField):
-            _data['%s_url' % key] = os.path.join(settings.WEB_URL_FIX, _data[key])
+            image_str = urllib.unquote(_data[key])
+            if image_str.startswith('http://') or image_str.startswith('https://'):
+                _data['%s_url' % key] = image_str
+            else:
+                _data['%s_url' % key] = os.path.join(settings.WEB_URL_FIX,
+                                                     'static',
+                                                     image_str.split('static/', 1)[1])
+            _data.pop(key)
     return _data
 
 
@@ -97,8 +112,10 @@ class BaseDishesDetailSerializer(BaseSerializer):
     size_detail = serializers.CharField(max_length=30, required=False,
                                         allow_null=True, allow_blank=True)
     price = serializers.CharField(max_length=50)
-    image_url = serializers.CharField(max_length=200)
+    image = serializers.ImageField()
+    image_detail = serializers.ImageField()
     user_id = serializers.IntegerField()
+    mark = serializers.IntegerField()
 
     updated = serializers.DateTimeField()
     business_id = serializers.IntegerField()
