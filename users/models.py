@@ -41,7 +41,8 @@ HEAD_PICTURE_PATH = settings.PICTURE_DIRS['consumer']['head_picture']
 
 
 class ConsumerUser(AbstractBaseUser):
-    phone = models.CharField(u'手机号', max_length=20, unique=True, db_index=True, null=True)
+    phone = models.CharField(u'手机号', max_length=20, unique=True, db_index=True,
+                             null=True)
     out_open_id = models.CharField(u'第三方唯一标识', max_length=64, unique=True,
                                    db_index=True, null=True)
     nickname = models.CharField(u'昵称', max_length=100, null=True, blank=True)
@@ -81,7 +82,10 @@ class ConsumerUser(AbstractBaseUser):
     @property
     def is_binding(self):
         re_com = re.compile(r'^1[0-9]{10}$')
-        result = re_com.match(self.phone)
+        try:
+            result = re_com.match(self.phone)
+        except:
+            return False
         if result is None:
             return False
         return True
