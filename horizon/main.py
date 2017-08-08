@@ -101,15 +101,15 @@ def make_barcode(save_path=QRCODE_PICTURE_PATH):
     生成条形码
     返回：条形码数字及条形码文件名
     """
-    source_data = make_random_char_and_number_of_string(13)
-    if not isinstance(source_data, (str, unicode)):
-        return TypeError('Params [source_data] type must be string or unicode')
-    if len(source_data) != 13:
-        return ValueError('Params [source_data] data format is incorrect')
-    try:
-        int(source_data)
-    except Exception as e:
-        return e
+    source_data = make_random_number_of_string(13)
+    # if not isinstance(source_data, (str, unicode)):
+    #     return TypeError('Params [source_data] type must be string or unicode')
+    # if len(source_data) != 13:
+    #     return ValueError('Params [source_data] data format is incorrect')
+    # try:
+    #     int(source_data)
+    # except Exception as e:
+    #     return e
 
     fname = '%s.png' % make_random_char_and_number_of_string(20)
     fname_path = os.path.join(save_path, fname)
