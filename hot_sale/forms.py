@@ -17,11 +17,11 @@ class HotSaleListForm(forms.Form):
 
 
 class DishesGetForm(forms.Form):
-    pk = forms.IntegerField(required=False)
+    pk = forms.IntegerField()
 
 
 class FoodCourtGetForm(forms.Form):
-    pk = forms.IntegerField(required=False)
+    pk = forms.IntegerField()
 
 
 class FoodCourtListForm(forms.Form):

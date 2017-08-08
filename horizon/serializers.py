@@ -85,7 +85,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
 def perfect_result(self, _data):
     _fields = self.get_fields()
-    for key in _data:
+    for key in _data.keys():
         if isinstance(_fields[key], Fields.DateTimeField):
             _data[key] = timezoneStringTostring(_data[key])
         if isinstance(_fields[key], Fields.ImageField):
