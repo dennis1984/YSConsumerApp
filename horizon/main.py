@@ -96,10 +96,12 @@ def make_qrcode(source_data, save_path=QRCODE_PICTURE_PATH, version=5):
     return fname_path
 
 
-def make_barcode(source_data, save_path=QRCODE_PICTURE_PATH):
+def make_barcode(save_path=QRCODE_PICTURE_PATH):
     """
     生成条形码
+    返回：条形码数字及条形码文件名
     """
+    source_data = make_random_char_and_number_of_string(13)
     if not isinstance(source_data, (str, unicode)):
         return TypeError('Params [source_data] type must be string or unicode')
     if len(source_data) != 13:
@@ -114,10 +116,11 @@ def make_barcode(source_data, save_path=QRCODE_PICTURE_PATH):
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
     fp = open(fname_path, 'wb')
-    generate('EAN13', source_data, writer=ImageWriter(), output=fp)
+    writer = ImageWriter()
+    generate('EAN13', source_data, writer=writer, output=fp)
     fp.close()
 
-    return fname_path
+    return writer.text, fname_path
 
 
 def make_static_url_by_file_path(file_path):

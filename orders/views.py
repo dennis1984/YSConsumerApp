@@ -259,7 +259,9 @@ class ConfirmConsumeAction(generics.GenericAPIView):
         return ConsumeOrders.is_consume_of_payment_status(request, orders_id)
 
     def post(self, request, *args, **kwargs):
-        random_str = main.make_random_number_of_string(13)
+        # 先生成条形码
+        random_str, barcode_fname = main.make_barcode()
+
         _data = {'user_id': request.user.id,
                  'random_string': random_str}
         serializer = ConfirmConsumeSerializer(data=_data)
@@ -271,7 +273,7 @@ class ConfirmConsumeAction(generics.GenericAPIView):
         file_name = main.make_qrcode(random_str)
         static_url = main.make_static_url_by_file_path(file_name)
         # 条形码
-        barcode_fname = main.make_barcode(random_str)
+        # barcode_fname = main.make_barcode(random_str)
         barcode_static_url = main.make_static_url_by_file_path(barcode_fname)
         return Response({'qrcode_url': static_url,
                          'barcode_url': barcode_static_url,
