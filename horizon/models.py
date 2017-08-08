@@ -71,7 +71,7 @@ def get_perfect_detail_by_instance(instance):
         if isinstance(f, models.DateTimeField):
             detail_dict[key] = timezoneStringTostring(detail_dict[key])
         elif isinstance(f, models.ImageField):
-            image_str = urllib.unquote(detail_dict[key])
+            image_str = urllib.unquote(str(detail_dict[key]))
             if image_str.startswith('http://') or image_str.startswith('https://'):
                 detail_dict['%s_url' % key] = image_str
             else:

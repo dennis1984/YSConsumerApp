@@ -86,7 +86,8 @@ class ShoppingCart(models.Model):
         if isinstance(instances, Exception):
             return instances
         for item in instances:
-            dishes_data = Dishes.get_dishes_detail_dict_with_user_info(pk=item.dishes_id)
+            dishes_data = Dishes.get_dishes_detail_dict_with_user_info(need_perfect=True,
+                                                                       pk=item.dishes_id)
             if isinstance(dishes_data, Exception):
                 continue
             dishes_dict = dishes_data
