@@ -10,7 +10,8 @@ from horizon import main
 from django.db import transaction
 from decimal import Decimal
 
-from Business_App.bz_dishes.models import Dishes
+from Business_App.bz_dishes.models import (Dishes,
+                                           DISHES_MARK_DISCOUNT_VALUES)
 from Business_App.bz_orders.models import (OrdersIdGenerator,
                                            VerifyOrdersAction)
 
@@ -290,7 +291,10 @@ class PayOrders(models.Model):
     @classmethod
     def make_orders_by_consume(cls, request, dishes_ids):
         meal_ids = []
-        total_amount = '0'
+        # 会员优惠及其他优惠
+        member_discount = 0
+        other_discount = 0
+        total_amount = 0
         try:
             food_court_id, food_court_name, dishes_details = \
                 cls.get_dishes_ids_detail(dishes_ids)
@@ -300,9 +304,10 @@ class PayOrders(models.Model):
             for item2 in _details['dishes_detail']:
                 total_amount = str(Decimal(total_amount) +
                                    Decimal(item2['price']) * item2['count'])
-        # 会员优惠及其他优惠
-        member_discount = 0
-        other_discount = 0
+                if item2['mark'] in DISHES_MARK_DISCOUNT_VALUES:
+                    member_discount = str(Decimal(member_discount) +
+                                          Decimal(item2['discount']))
+
         orders_data = cls.make_orders_base(request=request, food_court_id=food_court_id,
                                            food_court_name=food_court_name,
                                            dishes_details=dishes_details,

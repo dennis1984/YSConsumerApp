@@ -112,6 +112,8 @@ class BaseDishesDetailSerializer(BaseSerializer):
     size_detail = serializers.CharField(max_length=30, required=False,
                                         allow_null=True, allow_blank=True)
     price = serializers.CharField(max_length=50)
+    # 优惠后的价格
+    discount_price = serializers.CharField(max_length=50)
     image = serializers.ImageField()
     image_detail = serializers.ImageField()
     user_id = serializers.IntegerField()

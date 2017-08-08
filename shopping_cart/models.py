@@ -82,7 +82,10 @@ class ShoppingCart(models.Model):
     @classmethod
     def get_shopping_cart_detail_by_user_id(cls, request, food_court_id):
         meal_ids = []
-        for item in cls.get_shopping_cart_by_user_id(request, food_court_id):
+        instances = cls.get_shopping_cart_by_user_id(request, food_court_id)
+        if isinstance(instances, Exception):
+            return instances
+        for item in instances:
             dishes_data = Dishes.get_dishes_detail_dict_with_user_info(pk=item.dishes_id)
             if isinstance(dishes_data, Exception):
                 continue

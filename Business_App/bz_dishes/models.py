@@ -10,8 +10,16 @@ from horizon.models import (model_to_dict,
                             get_perfect_filter_params)
 
 from django.conf import settings
+from decimal import Decimal
 import os
 
+DISHES_MARK = {
+    'default': 0,
+    'new': 10,
+    'preferential': 20,
+    'flagship': 30,
+}
+DISHES_MARK_DISCOUNT_VALUES = (10, 20, 30)
 DISHES_PICTURE_DIR = settings.PICTURE_DIRS['business']['dishes']
 
 
@@ -39,8 +47,10 @@ class Dishes(models.Model):
     status = models.IntegerField('数据状态', default=1)  # 1 有效 2 已删除 3 其他（比如暂时不用）
     is_recommend = models.BooleanField('是否推荐该菜品', default=False)  # 0: 不推荐  1：推荐
 
-    # 0：无标记  10：新品  20：特惠  30：招牌
+    # 运营标记： 0：无标记  10：新品  20：特惠  30：招牌
     mark = models.IntegerField('运营标记', default=0)
+    # 优惠金额
+    discount = models.CharField('优惠金额', max_length=16, default='0')
     extend = models.TextField('扩展信息', default='', null=True, blank=True)
 
     objects = BaseManager()
@@ -49,6 +59,7 @@ class Dishes(models.Model):
         db_table = 'ys_dishes'
         unique_together = ('user_id', 'title', 'size',
                            'size_detail', 'status')
+        ordering = ['-updated']
         app_label = 'Business_App.bz_dishes.models.Dishes'
 
     def __unicode__(self):
@@ -99,6 +110,11 @@ class Dishes(models.Model):
         dishes_dict = model_to_dict(instance)
         dishes_dict['business_name'] = getattr(user, 'business_name', '')
         dishes_dict['business_id'] = dishes_dict['user_id']
+        if dishes_dict['mark'] in DISHES_MARK_DISCOUNT_VALUES:
+            dishes_dict['discount_price'] = str(Decimal(instance.price) -
+                                                    Decimal(instance.discount))
+        else:
+            dishes_dict['discount_price'] = instance.price
 
         # base_dir = str(dishes_dict['image']).split('static', 1)[1]
         # if base_dir.startswith(os.path.sep):
