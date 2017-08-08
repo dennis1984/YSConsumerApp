@@ -237,7 +237,7 @@ def get_time_stamp():
     return stamp
 
 
-def send_identifying_code_to_phone(params, receive_phones, template_name=None):
+def send_message_to_phone(params, receive_phones, template_name=None):
     """
     使用阿里云的短信服务发送短信
     """
@@ -258,15 +258,21 @@ def send_identifying_code_to_phone(params, receive_phones, template_name=None):
             return ValueError('Params template incorrect')
         template = template_dict[template_name]
     if isinstance(params, (str, unicode, int, float)):
-        params_dict = {params_key_dict[template_name]: params}
+        if isinstance(params, (float, int)):
+            params_dict = {params_key_dict[template_name]: '%.2f' % params}
+        else:
+            params_dict = {params_key_dict[template_name]: params}
         params_query = urllib.quote(json.dumps(params_dict))
     elif isinstance(params, dict):
         params_query = urllib.quote(json.dumps(params))
     else:
         return TypeError('params must be unicode or dictionary')
 
-    if not isinstance(receive_phones, (tuple, list)):
-        return TypeError('receive phones type must be list or tuple')
+    if isinstance(receive_phones, (str, unicode)):
+        receive_phones = [receive_phones]
+    else:
+        if not isinstance(receive_phones, (tuple, list)):
+            return TypeError('receive phones type must be list or tuple')
     query = {'RecNum': ','.join(receive_phones),
              'TemplateCode': template,
              'SignName': sign_names[0]}

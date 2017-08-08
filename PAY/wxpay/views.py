@@ -12,6 +12,7 @@ from orders.models import (PayOrders,
                            TradeRecordAction,
                            ORDERS_ORDERS_TYPE)
 from wallet.models import WalletAction
+from users.models import ConsumerUser
 import json
 import copy
 
@@ -46,6 +47,9 @@ class JsApiCallback(APIView):
         self._orders_id = None
         self._wx_instance = None
         super(JsApiCallback, self).__init__(**kwargs)
+
+    def get_user_object(self, user_id):
+        return ConsumerUser.get_object(pk=user_id)
 
     def post(self, request, *args, **kwargs):
         """
@@ -83,7 +87,14 @@ class JsApiCallback(APIView):
                                            out_orders_id=data_dict['transaction_id'])
                 if orders.orders_type == ORDERS_ORDERS_TYPE['wallet_recharge']:
                     # 支付订单，支付完成后去充值
-                    WalletAction().recharge(None, orders, gateway='pay_callback')
+                    result = WalletAction().recharge(None, orders, gateway='pay_callback')
+                    if not isinstance(result, Exception):
+                        # 发送短信提醒用户充值成功
+                        user = self.get_user_object(orders.user_id)
+                        if not isinstance(user, Exception):
+                            main.send_message_to_phone(orders.payable,
+                                                       user.phone,
+                                                       template_name='recharge')
                 else:
                     # 支付成功后，拆分主订单为子订单
                     BaseConsumeOrders().create(self._orders_id)
