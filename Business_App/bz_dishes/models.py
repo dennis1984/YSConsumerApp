@@ -7,7 +7,8 @@ from django.conf import settings
 from Business_App.bz_users.models import BusinessUser, FoodCourt
 from horizon.models import (model_to_dict,
                             BaseManager,
-                            get_perfect_filter_params)
+                            get_perfect_filter_params,
+                            get_perfect_detail_by_instance)
 
 from django.conf import settings
 from decimal import Decimal
@@ -102,27 +103,23 @@ class Dishes(models.Model):
         return dishes_list
 
     @classmethod
-    def get_dishes_detail_dict_with_user_info(cls, **kwargs):
+    def get_dishes_detail_dict_with_user_info(cls, need_perfect=False,  **kwargs):
         instance = cls.get_object(**kwargs)
         if isinstance(instance, Exception):
             return instance
         user = BusinessUser.get_object(pk=instance.user_id)
-        dishes_dict = model_to_dict(instance)
+        if need_perfect:
+            dishes_dict = get_perfect_detail_by_instance(instance)
+        else:
+            dishes_dict = model_to_dict(instance)
         dishes_dict['business_name'] = getattr(user, 'business_name', '')
         dishes_dict['business_id'] = dishes_dict['user_id']
         if dishes_dict['mark'] in DISHES_MARK_DISCOUNT_VALUES:
             dishes_dict['discount_price'] = str(Decimal(instance.price) -
-                                                    Decimal(instance.discount))
+                                                Decimal(instance.discount))
         else:
             dishes_dict['discount_price'] = instance.price
 
-        # base_dir = str(dishes_dict['image']).split('static', 1)[1]
-        # if base_dir.startswith(os.path.sep):
-        #     base_dir = base_dir[1:]
-        # dishes_dict.pop('image')
-        # dishes_dict['image_url'] = os.path.join(settings.WEB_URL_FIX,
-        #                                         'static',
-        #                                         base_dir)
         # 获取美食城信息
         food_instance = FoodCourt.get_object(pk=user.food_court_id)
         dishes_dict['food_court_name'] = getattr(food_instance, 'name', '')

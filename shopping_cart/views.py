@@ -127,7 +127,7 @@ class ShoppingCartList(generics.GenericAPIView):
         _data = self.get_list_detail(request, cld['food_court_id'])
         if isinstance(_data, Exception):
             return Response({'Detail': _data.args}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         serializer = ShoppingCartListSerializer(data=_data)
         if serializer.is_valid():
             results = serializer.list_data(**cld)

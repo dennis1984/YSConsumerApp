@@ -1,5 +1,9 @@
 from itertools import chain
 from django.db import models
+from django.conf import settings
+from horizon.main import timezoneStringTostring
+import urllib
+import os
 
 
 def model_to_dict(instance, fields=None, exclude=None):
@@ -53,3 +57,27 @@ def get_perfect_filter_params(cls, **kwargs):
         if key_new in fields:
             _kwargs[key] = kwargs[key]
     return _kwargs
+
+
+def get_perfect_detail_by_instance(instance):
+    opts = instance._meta
+    fields = []
+    for f in opts.concrete_fields:
+        fields.append(f)
+
+    detail_dict = model_to_dict(instance)
+    for f in fields:
+        key = f.name
+        if isinstance(f, models.DateTimeField):
+            detail_dict[key] = timezoneStringTostring(detail_dict[key])
+        elif isinstance(f, models.ImageField):
+            image_str = urllib.unquote(detail_dict[key])
+            if image_str.startswith('http://') or image_str.startswith('https://'):
+                detail_dict['%s_url' % key] = image_str
+            else:
+                detail_dict['%s_url' % key] = os.path.join(settings.WEB_URL_FIX,
+                                                           'static',
+                                                           image_str.split('static/', 1)[1])
+            detail_dict.pop(key)
+    return detail_dict
+
