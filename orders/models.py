@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.db.models import Q
 from django.utils.timezone import now
-from horizon.models import model_to_dict
+from horizon.models import model_to_dict, get_perfect_detail_by_detail
 from horizon.main import minutes_15_plus, DatetimeEncode
 from horizon import main
 from django.db import transaction
@@ -17,6 +17,7 @@ from Business_App.bz_orders.models import (OrdersIdGenerator,
 
 import json
 import datetime
+import copy
 
 FILTER_IN_ORDERS_TYPE = [101, 102, 103]
 FILTER_IN_PAYMENT_STATUS = [200, 400, 500]
@@ -187,7 +188,7 @@ class PayOrders(models.Model):
         if isinstance(_object, Exception):
             return _object
         detail = model_to_dict(_object)
-        detail['dishes_ids'] = json.loads(detail['dishes_ids'])
+        detail['dishes_ids'] = cls.get_perfect_dishes_details(detail['dishes_ids'])
         detail['is_expired'] = _object.is_expired
         return detail
 
@@ -206,7 +207,7 @@ class PayOrders(models.Model):
         results = []
         for item in _objects:
             item_dict = model_to_dict(item)
-            item_dict['dishes_ids'] = json.loads(item_dict['dishes_ids'])
+            item_dict['dishes_ids'] = cls.get_perfect_dishes_details(item_dict['dishes_ids'])
             item_dict['is_expired'] = item.is_expired
             item_dict['trade_type'] = 'pay'
             item_dict['business_id'] = None
@@ -222,6 +223,27 @@ class PayOrders(models.Model):
         detail['dishes_ids'] = json.loads(detail['dishes_ids'])
         detail['is_expired'] = self.is_expired
         return detail
+
+    @classmethod
+    def get_perfect_dishes_details(cls, dishes_ids):
+        if isinstance(dishes_ids, (str, unicode)):
+            try:
+                dishes_ids = json.loads(dishes_ids)
+            except Exception as e:
+                return e
+        elif not isinstance(dishes_ids, (list, tuple)):
+            return Exception('Params data is error.')
+
+        details = []
+        for item_dict in dishes_ids:
+            tmp_dict = copy.deepcopy(item_dict)
+            dishes_details = []
+            for dishes_detail in item_dict['dishes_detail']:
+                perfect_detail = get_perfect_detail_by_detail(Dishes, dishes_detail)
+                dishes_details.append(perfect_detail)
+            tmp_dict['dishes_detail'] = dishes_details
+            details.append(tmp_dict)
+        return details
 
     @classmethod
     def get_valid_orders(cls, **kwargs):
@@ -475,7 +497,7 @@ class ConsumeOrders(models.Model):
         if isinstance(_object, Exception):
             return _object
         result = model_to_dict(_object)
-        result['dishes_ids'] = json.loads(result['dishes_ids'])
+        result['dishes_ids'] = cls.get_perfect_dishes_details(result['dishes_ids'])
         result['trade_type'] = 'consume'
         return result
 
@@ -487,11 +509,27 @@ class ConsumeOrders(models.Model):
         results = []
         for item in _objects:
             item_dict = model_to_dict(item)
-            item_dict['dishes_ids'] = json.loads(item_dict['dishes_ids'])
+            item_dict['dishes_ids'] = cls.get_perfect_dishes_details(item_dict['dishes_ids'])
             item_dict['trade_type'] = 'consume'
             item_dict['is_expired'] = None
             results.append(item_dict)
         return results
+
+    @classmethod
+    def get_perfect_dishes_details(cls, dishes_ids):
+        if isinstance(dishes_ids, (str, unicode)):
+            try:
+                dishes_ids = json.loads(dishes_ids)
+            except Exception as e:
+                return e
+        elif not isinstance(dishes_ids, (list, tuple)):
+            return Exception('Params data is error.')
+
+        details = []
+        for dishes_detail in dishes_ids:
+            perfect_detail = get_perfect_detail_by_detail(Dishes, dishes_detail)
+            details.append(perfect_detail)
+        return details
 
     @classmethod
     def filter_consume_objects_detail(cls, **kwargs):

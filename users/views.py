@@ -270,7 +270,7 @@ class AdvertPictureList(generics.GenericAPIView):
     def get_advert_objects(self, **kwargs):
         return AdvertPicture.filter_objects(**kwargs)
 
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         form = AdvertListForm(request.data)
         if not form.is_valid():
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
@@ -283,7 +283,7 @@ class AdvertPictureList(generics.GenericAPIView):
 
         serializer = AdvertPictureListSerializer(advert_instances)
         datas = serializer.list_data()
-        return Response(datas, status=status.HTTP_400_BAD_REQUEST)
+        return Response(datas, status=status.HTTP_200_OK)
 
 
 class AuthLogout(generics.GenericAPIView):
