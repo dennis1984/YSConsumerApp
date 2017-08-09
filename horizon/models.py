@@ -91,6 +91,8 @@ def get_perfect_detail_by_detail(cls, detail):
     detail_dict = detail
     for f in fields:
         key = f.name
+        if key not in detail_dict:
+            continue
         if isinstance(f, models.DateTimeField):
             detail_dict[key] = timezoneStringTostring(detail_dict[key])
         elif isinstance(f, models.ImageField):

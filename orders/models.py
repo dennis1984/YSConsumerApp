@@ -48,12 +48,12 @@ ORDERS_PAYMENT_MODE = {
 
 
 class OrdersManager(models.Manager):
-    query1 = ~Q(payment_status=ORDERS_PAYMENT_STATUS['finished'],
-                orders_type=ORDERS_ORDERS_TYPE['wallet_recharge'])
+    query1 = ~Q(payment_status=ORDERS_PAYMENT_STATUS['finished'])
+    query2 = ~Q(orders_type=ORDERS_ORDERS_TYPE['wallet_recharge'])
 
     def get(self, *args, **kwargs):
         object_data = super(OrdersManager, self).get(
-             self.query1, *args, **kwargs
+             self.query1, self.query2, *args, **kwargs
         )
         if now() >= object_data.expires and object_data.payment_status == 0:
             object_data.payment_status = 400
@@ -61,7 +61,7 @@ class OrdersManager(models.Manager):
 
     def filter(self, *args, **kwargs):
         object_data = super(OrdersManager, self).filter(
-            self.query1, *args, **kwargs
+            self.query1, self.query2, *args, **kwargs
         )
         for item in object_data:
             if now() >= item.expires and item.payment_status == 0:
