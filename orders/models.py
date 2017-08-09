@@ -104,6 +104,7 @@ class PayOrders(models.Model):
     extend = models.TextField('扩展信息', default='', blank=True)
 
     objects = OrdersManager()
+    objects_all = models.Manager()
 
     class Meta:
         db_table = 'ys_pay_orders'
@@ -250,7 +251,7 @@ class PayOrders(models.Model):
         kwargs['payment_status'] = 0
         kwargs['expires__gt'] = now()
         try:
-            return cls.objects.get(**kwargs)
+            return cls.objects_all.get(**kwargs)
         except Exception as e:
             setattr(e, 'args', ('Orders %s does not existed or is expired' % kwargs['orders_id'],))
             return e
