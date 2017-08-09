@@ -38,6 +38,7 @@ class PayOrdersResponseSerializer(BaseSerializer):
 
     total_amount = serializers.CharField(max_length=16)
     member_discount = serializers.CharField(max_length=16)
+    online_discount = serializers.CharField(max_length=16)
     other_discount = serializers.CharField(max_length=16)
     payable = serializers.CharField(max_length=16)
     payment_status = serializers.IntegerField()
@@ -76,6 +77,7 @@ class ConsumeOrdersResponseSerializer(BaseSerializer):
 
     total_amount = serializers.CharField(max_length=16)
     member_discount = serializers.CharField(max_length=16)
+    online_discount = serializers.CharField(max_length=16)
     other_discount = serializers.CharField(max_length=16)
     payable = serializers.CharField(max_length=16)
 
@@ -122,6 +124,7 @@ class OrdersDetailForListSerializer(BaseSerializer):
 
     total_amount = serializers.CharField(max_length=16)
     member_discount = serializers.CharField(max_length=16)
+    online_discount = serializers.CharField(max_length=16)
     other_discount = serializers.CharField(max_length=16)
     payable = serializers.CharField(max_length=16)
 

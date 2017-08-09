@@ -85,6 +85,7 @@ class PayOrders(models.Model):
     #
     total_amount = models.CharField('订单总计', max_length=16)
     member_discount = models.CharField('会员优惠', max_length=16, default='0')
+    online_discount = models.CharField('在线下单优惠', max_length=16, default='0')
     other_discount = models.CharField('其他优惠', max_length=16, default='0')
     payable = models.CharField('应付金额', max_length=16)
 
@@ -293,6 +294,7 @@ class PayOrders(models.Model):
         meal_ids = []
         # 会员优惠及其他优惠
         member_discount = 0
+        online_discount = 0
         other_discount = 0
         total_amount = 0
         try:
@@ -304,8 +306,9 @@ class PayOrders(models.Model):
             for item2 in _details['dishes_detail']:
                 total_amount = str(Decimal(total_amount) +
                                    Decimal(item2['price']) * item2['count'])
-                if item2['mark'] in DISHES_MARK_DISCOUNT_VALUES:
-                    member_discount = str(Decimal(member_discount) +
+                if item2['mark'] in DISHES_MARK_DISCOUNT_VALUES and \
+                        item2['orders_type'] == ORDERS_ORDERS_TYPE['online']:
+                    online_discount = str(Decimal(member_discount) +
                                           Decimal(item2['discount']))
 
         orders_data = cls.make_orders_base(request=request, food_court_id=food_court_id,
@@ -313,6 +316,7 @@ class PayOrders(models.Model):
                                            dishes_details=dishes_details,
                                            total_amount=total_amount,
                                            member_discount=member_discount,
+                                           online_discount=online_discount,
                                            other_discount=other_discount,
                                            orders_type=ORDERS_ORDERS_TYPE['online'])
         return orders_data
@@ -341,7 +345,8 @@ class PayOrders(models.Model):
     @classmethod
     def make_orders_base(cls, request, food_court_id, food_court_name,
                          dishes_details, total_amount, member_discount,
-                         other_discount, orders_type):
+                         online_discount=0, other_discount=0,
+                         orders_type=None):
         try:
             orders_data = {'user_id': request.user.id,
                            'orders_id': OrdersIdGenerator.get_orders_id(),
@@ -351,9 +356,11 @@ class PayOrders(models.Model):
                                                     ensure_ascii=False, cls=DatetimeEncode),
                            'total_amount': total_amount,
                            'member_discount': str(member_discount),
+                           'online_discount': str(online_discount),
                            'other_discount': str(other_discount),
                            'payable': str(Decimal(total_amount) -
                                           Decimal(member_discount) -
+                                          Decimal(online_discount) -
                                           Decimal(other_discount)),
                            'orders_type': orders_type,
                            }
@@ -404,6 +411,7 @@ class ConsumeOrders(models.Model):
 
     total_amount = models.CharField('订单总计', max_length=16)
     member_discount = models.CharField('会员优惠', max_length=16, default='0')
+    online_discount = models.CharField('在线下单优惠', max_length=16, default='0')
     other_discount = models.CharField('其他优惠', max_length=16, default='0')
     payable = models.CharField('应付金额', max_length=16)
 
@@ -526,18 +534,25 @@ class BaseConsumeOrders(object):
         dishes_detail_list = json.loads(pay_orders.dishes_ids)
         for index, business_dishes in enumerate(dishes_detail_list, 1):
             member_discount = 0
+            online_discount = 0
             other_discount = 0
             total_amount = 0
             for item in business_dishes['dishes_detail']:
                 total_amount = Decimal(total_amount) + Decimal(item['price']) * item['count']
-                member_discount = Decimal(member_discount) + Decimal(item['discount'])
-            payable = Decimal(total_amount) - Decimal(member_discount) - Decimal(other_discount)
+                if item['mark'] in DISHES_MARK_DISCOUNT_VALUES and \
+                        item['orders_type'] == ORDERS_ORDERS_TYPE['online']:
+                    online_discount = Decimal(member_discount) + Decimal(item['discount'])
+            payable = str(Decimal(total_amount) -
+                          Decimal(member_discount) -
+                          Decimal(online_discount) -
+                          Decimal(other_discount))
             consume_data = {
                 'orders_id': self.make_consume_orders_id(pay_orders_id, index),
                 'user_id': pay_orders.user_id,
                 'dishes_ids': json.dumps(business_dishes['dishes_detail']),
                 'total_amount': str(total_amount),
                 'member_discount': str(member_discount),
+                'online_discount': str(online_discount),
                 'other_discount': str(other_discount),
                 'payable': str(payable),
                 'business_name': business_dishes['business_name'],
@@ -572,6 +587,7 @@ class TradeRecord(models.Model):
 
     total_amount = models.CharField('应付金额', max_length=16)
     member_discount = models.CharField('会员优惠', max_length=16, default='0')
+    online_discount = models.CharField('在线支付优惠', max_length=16, default='0')
     other_discount = models.CharField('其他优惠', max_length=16, default='0')
     payment = models.CharField('实付金额', max_length=16)
 
@@ -627,6 +643,7 @@ class TradeRecordAction(object):
                        'user_id': request.user.id,
                        'total_amount': orders.total_amount,
                        'member_discount': orders.member_discount,
+                       'online_discount': orders.online_discount,
                        'other_discount': orders.other_discount,
                        'payment': orders.payable,
                        'payment_mode': orders.payment_mode,
