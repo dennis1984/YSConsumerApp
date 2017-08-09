@@ -308,7 +308,7 @@ class PayOrders(models.Model):
                                    Decimal(item2['price']) * item2['count'])
                 if item2['mark'] in DISHES_MARK_DISCOUNT_VALUES and \
                         orders_type == ORDERS_ORDERS_TYPE['online']:
-                    online_discount = str(Decimal(member_discount) +
+                    online_discount = str(Decimal(online_discount) +
                                           Decimal(item2['discount']))
 
         orders_data = cls.make_orders_base(request=request, food_court_id=food_court_id,
@@ -541,7 +541,7 @@ class BaseConsumeOrders(object):
                 total_amount = Decimal(total_amount) + Decimal(item['price']) * item['count']
                 if item['mark'] in DISHES_MARK_DISCOUNT_VALUES and \
                         pay_orders.orders_type == ORDERS_ORDERS_TYPE['online']:
-                    online_discount = Decimal(member_discount) + Decimal(item['discount'])
+                    online_discount = Decimal(online_discount) + Decimal(item['discount'])
             payable = str(Decimal(total_amount) -
                           Decimal(member_discount) -
                           Decimal(online_discount) -

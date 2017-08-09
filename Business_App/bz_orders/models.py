@@ -64,6 +64,7 @@ class VerifyOrders(models.Model):
 
     total_amount = models.CharField('订单总计', max_length=16)
     member_discount = models.CharField('会员优惠', max_length=16, default='0')
+    online_discount = models.CharField('在线下单优惠', max_length=16, default='0')
     other_discount = models.CharField('其他优惠', max_length=16, default='0')
     payable = models.CharField('应付金额', max_length=16)
 
