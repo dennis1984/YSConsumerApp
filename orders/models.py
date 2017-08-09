@@ -530,14 +530,15 @@ class BaseConsumeOrders(object):
             total_amount = 0
             for item in business_dishes['dishes_detail']:
                 total_amount = Decimal(total_amount) + Decimal(item['price']) * item['count']
+                member_discount = Decimal(member_discount) + Decimal(item['discount'])
             payable = Decimal(total_amount) - Decimal(member_discount) - Decimal(other_discount)
             consume_data = {
                 'orders_id': self.make_consume_orders_id(pay_orders_id, index),
                 'user_id': pay_orders.user_id,
                 'dishes_ids': json.dumps(business_dishes['dishes_detail']),
                 'total_amount': str(total_amount),
-                'member_discount': member_discount,
-                'other_discount': other_discount,
+                'member_discount': str(member_discount),
+                'other_discount': str(other_discount),
                 'payable': str(payable),
                 'business_name': business_dishes['business_name'],
                 'business_id': business_dishes['business_id'],
