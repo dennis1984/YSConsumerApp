@@ -33,7 +33,7 @@ class CommentSerializer(BaseModelSerializer):
             for item in dishes_comment:
                 key = item['dishes_id']
                 item['dishes_name'] = dishes_ids_dict[key]['title']
-                item['image_url'] = dishes_ids_dict[key]['image_url']
+                item['image'] = dishes_ids_dict[key].get('image', 'image_url')
             for item in business_comment:
                 item['cn_name'] = COMMENT_BUSINESS_CN_DETAIL[item['id']]
 

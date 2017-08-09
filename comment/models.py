@@ -5,7 +5,8 @@ from django.db import models
 from django.utils.timezone import now
 
 from orders.models import ConsumeOrders
-from horizon.models import model_to_dict
+from horizon.models import model_to_dict, get_perfect_detail_by_detail
+from Business_App.bz_dishes.models import Dishes
 
 import json
 import datetime
@@ -30,7 +31,8 @@ class Comment(models.Model):
     # 菜品的点评内容的数据格式为：
     # [{'dishes_id':  1,
     #    'dishes_name': '菜品名称',
-    #    'image_url': 'http://',
+    #    'image': '/var/www/static/...',
+    #    'image_detail': '/var/www/static/...',
     #    'star': 3}, ....
     # ]
 
@@ -66,7 +68,7 @@ class Comment(models.Model):
         for instance in instances:
             ins_dict = model_to_dict(instance)
             ins_dict['business_comment'] = json.loads(ins_dict['business_comment'])
-            ins_dict['dishes_comment'] = json.loads(ins_dict['dishes_comment'])
+            ins_dict['dishes_comment'] = cls.get_perfect_dishes_comment(ins_dict['dishes_comment'])
             details.append(ins_dict)
         return details
 
@@ -77,8 +79,24 @@ class Comment(models.Model):
             return instance
         detail = model_to_dict(instance)
         detail['business_comment'] = json.loads(detail['business_comment'])
-        detail['dishes_comment'] = json.loads(detail['dishes_comment'])
+        detail['dishes_comment'] = cls.get_perfect_dishes_comment(detail['dishes_comment'])
         return detail
+
+    @classmethod
+    def get_perfect_dishes_comment(cls, dishes_comment):
+        if isinstance(dishes_comment, (str, unicode)):
+            try:
+                dishes_comment = json.loads(dishes_comment)
+            except Exception as e:
+                return e
+        elif not isinstance(dishes_comment, (list, tuple)):
+            return Exception('Params data is error.')
+
+        details = []
+        for dishes_detail in dishes_comment:
+            perfect_detail = get_perfect_detail_by_detail(Dishes, dishes_detail)
+            details.append(perfect_detail)
+        return details
 
 
 class ReplyComment(models.Model):
