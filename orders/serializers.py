@@ -36,7 +36,7 @@ class PayOrdersSerializer(BaseModelSerializer):
             ys_pay_instance = YinshiPayCode.get_object(code=random_code)
             if isinstance(ys_pay_instance, Exception):
                 raise ys_pay_instance
-            ys_pay_instance.pay_orders_id = self.data['orders_id']
+            ys_pay_instance.pay_orders_id = self.validated_data['orders_id']
             ys_pay_instance.save()
         return super(PayOrdersSerializer, self).save()
 

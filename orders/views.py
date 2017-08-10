@@ -106,7 +106,10 @@ class PayOrdersAction(generics.GenericAPIView):
             if 'random_code' not in kwargs:
                 return False, 'Field ["random_code"] must be not empty when ' \
                               'gateway is "yinshi_pay"'
-        if 'dishes_ids' in kwargs:
+        if kwargs['orders_type'] == INPUT_ORDERS_TYPE['consume']:
+            if 'dishes_ids' not in kwargs:
+                return False, 'Field ["dishes_ids"] must be not empty when ' \
+                              'orders_type is "consume".'
             try:
                 json.loads(kwargs['dishes_ids'])
             except Exception as e:
