@@ -52,11 +52,8 @@ class PayOrdersAction(generics.GenericAPIView):
     def get_orders_by_orders_id(self, orders_id):
         return PayOrders.get_valid_orders(orders_id=orders_id)
 
-    def make_orders_by_consume(self, request, dishes_ids, gateway=None):
-        kwargs = {}
-        if gateway == INPUT_ORDERS_GATEWAY['yinshi_pay']:
-            kwargs['orders_type'] = ORDERS_ORDERS_TYPE['online_ys_pay']
-        return PayOrders.make_orders_by_consume(request, dishes_ids, **kwargs)
+    def make_orders_by_consume(self, request, dishes_ids):
+        return PayOrders.make_orders_by_consume(request, dishes_ids)
 
     def make_orders_by_recharge(self, request, orders_type, payable):
         return PayOrders.make_orders_by_recharge(request, orders_type, payable)
@@ -141,7 +138,7 @@ class PayOrdersAction(generics.GenericAPIView):
                 if is_valid:
                     return Response({'Detail': error_message},
                                     status=status.HTTP_400_BAD_REQUEST)
-            _data = self.make_orders_by_consume(request, dishes_ids, gateway=cld['gateway'])
+            _data = self.make_orders_by_consume(request, dishes_ids)
 
         if isinstance(_data, Exception):
             return Response({'Detail': _data.args}, status=status.HTTP_400_BAD_REQUEST)

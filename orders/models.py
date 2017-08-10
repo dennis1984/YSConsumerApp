@@ -35,7 +35,6 @@ ORDERS_PAYMENT_STATUS = {
 ORDERS_ORDERS_TYPE = {
     'unknown': 0,
     'online': 101,
-    'online_ys_pay': 1011,
     'business': 102,
     'take_out': 103,
     'wallet_recharge': 201,
@@ -555,6 +554,13 @@ class BaseConsumeOrders(object):
     def make_consume_orders_id(self, pay_orders_id, index):
         return 'Z%s%03d' % (pay_orders_id, index)
 
+    def is_ys_pay_orders(self, pay_orders_id):
+        kwargs = {'pay_orders_id': pay_orders_id}
+        ys_pay_instance = YinshiPayCode.get_object(**kwargs)
+        if isinstance(ys_pay_instance, Exception):
+            return False, None
+        return True, ys_pay_instance
+
     def create(self, pay_orders_id):
         """
         创建子订单
@@ -589,8 +595,8 @@ class BaseConsumeOrders(object):
                           Decimal(online_discount) -
                           Decimal(other_discount))
             kwargs = {}
-            if pay_orders.orders_type == ORDERS_ORDERS_TYPE['online_ys_pay']:
-                kwargs['orders_type'] = ORDERS_ORDERS_TYPE['online']
+            is_ys_pay_orders, ys_pay_instance = self.is_ys_pay_orders(pay_orders_id)
+            if is_ys_pay_orders:
                 kwargs['payment_status'] = ORDERS_PAYMENT_STATUS['finished']
             consume_data = {
                 'orders_id': self.make_consume_orders_id(pay_orders_id, index),
@@ -617,11 +623,7 @@ class BaseConsumeOrders(object):
                 return e
 
             # 将子订单ID会写入YinshiPayCode
-            if pay_orders.orders_type == ORDERS_ORDERS_TYPE['online_ys_pay']:
-                kwargs = {'pay_orders_id': obj.master_orders_id}
-                ys_pay_instance = YinshiPayCode.get_object(**kwargs)
-                if isinstance(ys_pay_instance, Exception):
-                    return ys_pay_instance
+            if is_ys_pay_orders:
                 ys_pay_instance.consume_orders_id = obj.orders_id
                 try:
                     ys_pay_instance.save()
