@@ -10,12 +10,16 @@ class PayOrdersCreateForm(forms.Form):
     #              ]
     #
     # 生成订单途径
-    gateway = forms.ChoiceField(choices=(('shopping_cart', 1), ('other', 2)),
+    gateway = forms.ChoiceField(choices=(('shopping_cart', 1),
+                                         ('yinshi_pay', 2),
+                                         ('other', 3)),
                                 error_messages={
-                                    'required': u'生成订单途径不能为空'
+                                    'required': u'Field ["gateway"] must in'
+                                                u'[shopping_cart, yinshi_pay, other]'
                                 })
     orders_type = forms.ChoiceField(choices=(('recharge', 1), ('consume', 2)))
     payable = forms.IntegerField(min_value=10, required=False)
+    random_code = forms.CharField(min_length=6, max_length=32, required=False)
 
 
 class PayOrdersUpdateForm(forms.Form):

@@ -13,7 +13,8 @@ from decimal import Decimal
 from Business_App.bz_dishes.models import (Dishes,
                                            DISHES_MARK_DISCOUNT_VALUES)
 from Business_App.bz_orders.models import (OrdersIdGenerator,
-                                           VerifyOrdersAction)
+                                           VerifyOrdersAction,
+                                           YinshiPayCode)
 
 import json
 import datetime
@@ -34,6 +35,7 @@ ORDERS_PAYMENT_STATUS = {
 ORDERS_ORDERS_TYPE = {
     'unknown': 0,
     'online': 101,
+    'online_ys_pay': 1011,
     'business': 102,
     'take_out': 103,
     'wallet_recharge': 201,
@@ -586,6 +588,10 @@ class BaseConsumeOrders(object):
                           Decimal(member_discount) -
                           Decimal(online_discount) -
                           Decimal(other_discount))
+            kwargs = {}
+            if pay_orders.orders_type == ORDERS_ORDERS_TYPE['online_ys_pay']:
+                kwargs['orders_type'] = ORDERS_ORDERS_TYPE['online']
+                kwargs['payment_status'] = ORDERS_PAYMENT_STATUS['finished']
             consume_data = {
                 'orders_id': self.make_consume_orders_id(pay_orders_id, index),
                 'user_id': pay_orders.user_id,
@@ -603,17 +609,30 @@ class BaseConsumeOrders(object):
                 'orders_type': pay_orders.orders_type,
                 'master_orders_id': pay_orders_id
             }
+            consume_data.update(**kwargs)
             try:
                 obj = ConsumeOrders(**consume_data)
                 obj.save()
             except Exception as e:
                 return e
-            else:
-                # 同步子订单到商户端
-                result = VerifyOrdersAction().create(obj)
-                if isinstance(result, Exception):
-                    return result
-                orders.append(obj)
+
+            # 将子订单ID会写入YinshiPayCode
+            if pay_orders.orders_type == ORDERS_ORDERS_TYPE['online_ys_pay']:
+                kwargs = {'pay_orders_id': obj.master_orders_id}
+                ys_pay_instance = YinshiPayCode.get_object(**kwargs)
+                if isinstance(ys_pay_instance, Exception):
+                    return ys_pay_instance
+                ys_pay_instance.consume_orders_id = obj.orders_id
+                try:
+                    ys_pay_instance.save()
+                except Exception as e:
+                    return e
+
+            # 同步子订单到商户端
+            result = VerifyOrdersAction().create(obj)
+            if isinstance(result, Exception):
+                return result
+            orders.append(obj)
         return orders
 
 

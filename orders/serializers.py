@@ -3,12 +3,13 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from orders.models import (PayOrders,
                            ConsumeOrders,
-                           ConfirmConsume)
+                           ConfirmConsume,)
 from horizon.serializers import (BaseListSerializer,
                                  BaseModelSerializer,
                                  BaseSerializer,
                                  BaseDishesDetailSerializer)
 from Business_App.bz_dishes.models import Dishes
+from Business_App.bz_orders.models import YinshiPayCode
 from django.conf import settings
 from horizon.models import model_to_dict
 from horizon.decorators import has_permission_to_update
@@ -27,6 +28,17 @@ class PayOrdersSerializer(BaseModelSerializer):
         if 'password' in validated_data:
             validated_data['password'] = make_password(validated_data['password'])
         return super(PayOrdersSerializer, self).update(instance, validated_data)
+
+    def save(self, **kwargs):
+        # 将主订单ID会写入YinshiPayCode
+        if kwargs.get('gateway') == 'yinshi_pay':
+            random_code = kwargs['random_code']
+            ys_pay_instance = YinshiPayCode.get_object(code=random_code)
+            if isinstance(ys_pay_instance, Exception):
+                raise ys_pay_instance
+            ys_pay_instance.pay_orders_id = self.data['orders_id']
+            ys_pay_instance.save()
+        return super(PayOrdersSerializer, self).save()
 
 
 class PayOrdersResponseSerializer(BaseSerializer):

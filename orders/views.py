@@ -13,7 +13,8 @@ from orders.serializers import (PayOrdersSerializer,
 from orders.permissions import IsOwnerOrReadOnly
 from orders.models import (PayOrders,
                            ConsumeOrders,
-                           ConfirmConsume)
+                           ConfirmConsume,
+                           ORDERS_ORDERS_TYPE)
 from orders.forms import (PayOrdersCreateForm,
                           PayOrdersUpdateForm,
                           OrdersListForm,
@@ -31,6 +32,17 @@ from horizon.models import get_perfect_detail_by_detail
 import json
 
 
+INPUT_ORDERS_GATEWAY = {
+    'shopping_cart': 'shopping_cart',
+    'yinshi_pay': 'yinshi_pay',
+    'other': 'other',
+}
+INPUT_ORDERS_TYPE = {
+    'recharge': 'recharge',
+    'consume': 'consume',
+}
+
+
 class PayOrdersAction(generics.GenericAPIView):
     """
     支付订单类
@@ -40,8 +52,11 @@ class PayOrdersAction(generics.GenericAPIView):
     def get_orders_by_orders_id(self, orders_id):
         return PayOrders.get_valid_orders(orders_id=orders_id)
 
-    def make_orders_by_consume(self, request, dishes_ids):
-        return PayOrders.make_orders_by_consume(request, dishes_ids)
+    def make_orders_by_consume(self, request, dishes_ids, gateway=None):
+        kwargs = {}
+        if gateway == INPUT_ORDERS_GATEWAY['yinshi_pay']:
+            kwargs['orders_type'] = ORDERS_ORDERS_TYPE['online_ys_pay']
+        return PayOrders.make_orders_by_consume(request, dishes_ids, **kwargs)
 
     def make_orders_by_recharge(self, request, orders_type, payable):
         return PayOrders.make_orders_by_recharge(request, orders_type, payable)
@@ -63,7 +78,7 @@ class PayOrdersAction(generics.GenericAPIView):
         """
         _instances = self.get_shopping_cart_instances_by_dishes_ids(request, dishes_ids)
         if isinstance(_instances, Exception):
-            return False, _instances
+            return False, _instances.args
         return True, None
 
     def clean_shopping_cart(self, request, dishes_ids):
@@ -74,12 +89,29 @@ class PayOrdersAction(generics.GenericAPIView):
         :return: 
         """
         _instances = self.get_shopping_cart_instances_by_dishes_ids(request, dishes_ids)
+        if isinstance(_instances, Exception):
+            return
         for _instance in _instances:
             sc_serializer = ShoppingCartSerializer(_instance)
             try:
                 sc_serializer.delete_instance(request, _instance)
             except:
                 continue
+
+    def is_request_data_valid(self, **kwargs):
+        if kwargs['orders_type'] == INPUT_ORDERS_TYPE['recharge']:
+            if not kwargs.get('payable'):
+                return False, 'Field ["payable"] data error.'
+        if kwargs['gateway'] == INPUT_ORDERS_GATEWAY['yinshi_pay']:
+            if 'random_code' not in kwargs:
+                return False, 'Field ["random_code"] must be not empty when ' \
+                              'gateway is "yinshi_pay"'
+        if 'dishes_ids' in kwargs:
+            try:
+                json.loads(kwargs['dishes_ids'])
+            except Exception as e:
+                return False, e.args
+        return True, None
 
     def post(self, request, *args, **kwargs):
         """
@@ -90,43 +122,44 @@ class PayOrdersAction(generics.GenericAPIView):
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         cld = form.cleaned_data
+        is_valid, error_message = self.is_request_data_valid(**cld)
+        if not is_valid:
+            return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
+
         dishes_ids = None
         # 充值订单
-        if cld['orders_type'] == 'recharge':
-            if not cld.get('payable'):
-                return Response({'Detail': '[payable] params error'},
-                                status=status.HTTP_400_BAD_REQUEST)
+        if cld['orders_type'] == INPUT_ORDERS_TYPE['recharge']:
             _data = self.make_orders_by_recharge(request, cld['orders_type'], cld['payable'])
         else:
-            try:
-                dishes_ids = json.loads(cld['dishes_ids'])
-            except Exception as e:
-                return Response({'Detail': e.args}, status=status.HTTP_400_BAD_REQUEST)
+            dishes_ids = json.loads(cld['dishes_ids'])
             # 检查购物车
-            if cld['gateway'] == 'shopping_cart':
-                results = self.check_shopping_cart(request, dishes_ids)
-                if not results[0]:
-                    return Response({'Detail': results[1].args},
+            if cld['gateway'] == INPUT_ORDERS_GATEWAY['shopping_cart']:
+                is_valid, error_message = self.check_shopping_cart(request, dishes_ids)
+                if is_valid:
+                    return Response({'Detail': error_message},
                                     status=status.HTTP_400_BAD_REQUEST)
-            _data = self.make_orders_by_consume(request, dishes_ids)
+            _data = self.make_orders_by_consume(request, dishes_ids, gateway=cld['gateway'])
 
         if isinstance(_data, Exception):
             return Response({'Detail': _data.args}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = PayOrdersSerializer(data=_data)
-        if serializer.is_valid():
-            serializer.save()
-            # 清空购物车
-            if cld['gateway'] == 'shopping_cart':
-                self.clean_shopping_cart(request, dishes_ids)
+        if not serializer.is_valid():
+            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-            orders_detail = serializer.instance.orders_detail
-            serializer_response = PayOrdersResponseSerializer(data=orders_detail)
-            if serializer_response.is_valid():
-                return Response(serializer_response.data, status=status.HTTP_200_OK)
-            return Response(serializer_response.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            serializer.save(**cld)
+        except Exception as e:
+            return Response({'Detail': e.args}, status=status.HTTP_400_BAD_REQUEST)
+        # 清空购物车
+        if cld['gateway'] == INPUT_ORDERS_GATEWAY['shopping_cart']:
+            self.clean_shopping_cart(request, dishes_ids)
 
-        return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        orders_detail = serializer.instance.orders_detail
+        serializer_response = PayOrdersResponseSerializer(data=orders_detail)
+        if serializer_response.is_valid():
+            return Response(serializer_response.data, status=status.HTTP_200_OK)
+        return Response(serializer_response.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, *args, **kwargs):
         """
