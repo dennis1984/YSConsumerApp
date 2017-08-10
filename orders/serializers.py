@@ -7,6 +7,7 @@ from orders.models import (PayOrders,
 from horizon.serializers import (BaseListSerializer,
                                  BaseModelSerializer,
                                  BaseSerializer)
+from Business_App.bz_dishes.models import Dishes
 from django.conf import settings
 from horizon.models import model_to_dict
 from horizon.decorators import has_permission_to_update
@@ -157,3 +158,13 @@ class ConfirmConsumeSerializer(BaseModelSerializer):
     class Meta:
         model = ConfirmConsume
         fields = '__all__'
+
+
+class YSPayDishesSerializer(BaseModelSerializer):
+    class Meta:
+        model = Dishes
+        fields = '__all__'
+
+
+class YSPayDishesListSerializer(BaseListSerializer):
+    child = YSPayDishesSerializer()

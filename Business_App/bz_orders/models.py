@@ -4,7 +4,7 @@ from django.db import models
 from django.utils.timezone import now
 from django.db import transaction
 from horizon.main import minutes_15_plus
-from horizon.models import model_to_dict
+from horizon.models import model_to_dict, get_perfect_filter_params
 
 
 def date_for_model():
@@ -145,3 +145,43 @@ class VerifyOrdersAction(object):
         except Exception as e:
             return e
         return obj
+
+
+class YSPayManager(models.Manager):
+    def get(self, *args, **kwargs):
+        kwargs['expires__gt'] = now()
+        return super(YSPayManager, self).get(*args, **kwargs)
+
+    def filter(self, *args, **kwargs):
+        kwargs['expires__gt'] = now()
+        return super(YSPayManager, self).filter(*args, **kwargs)
+
+
+class YinshiPayCode(models.Model):
+    """
+    吟食支付随机码
+    """
+    user_id = models.IntegerField('用户ID')
+    dishes_ids = models.TextField('订购商品列表', default='')
+    code = models.CharField('随机码', max_length=32, db_index=True)
+    expires = models.DateTimeField('过期时间', default=minutes_15_plus)
+    created = models.DateTimeField('创建日期', default=now)
+
+    object = YSPayManager()
+
+    class Meta:
+        db_table = 'ys_yinshi_pay_code'
+
+    def __unicode__(self):
+        return str(self.code)
+
+    @classmethod
+    def get_object(cls, **kwargs):
+        kwargs = get_perfect_filter_params(cls, **kwargs)
+        return cls.object.get(**kwargs)
+
+    @classmethod
+    def filter_objects(cls, **kwargs):
+        kwargs = get_perfect_filter_params(cls, **kwargs)
+        return cls.object.filter(**kwargs)
+

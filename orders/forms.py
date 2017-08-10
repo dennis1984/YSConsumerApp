@@ -45,3 +45,7 @@ class ConfirmConsumeForm(forms.Form):
 
 class ConfirmConsumeListForm(forms.Form):
     confirm_code = forms.CharField(min_length=13, max_length=32)
+
+
+class YSPayDishesListForm(forms.Form):
+    code = forms.CharField(min_length=6, max_length=32)

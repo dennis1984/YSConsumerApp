@@ -8,7 +8,8 @@ from orders.serializers import (PayOrdersSerializer,
                                 OrdersDetailSerializer,
                                 OrdersListSerializer,
                                 ConfirmConsumeSerializer,
-                                ConsumeOrdersListSerializer)
+                                ConsumeOrdersListSerializer,
+                                YSPayDishesListSerializer)
 from orders.permissions import IsOwnerOrReadOnly
 from orders.models import (PayOrders,
                            ConsumeOrders,
@@ -17,10 +18,12 @@ from orders.forms import (PayOrdersCreateForm,
                           PayOrdersUpdateForm,
                           OrdersListForm,
                           OrdersDetailForm,
-                          ConfirmConsumeListForm)
+                          ConfirmConsumeListForm,
+                          YSPayDishesListForm)
 from shopping_cart.serializers import ShoppingCartSerializer
 from shopping_cart.models import ShoppingCart
 from orders.pay import WXPay, WalletPay
+from Business_App.bz_orders.models import YinshiPayCode
 
 from horizon import main
 import json
@@ -321,3 +324,33 @@ class ConfirmConsumeList(generics.GenericAPIView):
             return Response({'Detail': datas.args}, status=status.HTTP_400_BAD_REQUEST)
         return Response(datas, status=status.HTTP_200_OK)
 
+
+class YSPayDishesList(generics.GenericAPIView):
+    """
+    吟食支付菜品详情
+    """
+    permission_classes = (IsOwnerOrReadOnly,)
+
+    def get_dishes_list(self, code):
+        instance = YinshiPayCode.get_object(code=code)
+        if isinstance(instance, Exception):
+            return instance
+        return json.loads(instance.dishes_ids)
+
+    def post(self, request, *args, **kwargs):
+        form = YSPayDishesListForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        dishes_list = self.get_dishes_list(code=cld['code'])
+        if isinstance(dishes_list, Exception):
+            return Response({'Detail': dishes_list.args}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = YSPayDishesListSerializer(data=dishes_list)
+        if not serializer.is_valid():
+            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        datas = serializer.list_data()
+        if isinstance(datas, Exception):
+            return Response({'Detail': datas.args}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(datas, status=status.HTTP_200_OK)
