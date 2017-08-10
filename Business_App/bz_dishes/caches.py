@@ -31,7 +31,9 @@ class DishesDetailCache(object):
     def get_dishes_detail(self, dishes_id):
         key = self.get_dishes_id_key(dishes_id)
         instance = self.handle.get(key)
-        if not instance:
+        # redis 不能保存文件，暂时不用缓存
+        # 后期更改
+        if not instance or instance:
             instance = Dishes.get_dishes_detail_dict_with_user_info(**{'pk': dishes_id})
             if isinstance(instance, Exception):
                 return instance
