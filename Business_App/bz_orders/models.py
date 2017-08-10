@@ -112,10 +112,23 @@ class VerifyOrdersAction(object):
     """
     核销订单
     """
+    def is_ys_pay_orders(self, consume_orders):
+        kwargs = {'consume_orders_id': consume_orders.orders_id}
+        instance = YinshiPayCode.get_object(**kwargs)
+        if isinstance(instance, Exception):
+            return False
+        return True
+
     def is_valid_consume_orders(self, consume_orders):
-        if consume_orders.payment_status != ORDERS_PAYMENT_STATUS['consuming'] or\
-                        consume_orders.orders_type != ORDERS_ORDERS_TYPE['online']:
-            return False, Exception('Orders data is incorrect')
+        error_message = 'Orders data is incorrect.'
+        if consume_orders.orders_type != ORDERS_ORDERS_TYPE['online']:
+            return False, Exception(error_message)
+        if self.is_ys_pay_orders(consume_orders):
+            if consume_orders.payment_status != ORDERS_PAYMENT_STATUS['finished']:
+                return False, Exception(error_message)
+        else:
+            if consume_orders.payment_status != ORDERS_PAYMENT_STATUS['consuming']:
+                return False, Exception(error_message)
         return True, None
 
     def create(self, consume_orders):
