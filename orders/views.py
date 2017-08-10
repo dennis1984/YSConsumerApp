@@ -24,8 +24,10 @@ from shopping_cart.serializers import ShoppingCartSerializer
 from shopping_cart.models import ShoppingCart
 from orders.pay import WXPay, WalletPay
 from Business_App.bz_orders.models import YinshiPayCode
+from Business_App.bz_dishes.models import Dishes
 
 from horizon import main
+from horizon.models import get_perfect_detail_by_detail
 import json
 
 
@@ -335,7 +337,17 @@ class YSPayDishesList(generics.GenericAPIView):
         instance = YinshiPayCode.get_object(code=code)
         if isinstance(instance, Exception):
             return instance
-        return json.loads(instance.dishes_ids)
+        dishes_ids = json.loads(instance.dishes_ids)
+        return self.get_perfect_dishes_details(dishes_ids)
+
+    def get_perfect_dishes_details(self, dishes_ids):
+        details = []
+        for item in dishes_ids:
+            kwargs = {'pk': item['dishes_id']}
+            detail_dict = Dishes.get_dishes_detail_dict_with_user_info(**kwargs)
+            detail_dict['count'] = item['count']
+            details.append(detail_dict)
+        return details
 
     def post(self, request, *args, **kwargs):
         form = YSPayDishesListForm(request.data)

@@ -171,6 +171,7 @@ class YinshiPayCode(models.Model):
 
     class Meta:
         db_table = 'ys_yinshi_pay_code'
+        app_label = 'Business_App.bz_orders.models.YinshiPayCode'
 
     def __unicode__(self):
         return str(self.code)

@@ -6,7 +6,8 @@ from orders.models import (PayOrders,
                            ConfirmConsume)
 from horizon.serializers import (BaseListSerializer,
                                  BaseModelSerializer,
-                                 BaseSerializer)
+                                 BaseSerializer,
+                                 BaseDishesDetailSerializer)
 from Business_App.bz_dishes.models import Dishes
 from django.conf import settings
 from horizon.models import model_to_dict
@@ -160,10 +161,8 @@ class ConfirmConsumeSerializer(BaseModelSerializer):
         fields = '__all__'
 
 
-class YSPayDishesSerializer(BaseModelSerializer):
-    class Meta:
-        model = Dishes
-        fields = '__all__'
+class YSPayDishesSerializer(BaseDishesDetailSerializer):
+    pass
 
 
 class YSPayDishesListSerializer(BaseListSerializer):

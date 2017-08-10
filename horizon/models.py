@@ -4,6 +4,7 @@ from django.conf import settings
 from horizon.main import timezoneStringTostring
 import urllib
 import os
+import copy
 
 
 def model_to_dict(instance, fields=None, exclude=None):
@@ -88,7 +89,7 @@ def get_perfect_detail_by_detail(cls, detail):
     for f in opts.concrete_fields:
         fields.append(f)
 
-    detail_dict = detail
+    detail_dict = copy.deepcopy(detail)
     for f in fields:
         key = f.name
         if key not in detail_dict:
