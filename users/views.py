@@ -227,7 +227,7 @@ class UserAction(generics.GenericAPIView):
         """
         更新用户信息
         """
-        form = UpdateUserInfoForm(request.data)
+        form = UpdateUserInfoForm(request.data, request.FILES)
         if not form.is_valid():
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
