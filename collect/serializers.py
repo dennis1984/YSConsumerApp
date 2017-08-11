@@ -54,7 +54,8 @@ class DishesDetailSerializer(BaseSerializer):
     size_detail = serializers.CharField(max_length=30, required=False,
                                         allow_null=True, allow_blank=True)
     price = serializers.CharField(max_length=50)
-    image_url = serializers.CharField(max_length=200)
+    image = serializers.ImageField()
+    image_detail = serializers.ImageField()
     user_id = serializers.IntegerField()
 
     updated = serializers.DateTimeField()

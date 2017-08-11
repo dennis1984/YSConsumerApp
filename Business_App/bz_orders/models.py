@@ -184,7 +184,7 @@ class YinshiPayCode(models.Model):
     expires = models.DateTimeField('过期时间', default=minutes_15_plus)
     created = models.DateTimeField('创建日期', default=now)
 
-    object = YSPayManager()
+    objects = YSPayManager()
 
     class Meta:
         db_table = 'ys_yinshi_pay_code'
@@ -197,7 +197,7 @@ class YinshiPayCode(models.Model):
     def get_object(cls, **kwargs):
         kwargs = get_perfect_filter_params(cls, **kwargs)
         try:
-            return cls.object.get(**kwargs)
+            return cls.objects.get(**kwargs)
         except Exception as e:
             return e
 
@@ -205,7 +205,7 @@ class YinshiPayCode(models.Model):
     def filter_objects(cls, **kwargs):
         kwargs = get_perfect_filter_params(cls, **kwargs)
         try:
-            return cls.object.filter(**kwargs)
+            return cls.objects.filter(**kwargs)
         except Exception as e:
             return e
 
