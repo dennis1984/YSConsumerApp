@@ -77,11 +77,41 @@ class BaseSerializer(serializers.Serializer):
 
 
 class BaseModelSerializer(serializers.ModelSerializer):
+    def __init__(self, instance=None, data=None, **kwargs):
+        if data:
+            self.make_perfect_initial_data(data)
+            super(BaseModelSerializer, self).__init__(data=data, **kwargs)
+        else:
+            super(BaseModelSerializer, self).__init__(instance, **kwargs)
+
+    def update(self, instance, validated_data):
+        self.make_perfect_initial_data(validated_data)
+        super(BaseModelSerializer, self).update(instance, validated_data)
+
     @property
     def data(self):
         _data = super(BaseModelSerializer, self).data
         return perfect_result(self, _data)
 
+    def make_perfect_initial_data(self, data):
+        if 'price' in data:
+            data['price'] = '%.2f' % data['price']
+        if 'discount' in data:
+            data['discount'] = '%.2f' % data['discount']
+        # 处理管理后台上传图片图片名字没有后缀的问题
+        if 'image' in data:
+            image_names = data['image'].name.split('.')
+            if len(image_names) == 1:
+                data['image'].name = '%s.png' % image_names[0]
+        if 'image_detail' in data:
+            image_names = data['image_detail'].name.split('.')
+            if len(image_names) == 1:
+                data['image_detail'].name = '%s.png' % image_names[0]
+        if 'head_picture' in data:
+            image_names = data['head_picture'].name.split('.')
+            if len(image_names) == 1:
+                data['head_picture'].name = '%s.png' % image_names[0]
+            
 
 def perfect_result(self, _data):
     _fields = self.get_fields()

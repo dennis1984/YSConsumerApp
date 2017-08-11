@@ -80,7 +80,7 @@ class WXUserSerializer(serializers.ModelSerializer):
         return source_dict
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(BaseModelSerializer):
     class Meta:
         model = ConsumerUser
         fields = '__all__'
