@@ -379,6 +379,8 @@ class YSPayDishesList(generics.GenericAPIView):
         instance = YinshiPayCode.get_object(code=code)
         if isinstance(instance, Exception):
             return instance
+        if instance.pay_orders_id:
+            return Exception('Can not perform this action.')
         dishes_ids = json.loads(instance.dishes_ids)
         return self.get_perfect_dishes_details(dishes_ids)
 
@@ -399,7 +401,7 @@ class YSPayDishesList(generics.GenericAPIView):
         cld = form.cleaned_data
         dishes_list = self.get_dishes_list(code=cld['code'])
         if isinstance(dishes_list, Exception):
-            return Response({'Detail': dishes_list.args}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'Detail': dishes_list.args}, status=status.HTTP_200_OK)
 
         serializer = YSPayDishesListSerializer(data=dishes_list)
         if not serializer.is_valid():
