@@ -112,7 +112,7 @@ class UserInstanceSerializer(serializers.ModelSerializer):
         fields = ('id', 'phone', 'nickname', 'head_picture',)
 
 
-class UserDetailSerializer(serializers.Serializer):
+class UserDetailSerializer(BaseSerializer):
     pk = serializers.IntegerField()
     phone = serializers.CharField(max_length=20, allow_blank=True,
                                   allow_null=True)
@@ -127,23 +127,11 @@ class UserDetailSerializer(serializers.Serializer):
 
     head_picture = serializers.ImageField()
 
-    # food_court_name = serializers.CharField(max_length=200, required=False)
-    # city = serializers.CharField(max_length=100, required=False)
-    # district = serializers.CharField(max_length=100, required=False)
-    # mall = serializers.CharField(max_length=200, required=False)
-
     @property
     def data(self):
         _data = super(UserDetailSerializer, self).data
         if _data.get('pk', None):
             _data['member_id'] = 'NO.%06d' % _data['pk']
-            _data['last_login'] = timezoneStringTostring(_data['last_login'])
-            head_picture = _data.pop('head_picture')
-            if head_picture.startswith('http'):
-                _data['head_picture_url'] = urllib.unquote(head_picture)
-            else:
-                _data['head_picture_url'] = os.path.join(settings.WEB_URL_FIX,
-                                                         head_picture)
         return _data
 
 
