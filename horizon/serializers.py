@@ -111,7 +111,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
             image_names = data['head_picture'].name.split('.')
             if len(image_names) == 1:
                 data['head_picture'].name = '%s.png' % image_names[0]
-            
+
 
 def perfect_result(self, _data):
     _fields = self.get_fields()
