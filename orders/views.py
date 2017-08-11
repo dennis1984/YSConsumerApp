@@ -81,9 +81,6 @@ class PayOrdersAction(generics.GenericAPIView):
     def clean_shopping_cart(self, request, dishes_ids):
         """
         清空购物车
-        :param request: 
-        :param dishes_ids: 
-        :return: 
         """
         _instances = self.get_shopping_cart_instances_by_dishes_ids(request, dishes_ids)
         if isinstance(_instances, Exception):
@@ -113,6 +110,11 @@ class PayOrdersAction(generics.GenericAPIView):
                 return False, e.args
         return True, None
 
+    def is_user_binding(self, request):
+        if not request.user.is_binding:
+            return False, 'Can not perform this action, Please bind your phone first.'
+        return True, None
+
     def post(self, request, *args, **kwargs):
         """
         生成支付订单
@@ -124,6 +126,9 @@ class PayOrdersAction(generics.GenericAPIView):
         cld = form.cleaned_data
         is_valid, error_message = self.is_request_data_valid(**cld)
         if not is_valid:
+            return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
+        is_bind, error_message = self.is_user_binding(request)
+        if not is_bind:
             return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
 
         dishes_ids = None
@@ -172,6 +177,10 @@ class PayOrdersAction(generics.GenericAPIView):
         form = PayOrdersUpdateForm(request.data)
         if not form.is_valid():
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        is_bind, error_message = self.is_user_binding(request)
+        if not is_bind:
+            return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
 
         cld = form.cleaned_data
         payment_mode = cld['payment_mode']
