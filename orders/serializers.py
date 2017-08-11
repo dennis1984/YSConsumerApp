@@ -174,7 +174,7 @@ class ConfirmConsumeSerializer(BaseModelSerializer):
 
 
 class YSPayDishesSerializer(BaseDishesDetailSerializer):
-    pass
+    count = serializers.IntegerField()
 
 
 class YSPayDishesListSerializer(BaseListSerializer):
