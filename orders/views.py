@@ -135,7 +135,7 @@ class PayOrdersAction(generics.GenericAPIView):
             # 检查购物车
             if cld['gateway'] == INPUT_ORDERS_GATEWAY['shopping_cart']:
                 is_valid, error_message = self.check_shopping_cart(request, dishes_ids)
-                if is_valid:
+                if not is_valid:
                     return Response({'Detail': error_message},
                                     status=status.HTTP_400_BAD_REQUEST)
             _data = self.make_orders_by_consume(request, dishes_ids)
