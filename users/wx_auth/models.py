@@ -10,8 +10,8 @@ from hashlib import md5
 
 
 class WXAccessToken(models.Model):
-    access_token = models.CharField(u'微信授权访问用户的token', max_length=256, unique=True)
-    refresh_token = models.CharField(u'刷新access token的token', max_length=256, unique=True)
+    access_token = models.CharField(u'微信授权访问用户的token', max_length=164, unique=True)
+    refresh_token = models.CharField(u'刷新access token的token', max_length=164, unique=True)
     openid = models.CharField(u'微信用户唯一标识', max_length=64, db_index=True)
     scope = models.CharField(u'用户授权的作用域', max_length=64)
     unionid = models.CharField(u'unionid', max_length=32)
