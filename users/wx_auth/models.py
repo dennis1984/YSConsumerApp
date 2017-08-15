@@ -56,3 +56,22 @@ class WXRandomString(models.Model):
             return instances[0]
         else:
             return None
+
+
+class WXAPPInformation(models.Model):
+    app_id = models.CharField(u'开发者ID（APPID）', max_length=32)
+    app_secret = models.CharField(u'开发者秘钥（APPSECRET）', max_length=64)
+    created = models.DateTimeField(u'创建时间', default=now)
+
+    class Meta:
+        db_table = 'ys_wx_app_information'
+
+    def __unicode__(self):
+        return self.app_id
+
+    @classmethod
+    def get_object(cls):
+        try:
+            return cls.objects.all()[0]
+        except Exception as e:
+            return e
