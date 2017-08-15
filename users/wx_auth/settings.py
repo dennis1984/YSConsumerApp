@@ -1,4 +1,4 @@
-#-*- coding:utf8 -*-
+# -*- coding:utf8 -*-
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -17,11 +17,9 @@ WX_AUTH_API_URL = 'https://api.weixin.qq.com/'
 wx_app_info = WXAPPInformation.get_object()
 
 # 公众账号ID
-# APPID = 'wx55da5a50194f8c73'
 APPID = wx_app_info.app_id
 
 # APP密钥
-# APPSECRET = '13d98f221c4c7197e51f799cd572c4f5'
 APPSECRET = wx_app_info.app_secret
 
 # 应用授权作用域 （snsapi_userinfo代表：获取用户个人信息）
