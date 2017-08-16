@@ -104,6 +104,9 @@ class ConsumeOrdersResponseSerializer(BaseSerializer):
     created = serializers.DateTimeField()
     updated = serializers.DateTimeField()
     expires = serializers.DateTimeField()
+    # 是否评价过
+    is_commented = serializers.IntegerField(allow_null=True)
+
     extend = serializers.CharField(allow_blank=True)
 
 
