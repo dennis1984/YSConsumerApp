@@ -119,7 +119,7 @@ def make_barcode(save_path=QRCODE_PICTURE_PATH):
     writer = ImageWriter()
     generate('EAN13', source_data, writer=writer, output=fp,
              writer_options={'module_width': 0.66,
-                             'module_height': 20})
+                             'module_height': 30})
     fp.close()
 
     return writer.text, fname_path
