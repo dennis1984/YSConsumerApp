@@ -76,7 +76,10 @@ class WXUserSerializer(serializers.ModelSerializer):
                     if not key_tmp_list[index]:
                         if index < len(unicode_list):
                             key_tmp_list[index] = unicode_list[index]
-                source_dict[key] = ''.join(key_tmp_list).decode('utf8')
+                try:
+                    source_dict[key] = ''.join(key_tmp_list).decode('utf8')
+                except:
+                    source_dict[key] = ''
         return source_dict
 
 
