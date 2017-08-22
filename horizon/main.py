@@ -29,6 +29,10 @@ def minutes_30_plus():
     return now() + datetime.timedelta(minutes=30)
 
 
+def days_7_plus():
+    return now() + datetime.timedelta(days=7)
+
+
 def make_time_delta(days=0, minutes=0, seconds=0):
     """
     设置时间增量
