@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'wallet',
     'collect',
     'comment',
+    'coupons',
 
     # 允许跨域请求
     'corsheaders',
@@ -121,11 +122,19 @@ DATABASES = {
         'PASSWORD': 'Con!082%Trib',
         'HOST': '127.0.0.1',
         'PORT': 3306,
-    }
+    },
+    'admin': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'yinShi_AM',
+        'USER': 'yinShi_project',
+        'PASSWORD': 'Con!082%Trib',
+        'HOST': '127.0.0.1',
+        'PORT': 3306,
+    },
 }
 
 
-DATABASE_ROUTERS = ['Business_App.router.BusinessAppRouter']
+DATABASE_ROUTERS = ['YSConsumerApp.router.ConsumerAppRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators

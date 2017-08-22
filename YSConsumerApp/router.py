@@ -1,21 +1,25 @@
 # -*- coding:utf-8 -*-
 
 
-class BusinessAppRouter(object):
+class ConsumerAppRouter(object):
     """
-    控制 Business App 应用中模型的
+    控制 Consumer App 应用中模型的
     所有数据库操作的路由
     """
     def db_for_read(self, model, **hints):
         module_name = self.get_module_name(model)
         if module_name == 'Business_App':
             return 'business'
+        elif module_name == 'Admin_App':
+            return 'admin'
         return None
 
     def db_for_write(self, model, **hints):
         module_name = self.get_module_name(model)
         if module_name == 'Business_App':
             return 'business'
+        elif module_name == 'Admin_App':
+            return 'admin'
         return None
 
     def allow_relation(self, obj1, obj2, **hints):

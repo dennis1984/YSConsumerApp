@@ -38,6 +38,7 @@ urlpatterns = [
     url(r'^hot_sale/', include('hot_sale.urls', namespace='hot_sale')),
     url(r'^collect/', include('collect.urls', namespace='collect')),
     url(r'^comment/', include('comment.urls', namespace='comment')),
+    url(r'^coupons/', include('coupons.urls', namespace='coupons')),
 
     # 钱包
     url(r'^wallet/', include('wallet.urls', namespace='wallet')),
