@@ -59,6 +59,8 @@ class Coupons(models.Model):
         for instance in instances:
             consumer_detail = model_to_dict(instance)
             admin_instance = CouponsConfig.get_object(pk=instance.coupons_id)
+            if isinstance(admin_instance, Exception):
+                continue
             admin_detail = model_to_dict(admin_instance)
             admin_detail.pop('created')
             admin_detail.pop('updated')

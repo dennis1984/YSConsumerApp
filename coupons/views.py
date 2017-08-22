@@ -21,7 +21,7 @@ class CouponsList(generics.GenericAPIView):
     permission_classes = (IsOwnerOrReadOnly, )
 
     def get_coupons_list(self, request):
-        return Coupons.filter_objects(user_id=request.user.id)
+        return Coupons.get_perfect_detail_list(user_id=request.user.id)
 
     def post(self, request, *args, **kwargs):
         """

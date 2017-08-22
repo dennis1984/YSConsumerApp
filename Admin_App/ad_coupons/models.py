@@ -89,7 +89,6 @@ class CouponsConfig(models.Model):
         kwargs['expires__gt'] = now()
         return cls.get_object(**kwargs)
 
-
     @classmethod
     def filter_objects(cls, fuzzy=False, **kwargs):
         kwargs = get_perfect_filter_params(cls, **kwargs)
