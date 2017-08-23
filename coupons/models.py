@@ -36,6 +36,12 @@ class Coupons(models.Model):
     def __unicode__(self):
         return str(self.coupons_id)
 
+    @property
+    def is_expired(self):
+        if self.status == 400:
+            return True
+        return False
+
     @classmethod
     def get_object(cls, **kwargs):
         kwargs = get_perfect_filter_params(cls, **kwargs)
@@ -43,6 +49,21 @@ class Coupons(models.Model):
             return cls.objects.get(**kwargs)
         except Exception as e:
             return e
+
+    @classmethod
+    def get_perfect_detail(cls, **kwargs):
+        instance = cls.get_object(**kwargs)
+        if isinstance(instance, Exception):
+            return instance
+        detail = model_to_dict(instance)
+        admin_instance = CouponsConfig.get_object(pk=instance.coupons_id)
+        if isinstance(admin_instance, Exception):
+            return admin_instance
+        admin_detail = model_to_dict(admin_instance)
+        admin_detail.pop('created')
+        admin_detail.pop('updated')
+        detail.update(**admin_detail)
+        return detail
 
     @classmethod
     def filter_objects(cls, **kwargs):

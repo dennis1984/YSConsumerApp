@@ -7,6 +7,10 @@ from django.utils.timezone import now
 from django.db import transaction
 from decimal import Decimal
 
+from coupons.models import Coupons
+from Admin_App.ad_coupons.models import (CouponsConfig,
+                                         COUPONS_CONFIG_TYPE,
+                                         COUPONS_CONFIG_TYPE_CN_MATCH)
 from Business_App.bz_dishes.models import (Dishes,
                                            DISHES_MARK_DISCOUNT_VALUES)
 from Business_App.bz_orders.models import (OrdersIdGenerator,
@@ -318,12 +322,16 @@ class PayOrders(models.Model):
         return food_court_id, food_court_name, dishes_details_list
 
     @classmethod
-    def make_orders_by_consume(cls, request, dishes_ids, orders_type=ORDERS_ORDERS_TYPE['online']):
+    def make_orders_by_consume(cls, request, dishes_ids,
+                               orders_type=ORDERS_ORDERS_TYPE['online'],
+                               coupons_id=None):
         meal_ids = []
         # 会员优惠及其他优惠
         member_discount = 0
         online_discount = 0
         other_discount = 0
+        custom_discount = 0
+        custom_discount_name = ''
         total_amount = 0
         try:
             food_court_id, food_court_name, dishes_details = \
@@ -338,6 +346,14 @@ class PayOrders(models.Model):
                         orders_type == ORDERS_ORDERS_TYPE['online']:
                     online_discount = str(Decimal(online_discount) +
                                           Decimal(item2['discount']) * item2['count'])
+
+        if coupons_id:
+            coupons_detail = Coupons.get_perfect_detail(pk=coupons_id)
+            if isinstance(coupons_detail, Exception):
+                return coupons_detail
+            if coupons_detail['type'] == COUPONS_CONFIG_TYPE['custom']:
+                pass
+
 
         orders_data = cls.make_orders_base(request=request, food_court_id=food_court_id,
                                            food_court_name=food_court_name,

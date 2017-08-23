@@ -52,8 +52,8 @@ class PayOrdersAction(generics.GenericAPIView):
     def get_orders_by_orders_id(self, orders_id):
         return PayOrders.get_valid_orders(orders_id=orders_id)
 
-    def make_orders_by_consume(self, request, dishes_ids):
-        return PayOrders.make_orders_by_consume(request, dishes_ids)
+    def make_orders_by_consume(self, request, dishes_ids, coupons_id=None):
+        return PayOrders.make_orders_by_consume(request, dishes_ids, coupons_id=coupons_id)
 
     def make_orders_by_recharge(self, request, orders_type, payable):
         return PayOrders.make_orders_by_recharge(request, orders_type, payable)
@@ -93,13 +93,15 @@ class PayOrdersAction(generics.GenericAPIView):
                 continue
 
     def is_request_data_valid(self, **kwargs):
-        if kwargs['orders_type'] == INPUT_ORDERS_TYPE['recharge']:
-            if not kwargs.get('payable'):
-                return False, 'Field ["payable"] data error.'
         if kwargs['gateway'] == INPUT_ORDERS_GATEWAY['yinshi_pay']:
             if 'random_code' not in kwargs:
                 return False, 'Field ["random_code"] must be not empty when ' \
                               'gateway is "yinshi_pay"'
+        if kwargs['orders_type'] == INPUT_ORDERS_TYPE['recharge']:
+            if not kwargs.get('payable'):
+                return False, 'Field ["payable"] data error.'
+            if 'coupons_id' in kwargs:
+                return False, 'Can not use coupons'
         if kwargs['orders_type'] == INPUT_ORDERS_TYPE['consume']:
             if 'dishes_ids' not in kwargs:
                 return False, 'Field ["dishes_ids"] must be not empty when ' \
@@ -137,13 +139,14 @@ class PayOrdersAction(generics.GenericAPIView):
             _data = self.make_orders_by_recharge(request, cld['orders_type'], cld['payable'])
         else:
             dishes_ids = json.loads(cld['dishes_ids'])
+            coupons_id = cld.get('coupons_id')
             # 检查购物车
             if cld['gateway'] == INPUT_ORDERS_GATEWAY['shopping_cart']:
                 is_valid, error_message = self.check_shopping_cart(request, dishes_ids)
                 if not is_valid:
                     return Response({'Detail': error_message},
                                     status=status.HTTP_400_BAD_REQUEST)
-            _data = self.make_orders_by_consume(request, dishes_ids)
+            _data = self.make_orders_by_consume(request, dishes_ids, coupons_id=coupons_id)
 
         if isinstance(_data, Exception):
             return Response({'Detail': _data.args}, status=status.HTTP_400_BAD_REQUEST)
