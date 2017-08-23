@@ -29,7 +29,7 @@ class CouponsDetailSerializer(BaseSerializer):
     amount_of_money = serializers.CharField()
     expires = serializers.DateTimeField()
     created = serializers.DateTimeField()
-    update = serializers.DateTimeField()
+    updated = serializers.DateTimeField()
 
 
 class CouponsDetailListSerializer(BaseListSerializer):
