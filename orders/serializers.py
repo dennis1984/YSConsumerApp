@@ -20,17 +20,9 @@ class PayOrdersSerializer(BaseModelSerializer):
     class Meta:
         model = PayOrders
         fields = '__all__'
-        # fields = ('id', 'phone', 'business_name', 'head_picture',
-        #           'food_court_id')
-
-    @has_permission_to_update
-    def update_userinfo(self, request, instance, validated_data):
-        if 'password' in validated_data:
-            validated_data['password'] = make_password(validated_data['password'])
-        return super(PayOrdersSerializer, self).update(instance, validated_data)
 
     def save(self, **kwargs):
-        # 将主订单ID会写入YinshiPayCode
+        # 将主订单ID写入YinshiPayCode
         if kwargs.get('gateway') == 'yinshi_pay':
             random_code = kwargs['random_code']
             ys_pay_instance = YinshiPayCode.get_object(code=random_code)
@@ -56,6 +48,8 @@ class PayOrdersResponseSerializer(BaseSerializer):
     member_discount = serializers.CharField(max_length=16)
     online_discount = serializers.CharField(max_length=16)
     other_discount = serializers.CharField(max_length=16)
+    custom_discount = serializers.CharField(max_length=16)
+    custom_discount_name = serializers.CharField()
     payable = serializers.CharField(max_length=16)
     payment_status = serializers.IntegerField()
     payment_mode = serializers.IntegerField()
@@ -95,6 +89,8 @@ class ConsumeOrdersResponseSerializer(BaseSerializer):
     member_discount = serializers.CharField(max_length=16)
     online_discount = serializers.CharField(max_length=16)
     other_discount = serializers.CharField(max_length=16)
+    custom_discount = serializers.CharField(max_length=16)
+    custom_discount_name = serializers.CharField()
     payable = serializers.CharField(max_length=16)
 
     payment_status = serializers.IntegerField()
@@ -145,6 +141,8 @@ class OrdersDetailForListSerializer(BaseSerializer):
     member_discount = serializers.CharField(max_length=16)
     online_discount = serializers.CharField(max_length=16)
     other_discount = serializers.CharField(max_length=16)
+    custom_discount = serializers.CharField(max_length=16)
+    custom_discount_name = serializers.CharField()
     payable = serializers.CharField(max_length=16)
 
     payment_status = serializers.IntegerField()

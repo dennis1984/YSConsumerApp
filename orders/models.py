@@ -97,6 +97,9 @@ class PayOrders(models.Model):
     member_discount = models.CharField('会员优惠', max_length=16, default='0')
     online_discount = models.CharField('在线下单优惠', max_length=16, default='0')
     other_discount = models.CharField('其他优惠', max_length=16, default='0')
+    custom_discount = models.CharField('自定义优惠', max_length=16, default='0')
+    custom_discount_name = models.CharField('自定义优惠名称', max_length=64, default='',
+                                            blank=True, null=True)
     payable = models.CharField('应付金额', max_length=16)
 
     # 0:未支付 200:已支付 400: 已过期 500:支付失败
@@ -352,8 +355,14 @@ class PayOrders(models.Model):
             if isinstance(coupons_detail, Exception):
                 return coupons_detail
             if coupons_detail['type'] == COUPONS_CONFIG_TYPE['custom']:
-                pass
-
+                custom_discount = coupons_detail['amount_of_money']
+                custom_discount_name = coupons_detail['type_detail']
+            elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['member']:
+                member_discount = coupons_detail['amount_of_money']
+            elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['online']:
+                online_discount = str(Decimal(online_discount) + Decimal(coupons_detail['amount_of_money']))
+            elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['other']:
+                online_discount = coupons_detail['amount_of_money']
 
         orders_data = cls.make_orders_base(request=request, food_court_id=food_court_id,
                                            food_court_name=food_court_name,
@@ -362,6 +371,8 @@ class PayOrders(models.Model):
                                            member_discount=member_discount,
                                            online_discount=online_discount,
                                            other_discount=other_discount,
+                                           custom_discount=custom_discount,
+                                           custom_discount_name=custom_discount_name,
                                            orders_type=orders_type)
         return orders_data
 
@@ -389,8 +400,8 @@ class PayOrders(models.Model):
     @classmethod
     def make_orders_base(cls, request, food_court_id, food_court_name,
                          dishes_details, total_amount, member_discount,
-                         online_discount=0, other_discount=0,
-                         orders_type=None):
+                         online_discount=0, other_discount=0, custom_discount=0,
+                         custom_discount_name=None, orders_type=None):
         try:
             orders_data = {'user_id': request.user.id,
                            'orders_id': OrdersIdGenerator.get_orders_id(),
@@ -402,10 +413,13 @@ class PayOrders(models.Model):
                            'member_discount': str(member_discount),
                            'online_discount': str(online_discount),
                            'other_discount': str(other_discount),
+                           'custom_discount': str(custom_discount),
+                           'custom_discount_name': custom_discount_name,
                            'payable': str(Decimal(total_amount) -
                                           Decimal(member_discount) -
                                           Decimal(online_discount) -
-                                          Decimal(other_discount)),
+                                          Decimal(other_discount) -
+                                          Decimal(custom_discount)),
                            'orders_type': orders_type,
                            }
         except Exception as e:
@@ -457,6 +471,9 @@ class ConsumeOrders(models.Model):
     member_discount = models.CharField('会员优惠', max_length=16, default='0')
     online_discount = models.CharField('在线下单优惠', max_length=16, default='0')
     other_discount = models.CharField('其他优惠', max_length=16, default='0')
+    custom_discount = models.CharField('自定义优惠', max_length=16, default='0')
+    custom_discount_name = models.CharField('自定义优惠名称', max_length=64, default='',
+                                            blank=True, null=True)
     payable = models.CharField('应付金额', max_length=16)
 
     # 0:未支付 200:已支付 201:待消费 206:已完成 400: 已过期 500:支付失败
