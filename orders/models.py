@@ -641,16 +641,17 @@ class BaseConsumeOrders(object):
                     return coupons_detail
 
                 amount_of_money = float(coupons_detail['amount_of_money'])
+                business_ratio = coupons_detail['business_ratio'] / 100.0
+                discount = '%.2f' % ((amount_of_money / business_count) * business_ratio)
                 if coupons_detail['type'] == COUPONS_CONFIG_TYPE['custom']:
-                    custom_discount = '%.2f' % (amount_of_money / business_count)
+                    custom_discount = discount
                     custom_discount_name = coupons_detail['type_detail']
                 elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['member']:
-                    member_discount = '%.2f' % (amount_of_money / business_count)
+                    member_discount = discount
                 elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['online']:
-                    discount = '%.2f' % (amount_of_money / business_count)
                     online_discount = str(Decimal(online_discount) + Decimal(discount))
                 elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['other']:
-                    other_discount = '%.2f' % (amount_of_money / business_count)
+                    other_discount = discount
 
             payable = str(Decimal(total_amount) -
                           Decimal(member_discount) -
