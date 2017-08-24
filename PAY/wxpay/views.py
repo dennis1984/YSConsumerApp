@@ -98,11 +98,11 @@ class JsApiCallback(APIView):
                                                        user.phone,
                                                        template_name='recharge')
                 else:
+                    # 支付成功后，拆分主订单为子订单
+                    BaseConsumeOrders().create(self._orders_id)
                     # 回写优惠券使用状态
                     if orders.coupons_id:
                         Coupons.update_status_for_used(orders.coupons_id)
-                    # 支付成功后，拆分主订单为子订单
-                    BaseConsumeOrders().create(self._orders_id)
         else:
             try:
                 PayOrders.update_payment_status_by_pay_callback(

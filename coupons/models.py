@@ -84,6 +84,7 @@ class Coupons(models.Model):
             if isinstance(admin_instance, Exception):
                 continue
             admin_detail = model_to_dict(admin_instance)
+            admin_detail.pop('id')
             admin_detail.pop('created')
             admin_detail.pop('updated')
             consumer_detail.update(**admin_detail)

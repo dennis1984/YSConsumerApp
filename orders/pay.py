@@ -11,6 +11,8 @@ import os
 import json
 from decimal import Decimal
 
+from coupons.models import Coupons
+
 
 class WXPay(object):
     def __init__(self, request, instance):
@@ -93,4 +95,11 @@ class WalletPay(object):
         consume_result = BaseConsumeOrders().create(self.orders)
         if isinstance(consume_result, Exception):
             return consume_result
+
+        orders = consume_result[0]
+        # 回写优惠券使用状态
+        if orders.coupons_id:
+            coupons = Coupons.update_status_for_used(orders.coupons_id)
+            if isinstance(coupons, Exception):
+                return coupons
         return result

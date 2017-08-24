@@ -256,12 +256,6 @@ class WalletAction(object):
             orders = PayOrders.update_payment_status_by_pay_callback(**kwargs)
         except Exception as e:
             return e
-        else:
-            # 回写优惠券使用状态
-            if orders.coupons_id:
-                coupons = Coupons.update_status_for_used(orders.coupons_id)
-                if isinstance(coupons, Exception):
-                    return coupons
 
         # 生成消费记录
         _trade = WalletTradeAction().create(request, orders)

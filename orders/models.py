@@ -635,21 +635,22 @@ class BaseConsumeOrders(object):
                     online_discount = str(Decimal(online_discount) +
                                           Decimal(item['discount']) * item['count'])
 
-            coupons_detail = Coupons.get_perfect_detail(pk=_instance.coupons_id, user_id=_instance.user_id)
-            if isinstance(coupons_detail, Exception):
-                return coupons_detail
+            if _instance.coupons_id:
+                coupons_detail = Coupons.get_perfect_detail(pk=_instance.coupons_id, user_id=_instance.user_id)
+                if isinstance(coupons_detail, Exception):
+                    return coupons_detail
 
-            amount_of_money = coupons_detail['amount_of_money']
-            if coupons_detail['type'] == COUPONS_CONFIG_TYPE['custom']:
-                custom_discount = '%.2f' % (amount_of_money / business_count)
-                custom_discount_name = coupons_detail['type_detail']
-            elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['member']:
-                member_discount = '%.2f' % (amount_of_money / business_count)
-            elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['online']:
-                discount = '%.2f' % (amount_of_money / business_count)
-                online_discount = str(Decimal(online_discount) + Decimal(discount))
-            elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['other']:
-                other_discount = '%.2f' % (amount_of_money / business_count)
+                amount_of_money = coupons_detail['amount_of_money']
+                if coupons_detail['type'] == COUPONS_CONFIG_TYPE['custom']:
+                    custom_discount = '%.2f' % (amount_of_money / business_count)
+                    custom_discount_name = coupons_detail['type_detail']
+                elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['member']:
+                    member_discount = '%.2f' % (amount_of_money / business_count)
+                elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['online']:
+                    discount = '%.2f' % (amount_of_money / business_count)
+                    online_discount = str(Decimal(online_discount) + Decimal(discount))
+                elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['other']:
+                    other_discount = '%.2f' % (amount_of_money / business_count)
 
             payable = str(Decimal(total_amount) -
                           Decimal(member_discount) -
