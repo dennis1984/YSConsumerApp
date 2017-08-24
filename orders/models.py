@@ -640,7 +640,7 @@ class BaseConsumeOrders(object):
                 if isinstance(coupons_detail, Exception):
                     return coupons_detail
 
-                amount_of_money = coupons_detail['amount_of_money']
+                amount_of_money = float(coupons_detail['amount_of_money'])
                 if coupons_detail['type'] == COUPONS_CONFIG_TYPE['custom']:
                     custom_discount = '%.2f' % (amount_of_money / business_count)
                     custom_discount_name = coupons_detail['type_detail']
