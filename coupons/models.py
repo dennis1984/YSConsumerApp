@@ -60,6 +60,7 @@ class Coupons(models.Model):
         if isinstance(admin_instance, Exception):
             return admin_instance
         admin_detail = model_to_dict(admin_instance)
+        admin_detail.pop('id')
         admin_detail.pop('created')
         admin_detail.pop('updated')
         detail.update(**admin_detail)
@@ -89,3 +90,24 @@ class Coupons(models.Model):
             details.append(consumer_detail)
         return details
 
+    @classmethod
+    def update_status_for_used(cls, pk):
+        instance = cls.get_object(pk=pk)
+        if isinstance(instance, Exception):
+            return instance
+        try:
+            instance.status = 2
+            instance.save()
+        except Exception as e:
+            return e
+        return instance
+
+    @classmethod
+    def is_used(cls, pk):
+        instance = cls.get_object(pk=pk)
+        if isinstance(instance, Exception):
+            return True
+        if instance.status == 2:
+            return True
+        else:
+            return False

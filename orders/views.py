@@ -21,6 +21,7 @@ from orders.forms import (PayOrdersCreateForm,
                           OrdersDetailForm,
                           ConfirmConsumeListForm,
                           YSPayDishesListForm)
+from coupons.models import Coupons
 from shopping_cart.serializers import ShoppingCartSerializer
 from shopping_cart.models import ShoppingCart
 from orders.pay import WXPay, WalletPay
@@ -190,6 +191,12 @@ class PayOrdersAction(generics.GenericAPIView):
         _instance = self.get_orders_by_orders_id(cld['orders_id'])
         if isinstance(_instance, Exception):
             return Response({'Detail': _instance.args}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 检查优惠券是否已经使用过了
+        if _instance.coupons_id:
+            is_used = Coupons.is_used(pk=_instance.coupons_id)
+            if is_used:
+                return Response({'Detail': 'The coupon is used.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if payment_mode == 1:      # 钱包支付
             wallet_pay = WalletPay(request, _instance)

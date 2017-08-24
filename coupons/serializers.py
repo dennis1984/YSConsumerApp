@@ -20,6 +20,7 @@ class CouponsSerializer(BaseModelSerializer):
 
 
 class CouponsDetailSerializer(BaseSerializer):
+    id = serializers.IntegerField()
     coupons_id = serializers.IntegerField()
     status = serializers.IntegerField()
 

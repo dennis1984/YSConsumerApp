@@ -13,6 +13,7 @@ from orders.models import (PayOrders,
                            ORDERS_ORDERS_TYPE)
 from wallet.models import WalletAction
 from users.models import ConsumerUser
+from coupons.models import Coupons
 import json
 import copy
 
@@ -75,6 +76,7 @@ class JsApiCallback(APIView):
 
         return_xml = main.make_dict_to_xml(success_message, use_cdata=True)
         if data_dict['result_code'] == 'SUCCESS':
+            # 回写订单状态
             try:
                 orders = PayOrders.update_payment_status_by_pay_callback(
                     orders_id=self._orders_id,
@@ -96,6 +98,9 @@ class JsApiCallback(APIView):
                                                        user.phone,
                                                        template_name='recharge')
                 else:
+                    # 回写优惠券使用状态
+                    if orders.coupons_id:
+                        Coupons.update_status_for_used(orders.coupons_id)
                     # 支付成功后，拆分主订单为子订单
                     BaseConsumeOrders().create(self._orders_id)
         else:
