@@ -355,6 +355,11 @@ class PayOrders(models.Model):
             coupons_detail = Coupons.get_perfect_detail(pk=coupons_id, user_id=request.user.id)
             if isinstance(coupons_detail, Exception):
                 return coupons_detail
+            if coupons_detail['start_amount'] > total_amount or \
+                coupons_detail['amount_of_money'] > total_amount:
+                return Exception("The orders's total amount is not enough,"
+                                 "can not used the coupons.")
+
             if coupons_detail['type'] == COUPONS_CONFIG_TYPE['custom']:
                 custom_discount = coupons_detail['amount_of_money']
                 custom_discount_name = coupons_detail['type_detail']
@@ -622,10 +627,10 @@ class BaseConsumeOrders(object):
         dishes_detail_list = json.loads(pay_orders.dishes_ids)
         business_count = float(len(dishes_detail_list))
         for index, business_dishes in enumerate(dishes_detail_list, 1):
-            member_discount = verify_member_discount = 0
-            online_discount = verify_online_discount = 0
-            other_discount = verify_other_discount = 0
-            custom_discount = verify_custom_discount = 0
+            member_discount = 0
+            online_discount = 0
+            other_discount = 0
+            custom_discount = 0
             custom_discount_name = ''
             total_amount = 0
             for item in business_dishes['dishes_detail']:
@@ -634,9 +639,6 @@ class BaseConsumeOrders(object):
                         pay_orders.orders_type == ORDERS_ORDERS_TYPE['online']:
                     online_discount = str(Decimal(online_discount) +
                                           Decimal(item['discount']) * item['count'])
-            else:
-                verify_online_discount = online_discount
-
             if _instance.coupons_id:
                 coupons_detail = Coupons.get_perfect_detail(pk=_instance.coupons_id, user_id=_instance.user_id)
                 if isinstance(coupons_detail, Exception):
@@ -648,29 +650,19 @@ class BaseConsumeOrders(object):
                 verify_discount = '%.2f' % ((amount_of_money / business_count) * business_ratio)
                 if coupons_detail['type'] == COUPONS_CONFIG_TYPE['custom']:
                     custom_discount = discount
-                    verify_custom_discount = verify_discount
                     custom_discount_name = coupons_detail['type_detail']
                 elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['member']:
                     member_discount = discount
-                    verify_member_discount = verify_discount
                 elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['online']:
                     online_discount = str(Decimal(online_discount) + Decimal(discount))
-                    verify_online_discount = str(Decimal(online_discount) + Decimal(verify_discount))
                 elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['other']:
                     other_discount = discount
-                    verify_other_discount = verify_discount
 
             payable = str(Decimal(total_amount) -
                           Decimal(member_discount) -
                           Decimal(online_discount) -
                           Decimal(other_discount) -
                           Decimal(custom_discount))
-            verify_payable = str(Decimal(total_amount) -
-                                 Decimal(verify_member_discount) -
-                                 Decimal(verify_online_discount) -
-                                 Decimal(verify_other_discount) -
-                                 Decimal(verify_custom_discount))
-
             kwargs = {}
             is_ys_pay_orders, ys_pay_instance = self.is_ys_pay_orders(pay_orders_id)
             if is_ys_pay_orders:
@@ -711,13 +703,7 @@ class BaseConsumeOrders(object):
                     return e
 
             # 同步子订单到商户端
-            obj2 = copy.deepcopy(obj)
-            obj2.member_discount = verify_member_discount
-            obj2.online_discount = verify_online_discount
-            obj2.other_discount = verify_other_discount
-            obj2.custom_discount = verify_custom_discount
-            obj2.payable = verify_payable
-            result = VerifyOrdersAction().create(obj2)
+            result = VerifyOrdersAction().create(obj, pay_orders)
             if isinstance(result, Exception):
                 return result
             orders.append(obj)

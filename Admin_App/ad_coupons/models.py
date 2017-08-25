@@ -62,6 +62,10 @@ class CouponsConfig(models.Model):
     amount_of_money = models.CharField(u'优惠金额', max_length=16)
     service_ratio = models.IntegerField(u'平台商承担（优惠）比例')
     business_ratio = models.IntegerField(u'商户承担（优惠）比例')
+    start_amount = models.CharField(u'满足优惠条件的起始金额', max_length=16, default='0')
+
+    total_count = models.IntegerField(u'优惠券总数量', null=True)
+    send_count = models.IntegerField(u'优惠券发放数量', default=0)
 
     expires = models.DateTimeField(u'优惠券失效日期', default=main.days_7_plus)
     # 数据状态：1：正常 400：已过期 其它值：已删除

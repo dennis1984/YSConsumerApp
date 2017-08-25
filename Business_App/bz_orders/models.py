@@ -3,8 +3,13 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils.timezone import now
 from django.db import transaction
+
 from horizon.main import minutes_15_plus
 from horizon.models import model_to_dict, get_perfect_filter_params
+from coupons.models import Coupons
+
+import json
+from decimal import Decimal
 
 
 def date_for_model():
@@ -69,8 +74,11 @@ class VerifyOrders(models.Model):
     custom_discount = models.CharField('自定义优惠', max_length=16, default='0')
     custom_discount_name = models.CharField('自定义优惠名称', max_length=64, default='',
                                             blank=True, null=True)
-    coupons_id = models.IntegerField('优惠券ID', null=True)
+    service_dishes_subsidy = models.CharField('菜品优惠平台补贴', max_length=16, default='0')
+    service_coupons_subsidy = models.CharField('优惠券优惠平台补贴', max_length=16, default='0')
     payable = models.CharField('应付金额', max_length=16)
+
+    coupons_id = models.IntegerField('优惠券ID', null=True)
 
     # 0:未支付 200:已支付 201:待消费 206:已完成 400: 已过期 500:支付失败
     payment_status = models.IntegerField('订单支付状态', default=201)
@@ -135,7 +143,7 @@ class VerifyOrdersAction(object):
                 return False, Exception(error_message)
         return True, None
 
-    def create(self, consume_orders):
+    def create(self, consume_orders, pay_orders):
         """
         创建核销订单
         return: None: 成功
@@ -145,16 +153,36 @@ class VerifyOrdersAction(object):
         if not is_valid:
             return result
 
+        service_dishes_subsidy = '0'
+        service_coupons_subsidy = '0'
+
+        # 优惠券计算
+        dishes_detail_list = json.loads(pay_orders.dishes_ids)
+        business_count = float(len(dishes_detail_list))
+        if consume_orders.coupons_id:
+            coupons_detail = Coupons.get_perfect_detail(pk=consume_orders.coupons_id,
+                                                        user_id=consume_orders.user_id)
+            if isinstance(coupons_detail, Exception):
+                return coupons_detail
+
+            amount_of_money = float(coupons_detail['amount_of_money'])
+            service_ratio = coupons_detail['service_ratio'] / 100.0
+            verify_discount = '%.2f' % ((amount_of_money / business_count) * service_ratio)
+            service_dishes_subsidy = '0'
+            service_coupons_subsidy = verify_discount
+
+        update_data = {'user_id': consume_orders.business_id,
+                       'consumer_id': consume_orders.user_id,
+                       'service_dishes_subsidy': service_dishes_subsidy,
+                       'service_coupons_subsidy': service_coupons_subsidy,
+                       'payable': str(Decimal(consume_orders.payable) +
+                                      Decimal(service_dishes_subsidy) +
+                                      Decimal(service_coupons_subsidy))}
         orders_data = model_to_dict(consume_orders)
-        pop_keys = ['created', 'updated', 'master_orders_id', 'is_commented']
+        pop_keys = ['created', 'updated', 'master_orders_id', 'is_commented', 'confirm_code']
         for key in pop_keys:
             orders_data.pop(key)
-        consumer_id = orders_data['user_id']
-        business_id = orders_data['business_id']
-        orders_data['user_id'] = business_id
-        orders_data['consumer_id'] = consumer_id
-        orders_data.pop('business_id')
-        orders_data.pop('confirm_code')
+        orders_data.update(update_data)
 
         try:
             obj = VerifyOrders(**orders_data)
