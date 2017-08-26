@@ -182,9 +182,9 @@ class VerifyOrdersAction(object):
                 if isinstance(dishes_discount_config, Exception):
                     continue
                 service_ratio = dishes_discount_config.service_ratio / 100.0
-                dishes_subsidy = '%.2f' % str(Decimal(dishes_detail['discount']) *
-                                              dishes_detail['count'] *
-                                              Decimal(service_ratio))
+                dishes_subsidy = '%.2f' % float(str(Decimal(dishes_detail['discount']) *
+                                                    dishes_detail['count'] *
+                                                    Decimal(service_ratio)))
                 service_dishes_subsidy = str(Decimal(service_dishes_subsidy) +
                                              Decimal(dishes_subsidy))
 
