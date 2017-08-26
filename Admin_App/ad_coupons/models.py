@@ -104,3 +104,40 @@ class CouponsConfig(models.Model):
             return cls.objects.filter(**kwargs)
         except Exception as e:
             return e
+
+
+class DishesDiscountConfig(models.Model):
+    """
+    菜品优惠配置
+    """
+    dishes_id = models.IntegerField(u'菜品ID', db_index=True)
+    # dishes_name = models.CharField(u'菜品名称', max_length=40)
+    # business_id = models.IntegerField(u'商户ID')
+    # business_name = models.CharField(u'商品名称', max_length=128)
+    # food_court_id = models.IntegerField(u'美食城ID')
+    # food_court_name = models.CharField(u'美食城名称', max_length=200)
+
+    service_ratio = models.IntegerField(u'平台商承担（优惠）比例')
+    business_ratio = models.IntegerField(u'商户承担（优惠）比例')
+
+    # expires = models.DateTimeField(u'优惠券失效日期', default=main.days_7_plus)
+    # 数据状态：1：正常 其它值：已删除
+    status = models.IntegerField(u'数据状态', default=1)
+    created = models.DateTimeField(u'创建时间', default=now)
+    updated = models.DateTimeField(u'最后更新时间', auto_now=True)
+
+    objects = BaseManager()
+
+    class Meta:
+        db_table = 'ys_dishes_discount_config'
+        unique_together = ('dishes_id', 'status')
+        index_together = (['dishes_id', 'status'])
+        app_label = 'Admin_App.ad_coupons.models.DishesDiscountConfig'
+
+    @classmethod
+    def get_object(cls, **kwargs):
+        kwargs = get_perfect_filter_params(cls, **kwargs)
+        try:
+            return cls.objects.get(**kwargs)
+        except Exception as e:
+            return e

@@ -7,6 +7,8 @@ from django.db import transaction
 from horizon.main import minutes_15_plus
 from horizon.models import model_to_dict, get_perfect_filter_params
 from coupons.models import Coupons
+from Business_App.bz_dishes.models import DISHES_MARK_DISCOUNT_VALUES
+from Admin_App.ad_coupons.models import DishesDiscountConfig
 
 import json
 from decimal import Decimal
@@ -156,7 +158,7 @@ class VerifyOrdersAction(object):
         service_dishes_subsidy = '0'
         service_coupons_subsidy = '0'
 
-        # 优惠券计算
+        # 优惠券平台补贴计算
         dishes_detail_list = json.loads(pay_orders.dishes_ids)
         business_count = float(len(dishes_detail_list))
         if consume_orders.coupons_id:
@@ -168,8 +170,23 @@ class VerifyOrdersAction(object):
             amount_of_money = float(coupons_detail['amount_of_money'])
             service_ratio = coupons_detail['service_ratio'] / 100.0
             verify_discount = '%.2f' % ((amount_of_money / business_count) * service_ratio)
-            service_dishes_subsidy = '0'
             service_coupons_subsidy = verify_discount
+
+        # 菜品折扣平台补贴计算
+        dishes_detail_list = json.loads(consume_orders.dishes_ids)
+        for index, dishes_detail in enumerate(dishes_detail_list, 1):
+            if dishes_detail['mark'] in DISHES_MARK_DISCOUNT_VALUES and \
+                            pay_orders.orders_type == ORDERS_ORDERS_TYPE['online']:
+
+                dishes_discount_config = DishesDiscountConfig.get_object(dishes_id=dishes_detail['id'])
+                if isinstance(dishes_discount_config, Exception):
+                    continue
+                service_ratio = dishes_discount_config.service_ratio / 100.0
+                dishes_subsidy = '%.2f' % str(Decimal(dishes_detail['discount']) *
+                                              dishes_detail['count'] *
+                                              Decimal(service_ratio))
+                service_dishes_subsidy = str(Decimal(service_dishes_subsidy) +
+                                             Decimal(dishes_subsidy))
 
         update_data = {'user_id': consume_orders.business_id,
                        'consumer_id': consume_orders.user_id,
@@ -179,7 +196,8 @@ class VerifyOrdersAction(object):
                                       Decimal(service_dishes_subsidy) +
                                       Decimal(service_coupons_subsidy))}
         orders_data = model_to_dict(consume_orders)
-        pop_keys = ['created', 'updated', 'master_orders_id', 'is_commented', 'confirm_code']
+        pop_keys = ['created', 'updated', 'master_orders_id',
+                    'is_commented', 'confirm_code', 'business_id']
         for key in pop_keys:
             orders_data.pop(key)
         orders_data.update(update_data)

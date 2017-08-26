@@ -355,8 +355,8 @@ class PayOrders(models.Model):
             coupons_detail = Coupons.get_perfect_detail(pk=coupons_id, user_id=request.user.id)
             if isinstance(coupons_detail, Exception):
                 return coupons_detail
-            if coupons_detail['start_amount'] > total_amount or \
-                coupons_detail['amount_of_money'] > total_amount:
+            if Decimal(coupons_detail['start_amount']) > Decimal(total_amount) or \
+                Decimal(coupons_detail['amount_of_money']) > Decimal(total_amount):
                 return Exception("The orders's total amount is not enough,"
                                  "can not used the coupons.")
 
@@ -645,9 +645,7 @@ class BaseConsumeOrders(object):
                     return coupons_detail
 
                 amount_of_money = float(coupons_detail['amount_of_money'])
-                business_ratio = coupons_detail['business_ratio'] / 100.0
                 discount = '%.2f' % (amount_of_money / business_count)
-                verify_discount = '%.2f' % ((amount_of_money / business_count) * business_ratio)
                 if coupons_detail['type'] == COUPONS_CONFIG_TYPE['custom']:
                     custom_discount = discount
                     custom_discount_name = coupons_detail['type_detail']
