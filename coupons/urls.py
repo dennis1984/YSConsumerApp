@@ -6,6 +6,7 @@ from coupons import views
 
 urlpatterns = [
     url(r'^coupons_list/$', views.CouponsList.as_view()),
+    url(r'^coupons_detail/$', views.CouponsDetail.as_view()),
 
 ]
 
