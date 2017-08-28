@@ -120,6 +120,7 @@ class ConsumeOrdersResponseSerializer(BaseSerializer):
     expires = serializers.DateTimeField()
     # 是否评价过
     is_commented = serializers.IntegerField(allow_null=True)
+    notes = serializers.CharField(allow_null=True, allow_blank=True)
 
     extend = serializers.CharField(allow_blank=True)
 
@@ -180,6 +181,7 @@ class OrdersDetailForListSerializer(BaseSerializer):
     is_expired = serializers.NullBooleanField(required=False)
     # 是否评价过
     is_commented = serializers.IntegerField(required=False, allow_null=True)
+    notes = serializers.CharField(allow_null=True, allow_blank=True)
 
     extend = serializers.CharField(allow_blank=True)
 

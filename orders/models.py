@@ -695,7 +695,8 @@ class BaseConsumeOrders(object):
                 'food_court_name': pay_orders.food_court_name,
                 'payment_mode': pay_orders.payment_mode,
                 'orders_type': pay_orders.orders_type,
-                'master_orders_id': pay_orders_id
+                'master_orders_id': pay_orders_id,
+                'notes': pay_orders.notes,
             }
             consume_data.update(**kwargs)
             try:
