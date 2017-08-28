@@ -78,3 +78,7 @@ class WXAuthCreateUserForm(VerifyIdentifyingCodeForm):
 class AdvertListForm(forms.Form):
     food_court_id = forms.IntegerField(min_value=1)
 
+
+class WXAuthLoginForm(forms.Form):
+    callback_url = forms.URLField(max_length=256, required=False)
+

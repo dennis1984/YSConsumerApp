@@ -20,7 +20,8 @@ from users.forms import (CreateUserForm,
                          UpdateUserInfoForm,
                          SetPasswordForm,
                          WXAuthCreateUserForm,
-                         AdvertListForm)
+                         AdvertListForm,
+                         WXAuthLoginForm)
 from users.wx_auth.views import Oauth2AccessToken
 
 from Business_App.bz_users.models import AdvertPicture
@@ -109,6 +110,11 @@ class WXAuthAction(APIView):
         from users.wx_auth import settings as wx_auth_settings
         from users.wx_auth.serializers import RandomStringSerializer
 
+        form = WXAuthLoginForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
         wx_auth_params = copy.deepcopy(wx_auth_settings.WX_AUTH_PARAMS['get_code'])
         wx_auth_url = wx_auth_settings.WX_AUTH_URLS['get_code']
         end_params = wx_auth_params.pop('end_params')
@@ -120,7 +126,9 @@ class WXAuthAction(APIView):
         serializer = RandomStringSerializer(data={'random_str': state})
         if serializer.is_valid():
             serializer.save()
-            return Response({'wx_auth_url': return_url}, status=status.HTTP_200_OK)
+            return_data = {'wx_auth_url': return_url}
+            return_data.update(cld)
+            return Response(return_data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 

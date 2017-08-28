@@ -148,14 +148,16 @@ class PayOrdersAction(generics.GenericAPIView):
         else:
             dishes_ids = json.loads(cld['dishes_ids'])
             coupons_id = cld.get('coupons_id')
+            notes = cld.get('notes', '')
             # 检查购物车
             if cld['gateway'] == INPUT_ORDERS_GATEWAY['shopping_cart']:
                 is_valid, error_message = self.check_shopping_cart(request, dishes_ids)
                 if not is_valid:
                     return Response({'Detail': error_message},
                                     status=status.HTTP_400_BAD_REQUEST)
-            _data = self.make_orders_by_consume(request, dishes_ids, coupons_id=coupons_id,
-                                                notes=cld['notes'])
+            _data = self.make_orders_by_consume(request, dishes_ids,
+                                                coupons_id=coupons_id,
+                                                notes=notes)
 
         if isinstance(_data, Exception):
             return Response({'Detail': _data.args}, status=status.HTTP_400_BAD_REQUEST)

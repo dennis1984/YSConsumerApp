@@ -10,16 +10,18 @@ from wallet.permissions import IsOwnerOrReadOnly
 from wallet.models import (Wallet,
                            WalletTradeDetail)
 from wallet.forms import (WalletDetailListForm,
-                          WalletCreateForm,)
+                          WalletCreateForm,
+                          WalletUpdateForm)
 
 
 class WalletAction(generics.GenericAPIView):
     """
     钱包相关功能
     """
-    queryset = Wallet.objects.all()
-    serializer_class = WalletSerializer
     permission_classes = (IsOwnerOrReadOnly, )
+
+    def get_wallet_object(self, request):
+        return Wallet.get_object(user_id=request.user.id)
 
     def post(self, request, *args, **kwargs):
         """
@@ -37,6 +39,32 @@ class WalletAction(generics.GenericAPIView):
             if serializer_res.is_valid():
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, *args, **kwargs):
+        """
+        更改钱包密码
+        """
+        form = WalletUpdateForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        instance = self.get_wallet_object(request)
+        if isinstance(instance, Exception):
+            serializer = WalletSerializer(data=cld, request=request)
+            if not serializer.is_valid():
+                return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                serializer.save()
+            except Exception as e:
+                return Response({'Detail': e.args}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            serializer = WalletSerializer(instance)
+            try:
+                serializer.update_password(instance, cld)
+            except Exception as e:
+                return Response({'Detail': e.args}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
 
 
 class WalletDetail(generics.GenericAPIView):

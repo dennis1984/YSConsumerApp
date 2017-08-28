@@ -9,6 +9,13 @@ class WalletCreateForm(forms.Form):
                                })
 
 
+class WalletUpdateForm(forms.Form):
+    password = forms.CharField(min_length=6, max_length=6,
+                               error_messages={
+                                   'required': u'密码不能为空'
+                               })
+
+
 class WalletTradeActionForm(forms.Form):
     orders_id = forms.CharField(max_length=32)
     user_id = forms.IntegerField()

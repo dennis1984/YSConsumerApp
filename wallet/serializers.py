@@ -9,15 +9,10 @@ import os
 
 
 class WalletSerializer(BaseModelSerializer):
-    def __init__(self, instance=None, data=None, **kwargs):
+    def __init__(self, instance=None, data=None, request=None, **kwargs):
         if data:
-            password = data.get('password')
-            if password:
-                password = make_password(password)
-            request = kwargs.get('_request')
-            user = getattr(request, 'user')
-            _data = {'password': password,
-                     'user_id': getattr(user, 'id')}
+            _data = {'password': make_password(data.get('password')),
+                     'user_id': request.user.id}
             super(WalletSerializer, self).__init__(data=_data, **kwargs)
         else:
             super(WalletSerializer, self).__init__(instance, **kwargs)
@@ -25,6 +20,13 @@ class WalletSerializer(BaseModelSerializer):
     class Meta:
         model = Wallet
         fields = '__all__'
+
+    def update_password(self, instance, validated_data):
+        if 'password' not in validated_data:
+            raise Exception('password does not exist in validated_data')
+        password = make_password(validated_data['password'])
+        validated_data = {'password': password}
+        return super(WalletSerializer, self).update(instance, validated_data)
 
 
 class WalletResponseSerializer(BaseModelSerializer):

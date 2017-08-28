@@ -24,6 +24,9 @@ class HotSaleList(generics.GenericAPIView):
     permissions = (IsOwnerOrReadOnly,)
 
     def get_hot_sale_list(self, request, **kwargs):
+        if kwargs['mark'] == 0:
+            kwargs['mark__in'] = [10, 20, 30]
+            kwargs.pop('mark')
         return Dishes.get_hot_sale_list(request, **kwargs)
 
     def post(self, request, *args, **kwargs):

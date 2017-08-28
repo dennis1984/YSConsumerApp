@@ -7,9 +7,10 @@ class HotSaleListForm(forms.Form):
     food_court_id = forms.IntegerField(min_value=1)
     mark = forms.ChoiceField(choices=((10, 1),
                                       (20, 2),
-                                      (30, 3)),
+                                      (30, 3),
+                                      (0, 4)),
                              error_messages={
-                                 'required': 'Field "mark" must in [10,20,30].'})
+                                 'required': 'Field "mark" must in [10,20,30,0].'})
     page_size = forms.IntegerField(min_value=1,
                                    max_value=settings.MAX_PAGE_SIZE,
                                    required=False)
