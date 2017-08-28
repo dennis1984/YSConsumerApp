@@ -111,7 +111,7 @@ class PayOrders(models.Model):
     #         201: 钱包充值订单  (预留：202：钱包消费订单 203: 钱包提现)
     orders_type = models.IntegerField('订单类型', default=0)
 
-    notes = models.CharField('订单备注', max_length=40)
+    notes = models.CharField('订单备注', max_length=40, default='')
 
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
@@ -330,7 +330,7 @@ class PayOrders(models.Model):
     @classmethod
     def make_orders_by_consume(cls, request, dishes_ids,
                                orders_type=ORDERS_ORDERS_TYPE['online'],
-                               coupons_id=None, _method=None):
+                               coupons_id=None, notes='', _method=None):
         meal_ids = []
         # 会员优惠及其他优惠
         member_discount = 0
@@ -383,6 +383,7 @@ class PayOrders(models.Model):
                                            custom_discount_name=custom_discount_name,
                                            coupons_id=coupons_id,
                                            orders_type=orders_type,
+                                           notes=notes,
                                            _method=_method)
         return orders_data
 
@@ -412,7 +413,7 @@ class PayOrders(models.Model):
                          dishes_details, total_amount, member_discount,
                          online_discount=0, other_discount=0, custom_discount=0,
                          custom_discount_name=None, coupons_id=None, orders_type=None,
-                         _method=None):
+                         notes='', _method=None):
         if _method == 'confirm_orders':
             orders_id = None
         else:
@@ -437,6 +438,7 @@ class PayOrders(models.Model):
                                           Decimal(other_discount) -
                                           Decimal(custom_discount)),
                            'orders_type': orders_type,
+                           'notes': notes,
                            }
         except Exception as e:
             return e
@@ -507,7 +509,7 @@ class ConsumeOrders(models.Model):
     # 核销码：如果已经核销，该字段不为空，如果没有核销，该字段为空
     confirm_code = models.CharField('核销码', max_length=32, default='', blank=True)
 
-    notes = models.CharField('订单备注', max_length=40)
+    notes = models.CharField('订单备注', max_length=40, default='')
 
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)

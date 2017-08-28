@@ -71,6 +71,7 @@ class PayOrdersConfirmSerializer(PayOrdersResponseSerializer):
     is_expired = serializers.NullBooleanField(required=False)
 
     request_data = serializers.DictField()
+    notes = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     created = serializers.DateTimeField(required=False, allow_null=True)
     updated = serializers.DateTimeField(required=False, allow_null=True)

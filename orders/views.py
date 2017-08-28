@@ -55,9 +55,10 @@ class PayOrdersAction(generics.GenericAPIView):
     def get_orders_by_orders_id(self, orders_id):
         return PayOrders.get_valid_orders(orders_id=orders_id)
 
-    def make_orders_by_consume(self, request, dishes_ids, coupons_id=None, _method=None):
+    def make_orders_by_consume(self, request, dishes_ids, coupons_id=None, notes='', _method=None):
         return PayOrders.make_orders_by_consume(request, dishes_ids,
                                                 coupons_id=coupons_id,
+                                                notes=notes,
                                                 _method=_method)
 
     def make_orders_by_recharge(self, request, orders_type, payable):
@@ -151,7 +152,8 @@ class PayOrdersAction(generics.GenericAPIView):
                 if not is_valid:
                     return Response({'Detail': error_message},
                                     status=status.HTTP_400_BAD_REQUEST)
-            _data = self.make_orders_by_consume(request, dishes_ids, coupons_id=coupons_id)
+            _data = self.make_orders_by_consume(request, dishes_ids, coupons_id=coupons_id,
+                                                notes=cld['notes'])
 
         if isinstance(_data, Exception):
             return Response({'Detail': _data.args}, status=status.HTTP_400_BAD_REQUEST)
