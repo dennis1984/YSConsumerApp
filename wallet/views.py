@@ -3,15 +3,14 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from wallet.serializers import (WalletSerializer,
-                                WalletDetailSerializer,
-                                WalletDetailListSerializer,
-                                WalletResponseSerializer)
+                                WalletDetailListSerializer)
 from wallet.permissions import IsOwnerOrReadOnly
 from wallet.models import (Wallet,
                            WalletTradeDetail)
 from wallet.forms import (WalletDetailListForm,
                           WalletCreateForm,
-                          WalletUpdateForm)
+                          WalletUpdateForm,
+                          WalletPasswordCheckForm)
 
 
 class WalletAction(generics.GenericAPIView):
@@ -35,9 +34,7 @@ class WalletAction(generics.GenericAPIView):
         serializer = WalletSerializer(data=cld, _request=request)
         if serializer.is_valid():
             serializer.save()
-            serializer_res = WalletResponseSerializer(serializer.data)
-            if serializer_res.is_valid():
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, *args, **kwargs):
@@ -67,12 +64,29 @@ class WalletAction(generics.GenericAPIView):
         return Response(serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
 
 
+class WalletPasswordCheck(generics.GenericAPIView):
+    """
+    钱包密码验证
+    """
+    permission_classes = (IsOwnerOrReadOnly,)
+
+    def check_password(self, request, password):
+        return Wallet.check_password(request, password)
+
+    def post(self, request, *args, **kwargs):
+        form = WalletPasswordCheckForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        is_correct = self.check_password(request, cld['password'])
+        return Response({'result': is_correct}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class WalletDetail(generics.GenericAPIView):
     """
     钱包余额
     """
-    queryset = Wallet.objects.all()
-    serializer_class = WalletSerializer
     permission_classes = (IsOwnerOrReadOnly, )
 
     def get_wallet_info(self, request):
@@ -88,7 +102,7 @@ class WalletDetail(generics.GenericAPIView):
         展示用户钱包余额
         """
         _instance = self.get_wallet_info(request)
-        serializer = WalletResponseSerializer(_instance)
+        serializer = WalletSerializer(_instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -96,8 +110,6 @@ class WalletTradeDetailList(generics.GenericAPIView):
     """
     钱包明细
     """
-    queryset = WalletTradeDetail.objects.all()
-    serializer_class = WalletDetailSerializer
     permission_classes = (IsOwnerOrReadOnly, )
 
     def get_details_list(self, request):

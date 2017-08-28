@@ -46,6 +46,7 @@ class PayOrdersCreateForm(forms.Form):
     random_code = forms.CharField(min_length=6, max_length=32, required=False)
     coupons_id = forms.IntegerField(min_value=1, required=False)
     notes = forms.CharField(max_length=120, required=False)
+    password = forms.CharField(min_length=6, max_length=6, required=False)
 
 
 class PayOrdersUpdateForm(forms.Form):

@@ -30,6 +30,7 @@ from shopping_cart.models import ShoppingCart
 from orders.pay import WXPay, WalletPay
 from Business_App.bz_orders.models import YinshiPayCode
 from Business_App.bz_dishes.models import Dishes
+from wallet.models import Wallet
 
 from horizon import main
 from horizon.models import get_perfect_detail_by_detail
@@ -125,6 +126,9 @@ class PayOrdersAction(generics.GenericAPIView):
             return False, 'Can not perform this action, Please bind your phone first.'
         return True, None
 
+    def check_password(self, request, password):
+        return Wallet.check_password(request, password)
+
     def post(self, request, *args, **kwargs):
         """
         生成支付订单
@@ -198,6 +202,13 @@ class PayOrdersAction(generics.GenericAPIView):
 
         cld = form.cleaned_data
         payment_mode = cld['payment_mode']
+        if payment_mode == 1:
+            if 'password' not in cld:
+                return Response({'Detail': 'Password is required while use wallet pay.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            if not self.check_password(request, cld['password']):
+                return Response({'Detail': 'Password is incorrect.'},
+                                status=status.HTTP_400_BAD_REQUEST)
         _instance = self.get_orders_by_orders_id(cld['orders_id'])
         if isinstance(_instance, Exception):
             return Response({'Detail': _instance.args}, status=status.HTTP_400_BAD_REQUEST)

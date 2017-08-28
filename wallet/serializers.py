@@ -19,7 +19,7 @@ class WalletSerializer(BaseModelSerializer):
 
     class Meta:
         model = Wallet
-        fields = '__all__'
+        fields = ('user_id', 'balance', 'created', 'updated')
 
     def update_password(self, instance, validated_data):
         if 'password' not in validated_data:
@@ -27,12 +27,6 @@ class WalletSerializer(BaseModelSerializer):
         password = make_password(validated_data['password'])
         validated_data = {'password': password}
         return super(WalletSerializer, self).update(instance, validated_data)
-
-
-class WalletResponseSerializer(BaseModelSerializer):
-    class Meta:
-        model = Wallet
-        fields = ('user_id', 'balance', 'created', 'updated', 'extend')
 
 
 class WalletDetailSerializer(BaseModelSerializer):

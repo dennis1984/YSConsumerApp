@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 from rest_framework.request import Request
 from django.http.request import HttpRequest
+from django.contrib.auth.hashers import check_password
 
 from django.db import models
 from django.utils.timezone import now
@@ -70,6 +71,13 @@ class Wallet(models.Model):
             return cls.objects.get(**kwargs)
         except Exception as e:
             return e
+
+    @classmethod
+    def check_password(cls, request, password):
+        instance = cls.get_object(user_id=request.user.id)
+        if isinstance(instance, Exception):
+            return False
+        return check_password(password, instance.password)
 
     @classmethod
     def create_wallet(cls, user_id):
