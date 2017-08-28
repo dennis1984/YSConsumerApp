@@ -113,10 +113,11 @@ class PayOrdersAction(generics.GenericAPIView):
             if 'dishes_ids' not in kwargs:
                 return False, 'Field ["dishes_ids"] must be not empty when ' \
                               'orders_type is "consume".'
-            try:
-                json.loads(kwargs['dishes_ids'])
-            except Exception as e:
-                return False, e.args
+            if isinstance(kwargs['dishes_ids'], (str, unicode)):
+                try:
+                    json.loads(kwargs['dishes_ids'])
+                except Exception as e:
+                    return False, e.args
         return True, None
 
     def is_user_binding(self, request):
@@ -243,6 +244,7 @@ class PayOrdersConfirm(PayOrdersAction):
         if not is_bind:
             return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
 
+        cld['dishes_ids'] = json.loads(cld['dishes_ids'])
         return Response({'request_data': cld}, status=status.HTTP_200_OK)
 
     def put(self, request, *args, **kwargs):
@@ -278,7 +280,7 @@ class PayOrdersConfirmDetail(PayOrdersAction):
             return Response({'Detail': 'orders type is not consume'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        dishes_ids = json.loads(cld['dishes_ids'])
+        dishes_ids = cld['dishes_ids']
         # 检查购物车
         if cld['gateway'] == INPUT_ORDERS_GATEWAY['shopping_cart']:
             is_valid, error_message = self.check_shopping_cart(request, dishes_ids)
