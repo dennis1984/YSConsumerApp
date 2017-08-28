@@ -328,7 +328,7 @@ class PayOrders(models.Model):
     @classmethod
     def make_orders_by_consume(cls, request, dishes_ids,
                                orders_type=ORDERS_ORDERS_TYPE['online'],
-                               coupons_id=None):
+                               coupons_id=None, _method=None):
         meal_ids = []
         # 会员优惠及其他优惠
         member_discount = 0
@@ -380,7 +380,8 @@ class PayOrders(models.Model):
                                            custom_discount=custom_discount,
                                            custom_discount_name=custom_discount_name,
                                            coupons_id=coupons_id,
-                                           orders_type=orders_type)
+                                           orders_type=orders_type,
+                                           _method=_method)
         return orders_data
 
     @classmethod
@@ -408,10 +409,15 @@ class PayOrders(models.Model):
     def make_orders_base(cls, request, food_court_id, food_court_name,
                          dishes_details, total_amount, member_discount,
                          online_discount=0, other_discount=0, custom_discount=0,
-                         custom_discount_name=None, coupons_id=None, orders_type=None):
+                         custom_discount_name=None, coupons_id=None, orders_type=None,
+                         _method=None):
+        if _method == 'confirm_orders':
+            orders_id = None
+        else:
+            orders_id = OrdersIdGenerator.get_orders_id()
         try:
             orders_data = {'user_id': request.user.id,
-                           'orders_id': OrdersIdGenerator.get_orders_id(),
+                           'orders_id': orders_id,
                            'food_court_id': food_court_id,
                            'food_court_name': food_court_name,
                            'dishes_ids': json.dumps(dishes_details,

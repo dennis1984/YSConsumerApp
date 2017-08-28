@@ -61,6 +61,11 @@ class PayOrdersResponseSerializer(BaseSerializer):
     extend = serializers.CharField(allow_blank=True)
 
 
+class PayOrdersConfirmSerializer(PayOrdersResponseSerializer):
+    id = serializers.IntegerField(required=False)
+    orders_id = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
+
 class ConsumeOrdersSerializer(BaseModelSerializer):
     class Meta:
         model = ConsumeOrders

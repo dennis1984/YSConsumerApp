@@ -2,6 +2,26 @@
 from horizon import forms
 
 
+class PayOrdersConfirmForm(forms.Form):
+    dishes_ids = forms.CharField(required=False)
+    # dishes_ids包含如下信息
+    # dishes_ids = [{'dishes_id': 'xxx',
+    #                'count': xxx}, {}, ...
+    #              ]
+    #
+    # 生成订单途径
+    gateway = forms.ChoiceField(choices=(('shopping_cart', 1),
+                                         ('yinshi_pay', 2),
+                                         ('other', 3)),
+                                error_messages={
+                                    'required': u'Field ["gateway"] must in'
+                                                u'[shopping_cart, yinshi_pay, other]'
+                                })
+    orders_type = forms.ChoiceField(choices=(('recharge', 1), ('consume', 2)))
+    payable = forms.IntegerField(min_value=10, required=False)
+    random_code = forms.CharField(min_length=6, max_length=32, required=False)
+
+
 class PayOrdersCreateForm(forms.Form):
     dishes_ids = forms.CharField(required=False)
     # dishes_ids包含如下信息

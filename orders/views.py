@@ -5,6 +5,7 @@ from rest_framework import status
 from django.conf import settings
 from orders.serializers import (PayOrdersSerializer,
                                 PayOrdersResponseSerializer,
+                                PayOrdersConfirmSerializer,
                                 OrdersDetailSerializer,
                                 OrdersListSerializer,
                                 ConfirmConsumeSerializer,
@@ -17,6 +18,7 @@ from orders.models import (PayOrders,
                            ORDERS_ORDERS_TYPE)
 from orders.forms import (PayOrdersCreateForm,
                           PayOrdersUpdateForm,
+                          PayOrdersConfirmForm,
                           OrdersListForm,
                           OrdersDetailForm,
                           ConfirmConsumeListForm,
@@ -53,8 +55,10 @@ class PayOrdersAction(generics.GenericAPIView):
     def get_orders_by_orders_id(self, orders_id):
         return PayOrders.get_valid_orders(orders_id=orders_id)
 
-    def make_orders_by_consume(self, request, dishes_ids, coupons_id=None):
-        return PayOrders.make_orders_by_consume(request, dishes_ids, coupons_id=coupons_id)
+    def make_orders_by_consume(self, request, dishes_ids, coupons_id=None, _method=None):
+        return PayOrders.make_orders_by_consume(request, dishes_ids,
+                                                coupons_id=coupons_id,
+                                                _method=_method)
 
     def make_orders_by_recharge(self, request, orders_type, payable):
         return PayOrders.make_orders_by_recharge(request, orders_type, payable)
@@ -215,6 +219,58 @@ class PayOrdersAction(generics.GenericAPIView):
         else:   # 支付宝支付
             pass
         return Response({}, status=status.HTTP_206_PARTIAL_CONTENT)
+
+
+class PayOrdersConfirm(PayOrdersAction):
+    """
+    订单确认操作
+    """
+    def post(self, request, *args, **kwargs):
+        """
+        生成确认支付订单
+        """
+        form = PayOrdersConfirmForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        is_valid, error_message = self.is_request_data_valid(**cld)
+        if not is_valid:
+            return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
+        is_bind, error_message = self.is_user_binding(request)
+        if not is_bind:
+            return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 消费订单
+        if cld['orders_type'] != INPUT_ORDERS_TYPE['consume']:
+            return Response({'Detail': 'orders type is not consume'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        dishes_ids = json.loads(cld['dishes_ids'])
+        coupons_id = cld.get('coupons_id')
+        # 检查购物车
+        if cld['gateway'] == INPUT_ORDERS_GATEWAY['shopping_cart']:
+            is_valid, error_message = self.check_shopping_cart(request, dishes_ids)
+            if not is_valid:
+                return Response({'Detail': error_message},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        _data = self.make_orders_by_consume(request, dishes_ids,
+                                            coupons_id=coupons_id,
+                                            _method='confirm_orders')
+        if isinstance(_data, Exception):
+            return Response({'Detail': _data.args}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = PayOrdersConfirmSerializer(data=_data)
+        if serializer.is_valid():
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, *args, **kwargs):
+        pass
+
+    def delete(self, request, *args, **kwargs):
+        pass
 
 
 class OrdersDetail(generics.GenericAPIView):
