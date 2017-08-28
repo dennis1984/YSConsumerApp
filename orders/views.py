@@ -19,6 +19,7 @@ from orders.models import (PayOrders,
 from orders.forms import (PayOrdersCreateForm,
                           PayOrdersUpdateForm,
                           PayOrdersConfirmForm,
+                          PayOrdersConfirmDetailForm,
                           OrdersListForm,
                           OrdersDetailForm,
                           ConfirmConsumeListForm,
@@ -173,7 +174,7 @@ class PayOrdersAction(generics.GenericAPIView):
         orders_detail = serializer.instance.orders_detail
         serializer_response = PayOrdersResponseSerializer(data=orders_detail)
         if serializer_response.is_valid():
-            return Response(serializer_response.data, status=status.HTTP_200_OK)
+            return Response(serializer_response.data, status=status.HTTP_201_CREATED)
         return Response(serializer_response.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, *args, **kwargs):
@@ -225,17 +226,46 @@ class PayOrdersAction(generics.GenericAPIView):
 
 class PayOrdersConfirm(PayOrdersAction):
     """
-    订单确认操作
+    确认订单操作
     """
+    permission_classes = (IsOwnerOrReadOnly,)
+
     def post(self, request, *args, **kwargs):
-        """
-        生成确认支付订单
-        """
         form = PayOrdersConfirmForm(request.data)
         if not form.is_valid():
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         cld = form.cleaned_data
+        is_valid, error_message = self.is_request_data_valid(**cld)
+        if not is_valid:
+            return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
+        is_bind, error_message = self.is_user_binding(request)
+        if not is_bind:
+            return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'request_data': cld}, status=status.HTTP_200_OK)
+
+    def put(self, request, *args, **kwargs):
+        pass
+
+
+class PayOrdersConfirmDetail(PayOrdersAction):
+    """
+    订单确认-订单详情
+    """
+    def post(self, request, *args, **kwargs):
+        """
+        订单详情
+        """
+        form = PayOrdersConfirmDetailForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        try:
+            cld = json.loads(cld['request_data'])
+        except Exception as e:
+            return Response({'Detail': e.args}, status=status.HTTP_400_BAD_REQUEST)
         is_valid, error_message = self.is_request_data_valid(**cld)
         if not is_valid:
             return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
@@ -269,9 +299,6 @@ class PayOrdersConfirm(PayOrdersAction):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, *args, **kwargs):
-        pass
-
-    def delete(self, request, *args, **kwargs):
         pass
 
 

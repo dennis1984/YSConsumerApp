@@ -22,6 +22,10 @@ class PayOrdersConfirmForm(forms.Form):
     random_code = forms.CharField(min_length=6, max_length=32, required=False)
 
 
+class PayOrdersConfirmDetailForm(forms.Form):
+    request_data = forms.CharField(min_length=1)
+
+
 class PayOrdersCreateForm(forms.Form):
     dishes_ids = forms.CharField(required=False)
     # dishes_ids包含如下信息

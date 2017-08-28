@@ -5,6 +5,7 @@ from orders import views
 
 urlpatterns = [
     url(r'^confirm_pay_orders/$', views.PayOrdersConfirm.as_view()),
+    url(r'^confirm_pay_orders_detail/$', views.PayOrdersConfirmDetail.as_view()),
 
     url(r'^pay_orders_action/$', views.PayOrdersAction.as_view()),
     url(r'^orders_list/$', views.OrdersList.as_view()),
