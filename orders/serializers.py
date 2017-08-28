@@ -55,6 +55,8 @@ class PayOrdersResponseSerializer(BaseSerializer):
     payment_mode = serializers.IntegerField()
     orders_type = serializers.IntegerField()
     is_expired = serializers.BooleanField()
+    notes = serializers.CharField(allow_null=True, allow_blank=True)
+
     created = serializers.DateTimeField()
     updated = serializers.DateTimeField()
     expires = serializers.DateTimeField()
@@ -64,6 +66,16 @@ class PayOrdersResponseSerializer(BaseSerializer):
 class PayOrdersConfirmSerializer(PayOrdersResponseSerializer):
     id = serializers.IntegerField(required=False)
     orders_id = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    payment_status = serializers.IntegerField(required=False, allow_null=True)
+    payment_mode = serializers.IntegerField(required=False, allow_null=True)
+    is_expired = serializers.NullBooleanField(required=False)
+
+    request_data = serializers.DictField()
+
+    created = serializers.DateTimeField(required=False, allow_null=True)
+    updated = serializers.DateTimeField(required=False, allow_null=True)
+    expires = serializers.DateTimeField(required=False, allow_null=True)
+    extend = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
 
 class ConsumeOrdersSerializer(BaseModelSerializer):

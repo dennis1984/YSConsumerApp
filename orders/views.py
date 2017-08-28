@@ -247,7 +247,6 @@ class PayOrdersConfirm(PayOrdersAction):
                             status=status.HTTP_400_BAD_REQUEST)
 
         dishes_ids = json.loads(cld['dishes_ids'])
-        coupons_id = cld.get('coupons_id')
         # 检查购物车
         if cld['gateway'] == INPUT_ORDERS_GATEWAY['shopping_cart']:
             is_valid, error_message = self.check_shopping_cart(request, dishes_ids)
@@ -256,11 +255,12 @@ class PayOrdersConfirm(PayOrdersAction):
                                 status=status.HTTP_400_BAD_REQUEST)
 
         _data = self.make_orders_by_consume(request, dishes_ids,
-                                            coupons_id=coupons_id,
                                             _method='confirm_orders')
         if isinstance(_data, Exception):
             return Response({'Detail': _data.args}, status=status.HTTP_400_BAD_REQUEST)
 
+        _data['dishes_ids'] = json.loads(_data['dishes_ids'])
+        _data['request_data'] = cld
         serializer = PayOrdersConfirmSerializer(data=_data)
         if serializer.is_valid():
             return Response(serializer.data, status=status.HTTP_200_OK)
