@@ -19,6 +19,8 @@ from hot_sale.forms import (HotSaleListForm,
 from hot_sale.permissions import IsOwnerOrReadOnly
 from collect.models import Collect
 
+import random
+
 
 class HotSaleList(generics.GenericAPIView):
     permissions = (IsOwnerOrReadOnly,)
@@ -85,6 +87,41 @@ class DishesDetail(generics.GenericAPIView):
         if not serializer.is_valid():
             return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class RecommendDishesList(generics.GenericAPIView):
+    """
+    推荐菜品列表
+    """
+    permission_classes = (IsOwnerOrReadOnly,)
+
+    def get_recommend_dishes_list(self, request):
+        details_list = Dishes.get_hot_sale_list(request)
+        details_ids = []
+        details_dict = {}
+        for item in details_list:
+            details_dict[item['id']] = item
+            details_ids.append(item['id'])
+
+        recommend_list = []
+        for index in range(0, 4):
+            if not details_ids:
+                break
+            dishes_id = random.choice(details_ids)
+            recommend_list.append(details_dict[dishes_id])
+            details_ids.remove(dishes_id)
+        return recommend_list
+
+    def post(self, request, *args, **kwargs):
+        dishes_details = self.get_recommend_dishes_list(request)
+        serializer = HotSaleSerializer(data=dishes_details)
+
+        if not serializer.is_valid():
+            return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        results = serializer.list_data()
+        if isinstance(results, Exception):
+            return Response({'Detail': results.args}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(results, status=status.HTTP_200_OK)
 
 
 class FoodCourtList(generics.GenericAPIView):
