@@ -15,7 +15,8 @@ from hot_sale.serializers import (HotSaleSerializer,
 from hot_sale.forms import (HotSaleListForm,
                             DishesGetForm,
                             FoodCourtListForm,
-                            FoodCourtGetForm,)
+                            FoodCourtGetForm,
+                            RecommendDishesListForm)
 from hot_sale.permissions import IsOwnerOrReadOnly
 from collect.models import Collect
 
@@ -95,8 +96,8 @@ class RecommendDishesList(generics.GenericAPIView):
     """
     permission_classes = (IsOwnerOrReadOnly,)
 
-    def get_recommend_dishes_list(self, request):
-        details_list = Dishes.get_hot_sale_list(request)
+    def get_recommend_dishes_list(self, request, **kwargs):
+        details_list = Dishes.get_hot_sale_list(request, **kwargs)
         details_ids = []
         details_dict = {}
         for item in details_list:
@@ -113,7 +114,12 @@ class RecommendDishesList(generics.GenericAPIView):
         return recommend_list
 
     def post(self, request, *args, **kwargs):
-        dishes_details = self.get_recommend_dishes_list(request)
+        form = RecommendDishesListForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        dishes_details = self.get_recommend_dishes_list(request, **cld)
         serializer = HotSaleSerializer(data=dishes_details)
 
         if not serializer.is_valid():

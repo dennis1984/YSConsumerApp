@@ -33,3 +33,7 @@ class FoodCourtListForm(forms.Form):
                                    max_value=settings.MAX_PAGE_SIZE,
                                    required=False)
     page_index = forms.IntegerField(min_value=1, required=False)
+
+
+class RecommendDishesListForm(forms.Form):
+    food_court_id = forms.IntegerField(min_value=1)
