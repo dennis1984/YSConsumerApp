@@ -9,7 +9,7 @@ class WalletCreateForm(forms.Form):
                                })
 
 
-class WalletUpdateForm(WalletCreateForm):
+class WalletUpdateForm(forms.Form):
     current_password = forms.CharField(min_length=6, max_length=6,
                                        required=False)
     new_password = forms.CharField(min_length=6, max_length=6,
