@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^wallet_trade_list/$', views.WalletTradeDetailList.as_view()),
 
     url(r'^check_wallet_password/$', views.WalletPasswordCheck.as_view()),
+    url(r'^has_wallet_password/$', views.WalletPasswordWhetherSet.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

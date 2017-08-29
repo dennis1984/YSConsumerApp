@@ -83,6 +83,28 @@ class WalletPasswordCheck(generics.GenericAPIView):
         return Response({'result': is_correct}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class WalletPasswordWhetherSet(generics.GenericAPIView):
+    """
+    检查是否设置了钱包密码
+    """
+    permission_classes = (IsOwnerOrReadOnly,)
+
+    def get_wallet_object(self, request):
+        return Wallet.get_object(user_id=request.user.id)
+
+    def does_wallet_password_exist(self, request):
+        instance = self.get_wallet_object(request)
+        if isinstance(instance, Exception):
+            return False
+        if not instance.password:
+            return False
+        return True
+
+    def post(self, request, *args, **kwargs):
+        has_password = self.does_wallet_password_exist(request)
+        return Response({'result': has_password}, status=status.HTTP_200_OK)
+
+
 class WalletDetail(generics.GenericAPIView):
     """
     钱包余额
