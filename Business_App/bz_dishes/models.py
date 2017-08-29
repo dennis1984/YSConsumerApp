@@ -101,7 +101,7 @@ class Dishes(models.Model):
         if isinstance(hot_objects, Exception):
             return hot_objects
 
-        hot_objects = sorted(hot_objects, key=lambda x: x['sort_orders'])
+        hot_objects = sorted(hot_objects, key=lambda x: x.sort_orders)
 
         dishes_list = []
         for item in hot_objects:

@@ -18,6 +18,8 @@ class DishesSerializer(serializers.ModelSerializer):
 
 class DishesDetailSerializer(BaseDishesDetailSerializer):
     is_collected = serializers.NullBooleanField(required=False)
+    tag = serializers.CharField(allow_null=True, allow_blank=True)
+    sort_orders = serializers.IntegerField(allow_null=True)
 
 
 class HotSaleSerializer(BaseListSerializer):
