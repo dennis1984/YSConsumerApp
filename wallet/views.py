@@ -22,6 +22,17 @@ class WalletAction(generics.GenericAPIView):
     def get_wallet_object(self, request):
         return Wallet.get_object(user_id=request.user.id)
 
+    def does_wallet_password_exist(self, request):
+        instance = self.get_wallet_object(request)
+        if isinstance(instance, Exception):
+            return False, None
+        if not instance.password:
+            return False, instance
+        return True, instance
+
+    def check_password_for_self(self, instance, password):
+        return instance.check_password_for_self(password)
+
     def post(self, request, *args, **kwargs):
         """
         创建用户钱包
@@ -46,7 +57,16 @@ class WalletAction(generics.GenericAPIView):
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         cld = form.cleaned_data
-        instance = self.get_wallet_object(request)
+        has_password, instance = self.does_wallet_password_exist(request)
+        if has_password:
+            current_password = cld.get('current_password')
+            if not current_password:
+                return Response({'Detail': 'Current password is incorrect'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            if not self.check_password_for_self(instance, current_password):
+                return Response({'Detail': 'Current password is incorrect.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
         if isinstance(instance, Exception):
             serializer = WalletSerializer(data=cld, request=request)
             if not serializer.is_valid():
@@ -57,6 +77,7 @@ class WalletAction(generics.GenericAPIView):
                 return Response({'Detail': e.args}, status=status.HTTP_400_BAD_REQUEST)
         else:
             serializer = WalletSerializer(instance)
+            cld['password'] = cld['new_password']
             try:
                 serializer.update_password(instance, cld)
             except Exception as e:

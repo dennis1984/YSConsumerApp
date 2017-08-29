@@ -10,7 +10,12 @@ class WalletCreateForm(forms.Form):
 
 
 class WalletUpdateForm(WalletCreateForm):
-    pass
+    current_password = forms.CharField(min_length=6, max_length=6,
+                                       required=False)
+    new_password = forms.CharField(min_length=6, max_length=6,
+                                   error_messages={
+                                       'required': u'密码不能为空'
+                                   })
 
 
 class WalletPasswordCheckForm(WalletCreateForm):

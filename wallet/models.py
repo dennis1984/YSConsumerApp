@@ -55,6 +55,9 @@ class Wallet(models.Model):
     def __unicode__(self):
         return str(self.user_id)
 
+    def check_password_for_self(self, password):
+        return check_password(password, self.password)
+
     @classmethod
     def has_enough_balance(cls, request, amount_of_money):
         wallet = cls.get_object(**{'user_id': request.user.id})
