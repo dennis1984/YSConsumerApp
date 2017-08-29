@@ -52,6 +52,11 @@ class Dishes(models.Model):
     mark = models.IntegerField('运营标记', default=0)
     # 优惠金额
     discount = models.CharField('优惠金额', max_length=16, default='0')
+
+    # 菜品标记和排序顺序
+    tag = models.CharField('标记', max_length=64, default='', null=True, blank=True)
+    sort_orders = models.IntegerField('排序标记', default=None, null=True)
+
     extend = models.TextField('扩展信息', default='', null=True, blank=True)
 
     objects = BaseManager()
@@ -95,6 +100,8 @@ class Dishes(models.Model):
         hot_objects = cls.filter_objects(**kwargs)
         if isinstance(hot_objects, Exception):
             return hot_objects
+
+        hot_objects = sorted(hot_objects, key=lambda x: x['sort_orders'])
 
         dishes_list = []
         for item in hot_objects:
