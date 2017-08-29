@@ -111,7 +111,7 @@ class PayOrders(models.Model):
     #         201: 钱包充值订单  (预留：202：钱包消费订单 203: 钱包提现)
     orders_type = models.IntegerField('订单类型', default=0)
 
-    notes = models.CharField('订单备注', max_length=40, default='')
+    notes = models.CharField('订单备注', max_length=40, default='', blank=True, null=True)
 
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
@@ -509,7 +509,7 @@ class ConsumeOrders(models.Model):
     # 核销码：如果已经核销，该字段不为空，如果没有核销，该字段为空
     confirm_code = models.CharField('核销码', max_length=32, default='', blank=True)
 
-    notes = models.CharField('订单备注', max_length=40, default='')
+    notes = models.CharField('订单备注', max_length=40, default='', blank=True, null=True)
 
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
