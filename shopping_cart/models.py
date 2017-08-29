@@ -62,7 +62,7 @@ class ShoppingCart(models.Model):
         ordering = ['-updated']
 
     def __unicode__(self):
-        return self.user_id
+        return str(self.user_id)
 
     @classmethod
     def get_object_by_dishes_id(cls, request, dishes_id, **kwargs):

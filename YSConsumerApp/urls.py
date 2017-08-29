@@ -40,6 +40,9 @@ urlpatterns = [
     url(r'^comment/', include('comment.urls', namespace='comment')),
     url(r'^coupons/', include('coupons.urls', namespace='coupons')),
 
+    # 设置
+    url(r'^setup/', include('setup.urls', namespace='setup')),
+
     # 钱包
     url(r'^wallet/', include('wallet.urls', namespace='wallet')),
 
