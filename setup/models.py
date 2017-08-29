@@ -11,7 +11,7 @@ import json
 import datetime
 
 
-class FeedBack(models.Model):
+class Feedback(models.Model):
     user_id = models.IntegerField('用户ID')
     phone = models.CharField('手机号', max_length=20, null=True, blank=True)
     nickname = models.CharField('菜品ID', max_length=100, null=True, blank=True)

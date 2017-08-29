@@ -3,7 +3,7 @@ from rest_framework import serializers
 from horizon.serializers import (BaseSerializer,
                                  BaseModelSerializer,
                                  BaseDishesDetailSerializer)
-from setup.models import FeedBack
+from setup.models import Feedback
 import os
 
 
@@ -19,5 +19,5 @@ class FeedbackSerializer(BaseModelSerializer):
             super(FeedbackSerializer, self).__init__(instance, **kwargs)
 
     class Meta:
-        model = FeedBack
+        model = Feedback
         fields = '__all__'
