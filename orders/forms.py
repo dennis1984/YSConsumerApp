@@ -46,13 +46,13 @@ class PayOrdersCreateForm(forms.Form):
     random_code = forms.CharField(min_length=6, max_length=32, required=False)
     coupons_id = forms.IntegerField(min_value=1, required=False)
     notes = forms.CharField(max_length=120, required=False)
-    password = forms.CharField(min_length=6, max_length=6, required=False)
 
 
 class PayOrdersUpdateForm(forms.Form):
     orders_id = forms.CharField(max_length=32)
     # 支付模式 1：钱包 2：微信支付 3：支付宝支付
     payment_mode = forms.IntegerField(min_value=1, max_value=3)
+    password = forms.CharField(min_length=6, max_length=6, required=False)
 
 
 class OrdersListForm(forms.Form):
