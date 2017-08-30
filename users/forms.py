@@ -27,11 +27,12 @@ class PasswordForm(forms.Form):
 
 class SendIdentifyingCodeForm(PhoneForm):
     """
-    发送手机验证码
+    发送手机验证码（未登录状态）
     """
-    method = forms.ChoiceField(choices=(('register', 1), ('forget_password', 2)),
+    method = forms.ChoiceField(choices=(('register', 1),
+                                        ('forget_password', 2)),
                                error_messages={
-                                   'required': u'method 值必须为"register"或"forget_password"',
+                                   'required': u'method 值必须为["register","forget_password"]之一。',
                                })
 
 
@@ -77,6 +78,7 @@ class WXAuthCreateUserForm(VerifyIdentifyingCodeForm):
 
 class AdvertListForm(forms.Form):
     food_court_id = forms.IntegerField(min_value=1)
+    ad_position_name = forms.CharField(max_length=20, required=False)
 
 
 class WXAuthLoginForm(forms.Form):

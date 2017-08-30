@@ -11,6 +11,7 @@ from wallet.forms import (WalletDetailListForm,
                           WalletCreateForm,
                           WalletUpdateForm,
                           WalletPasswordCheckForm)
+from users.models import IdentifyingCode
 
 
 class WalletAction(generics.GenericAPIView):
@@ -32,6 +33,19 @@ class WalletAction(generics.GenericAPIView):
 
     def check_password_for_self(self, instance, password):
         return instance.check_password_for_self(password)
+
+    def verify_identifying_code(self, request, identifying_code):
+        """
+        验证手机验证码
+        """
+        phone = request.user.phone
+
+        instance = IdentifyingCode.get_object_by_phone(phone)
+        if not instance:
+            return False, Exception('Identifying code is not existed or expired.')
+        if instance.identifying_code != identifying_code:
+            return False, Exception('Identifying code is incorrect.')
+        return True, None
 
     def post(self, request, *args, **kwargs):
         """
@@ -57,16 +71,12 @@ class WalletAction(generics.GenericAPIView):
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         cld = form.cleaned_data
-        has_password, instance = self.does_wallet_password_exist(request)
-        if has_password:
-            current_password = cld.get('current_password')
-            if not current_password:
-                return Response({'Detail': 'Current password is incorrect'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            if not self.check_password_for_self(instance, current_password):
-                return Response({'Detail': 'Current password is incorrect.'},
-                                status=status.HTTP_400_BAD_REQUEST)
 
+        is_correct, error_obj = self.verify_identifying_code(request, cld['identifying_code'])
+        if not is_correct:
+            return Response({'Detail': error_obj.args}, status=status.HTTP_400_BAD_REQUEST)
+
+        instance = self.get_wallet_object(request)
         if isinstance(instance, Exception):
             serializer = WalletSerializer(data=cld, request=request)
             if not serializer.is_valid():

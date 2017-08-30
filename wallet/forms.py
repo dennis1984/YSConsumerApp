@@ -10,8 +10,7 @@ class WalletCreateForm(forms.Form):
 
 
 class WalletUpdateForm(forms.Form):
-    current_password = forms.CharField(min_length=6, max_length=6,
-                                       required=False)
+    identifying_code = forms.CharField(min_length=6, max_length=6)
     new_password = forms.CharField(min_length=6, max_length=6,
                                    error_messages={
                                        'required': u'密码不能为空'

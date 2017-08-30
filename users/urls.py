@@ -9,6 +9,8 @@ urlpatterns = [
     url(r'^send_identifying_code/$', users_view.IdentifyingCodeAction.as_view()),
     url(r'^verify_identifying_code/$', users_view.IdentifyingCodeVerify.as_view()),
 
+    url(r'^send_identifying_code_with_login/$', users_view.IdentifyingCodeActionWithLogin.as_view()),
+
     url(r'^user_not_logged_action/$', users_view.UserNotLoggedAction.as_view()),
     url(r'^user_action/$', users_view.UserAction.as_view()),
     url(r'^user_detail/$', users_view.UserDetail.as_view()),

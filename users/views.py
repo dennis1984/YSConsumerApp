@@ -21,7 +21,7 @@ from users.forms import (CreateUserForm,
                          SetPasswordForm,
                          WXAuthCreateUserForm,
                          AdvertListForm,
-                         WXAuthLoginForm)
+                         WXAuthLoginForm,)
 from users.wx_auth.views import Oauth2AccessToken
 
 from Business_App.bz_users.models import AdvertPicture
@@ -182,6 +182,25 @@ class UserNotLoggedAction(APIView):
 
         serializer_response = UserInstanceSerializer(instance)
         return Response(serializer_response.data, status=status.HTTP_206_PARTIAL_CONTENT)
+
+
+class IdentifyingCodeActionWithLogin(generics.GenericAPIView):
+    """
+    发送短信验证码（登录状态）
+    """
+    permission_classes = (IsOwnerOrReadOnly,)
+
+    def post(self, request, *args, **kwargs):
+        phone = request.user.phone
+        identifying_code = make_random_number_of_string(str_length=6)
+        serializer = IdentifyingCodeSerializer(data={'phone': phone,
+                                                     'identifying_code': identifying_code})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        # 发送到短线平台
+        main.send_message_to_phone({'code': identifying_code}, (phone,))
+        return Response(status=status.HTTP_200_OK)
 
 
 class WXAuthUserNotLoggedAction(generics.GenericAPIView):
