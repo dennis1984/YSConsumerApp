@@ -100,6 +100,7 @@ class ConsumeOrdersResponseSerializer(BaseSerializer):
     food_court_name = serializers.CharField(max_length=200)
     business_name = serializers.CharField(max_length=200)
     business_id = serializers.IntegerField()
+    stalls_number = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     dishes_ids = serializers.ListField()
 
@@ -153,6 +154,7 @@ class OrdersDetailForListSerializer(BaseSerializer):
     business_name = serializers.CharField(max_length=200, required=False,
                                           allow_blank=True, allow_null=True)
     business_id = serializers.IntegerField(required=False, allow_null=True)
+    stalls_number = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     dishes_ids = serializers.ListField()
 

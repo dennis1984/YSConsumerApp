@@ -56,13 +56,19 @@ class BusinessUser(AbstractBaseUser):
     business_name = models.CharField(u'商户名称', max_length=100, default='')
     food_court_id = models.IntegerField(u'所属美食城', default=0)
     phone = models.CharField(u'手机号', max_length=20, unique=True, db_index=True)
-    head_picture = models.ImageField(u'头像',
-                                     upload_to=USER_PICTURE_DIR,
-                                     default=os.path.join(USER_PICTURE_DIR, 'noImage.png'),)
+    brand = models.CharField(u'所属品牌', max_length=60, null=False, default='')
+    manager = models.CharField(u'经理人姓名', max_length=20, null=False, default='')
+    chinese_people_id = models.CharField(u'身份证号码', max_length=25,
+                                         null=False, default='')
+    stalls_number = models.CharField(u'档口编号', max_length=20,
+                                     null=False, default='')
 
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=now)
+    head_picture = models.ImageField(u'头像',
+                                     upload_to=USER_PICTURE_DIR,
+                                     default=os.path.join(USER_PICTURE_DIR, 'noImage.png'), )
 
     objects = BusinessUserManager()
 
