@@ -199,11 +199,12 @@ class VerifyOrdersAction(object):
                                       Decimal(service_coupons_subsidy))}
         orders_data = model_to_dict(consume_orders)
         pop_keys = ['created', 'updated', 'master_orders_id',
-                    'is_commented', 'confirm_code', 'business_id']
+                    'is_commented', 'confirm_code', 'business_id',
+                    'stalls_number']
         for key in pop_keys:
             orders_data.pop(key)
-        orders_data.update(update_data)
 
+        orders_data.update(update_data)
         try:
             obj = VerifyOrders(**orders_data)
             obj.save()

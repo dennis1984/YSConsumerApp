@@ -322,7 +322,8 @@ class PayOrders(models.Model):
         for business_id in sorted(dishes_details.keys()):
             detail_dict = {'dishes_detail': dishes_details[business_id],
                            'business_id': business_id,
-                           'business_name': dishes_details[business_id][0]['business_name']}
+                           'business_name': dishes_details[business_id][0]['business_name'],
+                           'stalls_number': dishes_details[business_id][0]['stalls_number']}
             dishes_details_list.append(detail_dict)
 
         return food_court_id, food_court_name, dishes_details_list
@@ -480,6 +481,8 @@ class ConsumeOrders(models.Model):
 
     business_name = models.CharField('商户名字', max_length=200)
     business_id = models.IntegerField('商户ID')
+    stalls_number = models.CharField('档口编号', max_length=20, default='',
+                                     null=True, blank=True)
     food_court_id = models.IntegerField('美食城ID')
     food_court_name = models.CharField('美食城名字', max_length=200)
 
@@ -691,6 +694,7 @@ class BaseConsumeOrders(object):
                 'payable': str(payable),
                 'business_name': business_dishes['business_name'],
                 'business_id': business_dishes['business_id'],
+                'stalls_number': business_dishes['stalls_number'],
                 'food_court_id': pay_orders.food_court_id,
                 'food_court_name': pay_orders.food_court_name,
                 'payment_mode': pay_orders.payment_mode,

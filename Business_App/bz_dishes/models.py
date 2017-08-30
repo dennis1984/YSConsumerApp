@@ -120,6 +120,7 @@ class Dishes(models.Model):
         else:
             dishes_dict = model_to_dict(instance)
         dishes_dict['business_name'] = getattr(user, 'business_name', '')
+        dishes_dict['stalls_number'] = user.stalls_number
         dishes_dict['business_id'] = dishes_dict['user_id']
         if dishes_dict['mark'] in DISHES_MARK_DISCOUNT_VALUES:
             dishes_dict['discount_price'] = str(Decimal(instance.price) -
