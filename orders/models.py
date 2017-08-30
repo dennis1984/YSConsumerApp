@@ -230,6 +230,7 @@ class PayOrders(models.Model):
             item_dict['business_name'] = None
             item_dict['master_orders_id'] = None
             item_dict['is_commented'] = None
+            item_dict['stalls_number'] = None
             results.append(item_dict)
         return results
 
