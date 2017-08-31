@@ -106,17 +106,21 @@ def make_barcode(save_path=QRCODE_PICTURE_PATH, barcode_length=8):
     返回：条形码数字及条形码文件名
     """
     source_data = make_random_number_of_string(barcode_length)
-    generate_dict = {8: 'EAN8',
-                     13: 'EAN13'}
-
+    generate_dict = {8: {'name': 'EAN8',
+                         'width': 0.96},
+                     13: {'name': 'EAN13',
+                          'width': 0.66}
+                     }
     fname = '%s.png' % make_random_char_and_number_of_string(20)
     fname_path = os.path.join(save_path, fname)
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
     fp = open(fname_path, 'wb')
     writer = ImageWriter()
-    generate(generate_dict[barcode_length], source_data, writer=writer, output=fp,
-             writer_options={'module_width': 0.66,
+    generate_name = generate_dict[barcode_length]['name']
+    width = generate_dict[barcode_length]['width']
+    generate(generate_name, source_data, writer=writer, output=fp,
+             writer_options={'module_width': width,
                              'module_height': 30})
     fp.close()
 
