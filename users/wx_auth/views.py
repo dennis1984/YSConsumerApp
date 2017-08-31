@@ -125,8 +125,7 @@ class AuthCallback(APIView):
         if isinstance(_token, Exception):
             return Response({'Detail': _token.args},
                             status=status.HTTP_400_BAD_REQUEST)
-        _token.update(**{'is_binding': is_binding,
-                         'callback_url': cld.get('callback_url')})
+        _token.update(**{'is_binding': is_binding})
 
         # 标记用户已经登录
         self.mark_user_login(_user)

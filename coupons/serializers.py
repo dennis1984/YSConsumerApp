@@ -26,8 +26,8 @@ class CouponsDetailSerializer(BaseSerializer):
 
     name = serializers.CharField()
     type = serializers.IntegerField()
-    type_detail = serializers.CharField()
-    amount_of_money = serializers.CharField()
+    amount_of_money = serializers.CharField(allow_blank=True, allow_null=True)
+    discount_percent = serializers.IntegerField(allow_null=True)
     start_amount = serializers.CharField()
     expires = serializers.DateTimeField()
     created = serializers.DateTimeField()

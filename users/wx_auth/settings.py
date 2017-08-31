@@ -34,7 +34,7 @@ GRANT_TYPE = {
 # 微信授权接口参数配置
 
 # 微信授权登录回调地址 (前端页面)
-REDIRECT_URI = 'http://yinshi.weixin.city23.com/login/wexincallback/'
+REDIRECT_URI = 'http://yinshi.weixin.city23.com/login/wexincallback/?callback_url=%s'
 
 # 网页授权登录链接
 WX_AUTH_WEB_LINK = 'https://open.weixin.qq.com/connect/oauth2/authorize'
@@ -43,7 +43,7 @@ WX_AUTH_WEB_LINK = 'https://open.weixin.qq.com/connect/oauth2/authorize'
 WX_AUTH_PARAMS = {
     'get_code': {
         'appid': APPID,
-        'redirect_uri': urllib.quote_plus(REDIRECT_URI),
+        'redirect_uri': REDIRECT_URI,
         'response_type': 'code',
         'scope': 'snsapi_userinfo',
         'state': main.make_random_char_and_number_of_string,

@@ -479,6 +479,29 @@ class ConfirmConsumeList(generics.GenericAPIView):
         return Response(datas, status=status.HTTP_200_OK)
 
 
+class ConfirmConsumeResult(ConfirmConsumeList):
+    """
+    核销结果
+    """
+    def post(self, request, *args, **kwargs):
+        """
+        返回：TRUE，或FALSE
+        """
+        form = ConfirmConsumeListForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        if not self.is_random_string_valid(request, cld['confirm_code']):
+            return Response({'Detail': 'Random string does not exist or expired.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        instances = self.get_confirm_consume_list(request, cld['confirm_code'])
+        if isinstance(instances, Exception):
+            return Response({'result': False}, status=status.HTTP_200_OK)
+        return Response({'result': True}, status=status.HTTP_200_OK)
+
+
 class YSPayDishesList(generics.GenericAPIView):
     """
     吟食支付菜品详情

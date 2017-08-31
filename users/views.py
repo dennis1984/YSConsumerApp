@@ -30,6 +30,7 @@ from horizon.views import APIView
 from horizon.main import make_random_number_of_string
 from horizon import main
 import copy
+import urllib
 
 
 def verify_identifying_code(params_dict):
@@ -120,6 +121,8 @@ class WXAuthAction(APIView):
         end_params = wx_auth_params.pop('end_params')
         state = wx_auth_params['state']()
         wx_auth_params['state'] = state
+        wx_auth_params['redirect_uri'] = urllib.quote_plus(
+            wx_auth_params['redirect_uri'] % cld['callback_url'])
         return_url = '%s?%s%s' % (wx_auth_url,
                                   main.make_dict_to_verify_string(wx_auth_params),
                                   end_params)
@@ -127,7 +130,6 @@ class WXAuthAction(APIView):
         if serializer.is_valid():
             serializer.save()
             return_data = {'wx_auth_url': return_url}
-            return_data.update(cld)
             return Response(return_data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 

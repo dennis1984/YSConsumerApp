@@ -13,6 +13,7 @@ from horizon import main
 import datetime
 import re
 import os
+import copy
 
 
 class Coupons(models.Model):
@@ -76,13 +77,14 @@ class Coupons(models.Model):
 
     @classmethod
     def get_perfect_detail_list(cls, **kwargs):
+        _kwargs = copy.deepcopy(kwargs)
         if kwargs.get('status') == 400:
             kwargs.pop('status')
         instances = cls.filter_objects(**kwargs)
         details = []
         for instance in instances:
             consumer_detail = model_to_dict(instance)
-            admin_instance = CouponsConfig.get_object(pk=instance.coupons_id, **kwargs)
+            admin_instance = CouponsConfig.get_object(pk=instance.coupons_id, **_kwargs)
             if isinstance(admin_instance, Exception):
                 continue
             admin_detail = model_to_dict(admin_instance)

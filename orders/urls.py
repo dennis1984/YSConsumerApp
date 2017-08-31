@@ -13,6 +13,7 @@ urlpatterns = [
 
     url(r'^confirm_consume/$', views.ConfirmConsumeAction.as_view()),
     url(r'^confirm_consume_finished_list/$', views.ConfirmConsumeList.as_view()),
+    url(r'^confirm_consume_result/$', views.ConfirmConsumeResult.as_view()),
 
     url(r'^ys_pay_dishes_list/$', views.YSPayDishesList.as_view()),
 

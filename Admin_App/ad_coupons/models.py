@@ -82,11 +82,23 @@ class CouponsConfig(models.Model):
 
     @classmethod
     def get_object(cls, **kwargs):
+        if kwargs.get('status') == 400:
+            kwargs['status'] = 1
+            kwargs['expires__lte'] = now()
+        start_amount = None
+        if 'start_amount' in kwargs:
+            start_amount = kwargs.pop('start_amount')
+
         kwargs = get_perfect_filter_params(cls, **kwargs)
         try:
-            return cls.objects.get(**kwargs)
+            instance = cls.objects.get(**kwargs)
         except Exception as e:
             return e
+
+        if not start_amount or Decimal(instance.start_amount) >= Decimal(start_amount):
+            return instance
+        else:
+            return Exception('Data does not existed')
 
     @classmethod
     def get_active_object(cls, **kwargs):

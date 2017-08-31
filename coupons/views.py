@@ -22,8 +22,8 @@ class CouponsList(generics.GenericAPIView):
     """
     permission_classes = (IsOwnerOrReadOnly, )
 
-    def get_coupons_list(self, request):
-        return Coupons.get_perfect_detail_list(user_id=request.user.id)
+    def get_coupons_list(self, request, **kwargs):
+        return Coupons.get_perfect_detail_list(user_id=request.user.id, **kwargs)
 
     def post(self, request, *args, **kwargs):
         """
@@ -34,7 +34,7 @@ class CouponsList(generics.GenericAPIView):
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         cld = form.cleaned_data
-        details = self.get_coupons_list(request)
+        details = self.get_coupons_list(request, **cld)
 
         serializer = CouponsDetailListSerializer(data=details)
         if not serializer.is_valid():
