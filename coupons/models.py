@@ -76,11 +76,13 @@ class Coupons(models.Model):
 
     @classmethod
     def get_perfect_detail_list(cls, **kwargs):
+        if kwargs.get('status') == 400:
+            kwargs.pop('status')
         instances = cls.filter_objects(**kwargs)
         details = []
         for instance in instances:
             consumer_detail = model_to_dict(instance)
-            admin_instance = CouponsConfig.get_object(pk=instance.coupons_id)
+            admin_instance = CouponsConfig.get_object(pk=instance.coupons_id, **kwargs)
             if isinstance(admin_instance, Exception):
                 continue
             admin_detail = model_to_dict(admin_instance)
