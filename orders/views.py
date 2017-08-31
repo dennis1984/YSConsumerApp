@@ -499,6 +499,8 @@ class ConfirmConsumeResult(ConfirmConsumeList):
         instances = self.get_confirm_consume_list(request, cld['confirm_code'])
         if isinstance(instances, Exception):
             return Response({'result': False}, status=status.HTTP_200_OK)
+        if not instances:
+            return Response({'result': False}, status=status.HTTP_200_OK)
         return Response({'result': True}, status=status.HTTP_200_OK)
 
 

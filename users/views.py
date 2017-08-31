@@ -122,7 +122,7 @@ class WXAuthAction(APIView):
         state = wx_auth_params['state']()
         wx_auth_params['state'] = state
         wx_auth_params['redirect_uri'] = urllib.quote_plus(
-            wx_auth_params['redirect_uri'] % cld['callback_url'])
+            wx_auth_params['redirect_uri'] % cld.get('callback_url', ''))
         return_url = '%s?%s%s' % (wx_auth_url,
                                   main.make_dict_to_verify_string(wx_auth_params),
                                   end_params)
