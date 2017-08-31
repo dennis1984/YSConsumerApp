@@ -100,20 +100,14 @@ def make_qrcode(source_data, save_path=QRCODE_PICTURE_PATH, version=5):
     return fname_path
 
 
-def make_barcode(save_path=QRCODE_PICTURE_PATH):
+def make_barcode(save_path=QRCODE_PICTURE_PATH, barcode_length=8):
     """
     生成条形码
     返回：条形码数字及条形码文件名
     """
-    source_data = make_random_number_of_string(13)
-    # if not isinstance(source_data, (str, unicode)):
-    #     return TypeError('Params [source_data] type must be string or unicode')
-    # if len(source_data) != 13:
-    #     return ValueError('Params [source_data] data format is incorrect')
-    # try:
-    #     int(source_data)
-    # except Exception as e:
-    #     return e
+    source_data = make_random_number_of_string(barcode_length)
+    generate_dict = {8: 'EAN8',
+                     13: 'EAN13'}
 
     fname = '%s.png' % make_random_char_and_number_of_string(20)
     fname_path = os.path.join(save_path, fname)
@@ -121,7 +115,7 @@ def make_barcode(save_path=QRCODE_PICTURE_PATH):
         os.makedirs(save_path)
     fp = open(fname_path, 'wb')
     writer = ImageWriter()
-    generate('EAN13', source_data, writer=writer, output=fp,
+    generate(generate_dict[barcode_length], source_data, writer=writer, output=fp,
              writer_options={'module_width': 0.66,
                              'module_height': 30})
     fp.close()
