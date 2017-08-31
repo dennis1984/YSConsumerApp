@@ -97,9 +97,7 @@ class PayOrders(models.Model):
     member_discount = models.CharField('会员优惠', max_length=16, default='0')
     online_discount = models.CharField('在线下单优惠', max_length=16, default='0')
     other_discount = models.CharField('其他优惠', max_length=16, default='0')
-    custom_discount = models.CharField('自定义优惠', max_length=16, default='0')
-    custom_discount_name = models.CharField('自定义优惠名称', max_length=64, default='',
-                                            blank=True, null=True)
+    coupons_discount = models.CharField('优惠券优惠', max_length=16, default='0')
     coupons_id = models.IntegerField('优惠券ID', null=True)
     payable = models.CharField('应付金额', max_length=16)
 
@@ -338,8 +336,7 @@ class PayOrders(models.Model):
         member_discount = 0
         online_discount = 0
         other_discount = 0
-        custom_discount = 0
-        custom_discount_name = ''
+        coupons_discount = 0
         total_amount = 0
         try:
             food_court_id, food_court_name, dishes_details = \
@@ -362,17 +359,8 @@ class PayOrders(models.Model):
             if Decimal(coupons_detail['start_amount']) > Decimal(total_amount) or \
                 Decimal(coupons_detail['amount_of_money']) > Decimal(total_amount):
                 return Exception("The orders's total amount is not enough,"
-                                 "can not used the coupons.")
-
-            if coupons_detail['type'] == COUPONS_CONFIG_TYPE['custom']:
-                custom_discount = coupons_detail['amount_of_money']
-                custom_discount_name = coupons_detail['type_detail']
-            elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['member']:
-                member_discount = coupons_detail['amount_of_money']
-            elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['online']:
-                online_discount = str(Decimal(online_discount) + Decimal(coupons_detail['amount_of_money']))
-            elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['other']:
-                other_discount = coupons_detail['amount_of_money']
+                                 "can not be used the coupons.")
+            coupons_discount = coupons_detail['amount_of_money']
 
         orders_data = cls.make_orders_base(request=request, food_court_id=food_court_id,
                                            food_court_name=food_court_name,
@@ -381,8 +369,7 @@ class PayOrders(models.Model):
                                            member_discount=member_discount,
                                            online_discount=online_discount,
                                            other_discount=other_discount,
-                                           custom_discount=custom_discount,
-                                           custom_discount_name=custom_discount_name,
+                                           coupons_discount=coupons_discount,
                                            coupons_id=coupons_id,
                                            orders_type=orders_type,
                                            notes=notes,
@@ -413,8 +400,8 @@ class PayOrders(models.Model):
     @classmethod
     def make_orders_base(cls, request, food_court_id, food_court_name,
                          dishes_details, total_amount, member_discount,
-                         online_discount=0, other_discount=0, custom_discount=0,
-                         custom_discount_name=None, coupons_id=None, orders_type=None,
+                         online_discount=0, other_discount=0, coupons_discount=0,
+                         coupons_id=None, orders_type=None,
                          notes='', _method=None):
         if _method == 'confirm_orders':
             orders_id = None
@@ -431,14 +418,13 @@ class PayOrders(models.Model):
                            'member_discount': str(member_discount),
                            'online_discount': str(online_discount),
                            'other_discount': str(other_discount),
-                           'custom_discount': str(custom_discount),
-                           'custom_discount_name': custom_discount_name,
+                           'coupons_discount': str(coupons_discount),
                            'coupons_id': coupons_id,
                            'payable': str(Decimal(total_amount) -
                                           Decimal(member_discount) -
                                           Decimal(online_discount) -
                                           Decimal(other_discount) -
-                                          Decimal(custom_discount)),
+                                          Decimal(coupons_discount)),
                            'orders_type': orders_type,
                            'notes': notes,
                            }
@@ -493,9 +479,7 @@ class ConsumeOrders(models.Model):
     member_discount = models.CharField('会员优惠', max_length=16, default='0')
     online_discount = models.CharField('在线下单优惠', max_length=16, default='0')
     other_discount = models.CharField('其他优惠', max_length=16, default='0')
-    custom_discount = models.CharField('自定义优惠', max_length=16, default='0')
-    custom_discount_name = models.CharField('自定义优惠名称', max_length=64, default='',
-                                            blank=True, null=True)
+    coupons_discount = models.CharField('优惠券优惠', max_length=16, default='0')
     coupons_id = models.IntegerField('优惠券ID', null=True)
     payable = models.CharField('应付金额', max_length=16)
 
@@ -646,8 +630,7 @@ class BaseConsumeOrders(object):
             member_discount = 0
             online_discount = 0
             other_discount = 0
-            custom_discount = 0
-            custom_discount_name = ''
+            coupons_discount = 0
             total_amount = 0
             for item in business_dishes['dishes_detail']:
                 total_amount = Decimal(total_amount) + Decimal(item['price']) * item['count']
@@ -661,22 +644,13 @@ class BaseConsumeOrders(object):
                     return coupons_detail
 
                 amount_of_money = float(coupons_detail['amount_of_money'])
-                discount = '%.2f' % (amount_of_money / business_count)
-                if coupons_detail['type'] == COUPONS_CONFIG_TYPE['custom']:
-                    custom_discount = discount
-                    custom_discount_name = coupons_detail['type_detail']
-                elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['member']:
-                    member_discount = discount
-                elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['online']:
-                    online_discount = str(Decimal(online_discount) + Decimal(discount))
-                elif coupons_detail['type'] == COUPONS_CONFIG_TYPE['other']:
-                    other_discount = discount
+                coupons_discount = '%.2f' % (amount_of_money / business_count)
 
             payable = str(Decimal(total_amount) -
                           Decimal(member_discount) -
                           Decimal(online_discount) -
                           Decimal(other_discount) -
-                          Decimal(custom_discount))
+                          Decimal(coupons_discount))
             kwargs = {}
             is_ys_pay_orders, ys_pay_instance = self.is_ys_pay_orders(pay_orders_id)
             if is_ys_pay_orders:
@@ -689,8 +663,7 @@ class BaseConsumeOrders(object):
                 'member_discount': str(member_discount),
                 'online_discount': str(online_discount),
                 'other_discount': str(other_discount),
-                'custom_discount': str(custom_discount),
-                'custom_discount_name': custom_discount_name,
+                'coupons_discount': str(coupons_discount),
                 'coupons_id': _instance.coupons_id,
                 'payable': str(payable),
                 'business_name': business_dishes['business_name'],

@@ -73,9 +73,7 @@ class VerifyOrders(models.Model):
     member_discount = models.CharField('会员优惠', max_length=16, default='0')
     online_discount = models.CharField('在线下单优惠', max_length=16, default='0')
     other_discount = models.CharField('其他优惠', max_length=16, default='0')
-    custom_discount = models.CharField('自定义优惠', max_length=16, default='0')
-    custom_discount_name = models.CharField('自定义优惠名称', max_length=64, default='',
-                                            blank=True, null=True)
+    coupons_discount = models.CharField('优惠券优惠', max_length=16, default='0')
     service_dishes_subsidy = models.CharField('菜品优惠平台补贴', max_length=16, default='0')
     service_coupons_subsidy = models.CharField('优惠券优惠平台补贴', max_length=16, default='0')
     payable = models.CharField('应付金额', max_length=16)
