@@ -82,5 +82,5 @@ class AdvertListForm(forms.Form):
 
 
 class WXAuthLoginForm(forms.Form):
-    callback_url = forms.URLField(max_length=256, required=False)
+    callback_url = forms.CharField(max_length=256, required=False)
 

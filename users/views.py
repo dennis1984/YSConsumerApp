@@ -111,7 +111,7 @@ class WXAuthAction(APIView):
         from users.wx_auth import settings as wx_auth_settings
         from users.wx_auth.serializers import RandomStringSerializer
 
-        form = WXAuthLoginForm(request.data)
+        form = WXAuthLoginForm(getattr(request, request.method))
         if not form.is_valid():
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
