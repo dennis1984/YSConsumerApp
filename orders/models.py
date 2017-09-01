@@ -351,7 +351,8 @@ class PayOrders(models.Model):
                                           Decimal(item2['discount']) * item2['count'])
 
         if coupons_id:
-            coupons_detail = Coupons.get_perfect_detail(pk=coupons_id, user_id=request.user.id)
+            coupons_detail = Coupons.get_detail_for_make_orders(pk=coupons_id,
+                                                                user_id=request.user.id)
             if isinstance(coupons_detail, Exception):
                 return coupons_detail
             if Decimal(coupons_detail['start_amount']) > Decimal(total_amount) or \
@@ -637,7 +638,8 @@ class BaseConsumeOrders(object):
                     online_discount = str(Decimal(online_discount) +
                                           Decimal(item['discount']) * item['count'])
             if _instance.coupons_id:
-                coupons_detail = Coupons.get_perfect_detail(pk=_instance.coupons_id, user_id=_instance.user_id)
+                coupons_detail = Coupons.get_detail_for_make_orders(pk=_instance.coupons_id,
+                                                                    user_id=_instance.user_id)
                 if isinstance(coupons_detail, Exception):
                     return coupons_detail
 

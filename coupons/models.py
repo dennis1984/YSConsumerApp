@@ -82,12 +82,17 @@ class Coupons(models.Model):
             return admin_instance
 
         admin_detail = model_to_dict(admin_instance)
-        pop_keys = ('id', 'created', 'updated', 'expires_in', 'total_count',
+        pop_keys = ('id', 'created', 'updated', 'expire_in', 'total_count',
                     'send_count', 'status')
         for key in pop_keys:
             admin_detail.pop(key)
         detail.update(**admin_detail)
         return detail
+
+    @classmethod
+    def get_detail_for_make_orders(cls, **kwargs):
+        kwargs['expires__gt'] = now()
+        return cls.get_perfect_detail(**kwargs)
 
     @classmethod
     def filter_objects(cls, **kwargs):
@@ -104,6 +109,8 @@ class Coupons(models.Model):
             kwargs['status'] = 1
             kwargs['expires__lte'] = now()
             _kwargs.pop('status')
+        else:
+            kwargs['expires__gt'] = now()
         instances = cls.filter_objects(**kwargs)
         details = []
         for instance in instances:
@@ -113,7 +120,7 @@ class Coupons(models.Model):
                 continue
 
             admin_detail = model_to_dict(admin_instance)
-            pop_keys = ('id', 'created', 'updated', 'expires_in', 'total_count',
+            pop_keys = ('id', 'created', 'updated', 'expire_in', 'total_count',
                         'send_count', 'status')
             for key in pop_keys:
                 admin_detail.pop(key)
