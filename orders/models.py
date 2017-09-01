@@ -600,7 +600,7 @@ class BaseConsumeOrders(object):
     def make_consume_orders_id(self, pay_orders_id, index):
         return 'Z%s%03d' % (pay_orders_id, index)
 
-    def is_ys_pay_orders(self, pay_orders_id):
+    def is_yspay_orders(self, pay_orders_id):
         kwargs = {'pay_orders_id': pay_orders_id}
         ys_pay_instance = YinshiPayCode.get_object(**kwargs)
         if isinstance(ys_pay_instance, Exception):
@@ -652,8 +652,8 @@ class BaseConsumeOrders(object):
                           Decimal(other_discount) -
                           Decimal(coupons_discount))
             kwargs = {}
-            is_ys_pay_orders, ys_pay_instance = self.is_ys_pay_orders(pay_orders_id)
-            if is_ys_pay_orders:
+            is_yspay_orders, ys_pay_instance = self.is_yspay_orders(pay_orders_id)
+            if is_yspay_orders:
                 kwargs['payment_status'] = ORDERS_PAYMENT_STATUS['finished']
             consume_data = {
                 'orders_id': self.make_consume_orders_id(pay_orders_id, index),
@@ -684,7 +684,7 @@ class BaseConsumeOrders(object):
                 return e
 
             # 将子订单ID会写入YinshiPayCode
-            if is_ys_pay_orders:
+            if is_yspay_orders:
                 ys_pay_instance.consume_orders_id = obj.orders_id
                 try:
                     ys_pay_instance.save()

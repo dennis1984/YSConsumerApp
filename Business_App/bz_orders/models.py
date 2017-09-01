@@ -9,9 +9,28 @@ from horizon.models import model_to_dict, get_perfect_filter_params
 from coupons.models import Coupons
 from Business_App.bz_dishes.models import DISHES_MARK_DISCOUNT_VALUES
 from Admin_App.ad_coupons.models import DishesDiscountConfig
+from Business_App.bz_wallet.models import WalletAction
 
 import json
 from decimal import Decimal
+
+
+ORDERS_PAYMENT_STATUS = {
+    'unpaid': 0,
+    'paid': 200,
+    'consuming': 201,
+    'finished': 206,
+    'expired': 400,
+    'failed': 500,
+}
+
+ORDERS_ORDERS_TYPE = {
+    'unknown': 0,
+    'online': 101,
+    'business': 102,
+    'take_out': 103,
+    'wallet_recharge': 201,
+}
 
 
 def date_for_model():
@@ -103,23 +122,24 @@ class VerifyOrders(models.Model):
     def __unicode__(self):
         return self.orders_id
 
+    @property
+    def is_success(self):
+        """
+        订单是否完成
+        """
+        if self.payment_status == ORDERS_PAYMENT_STATUS['finished']:
+            return True
+        return False
 
-ORDERS_PAYMENT_STATUS = {
-    'unpaid': 0,
-    'paid': 200,
-    'consuming': 201,
-    'finished': 206,
-    'expired': 400,
-    'failed': 500,
-}
-
-ORDERS_ORDERS_TYPE = {
-    'unknown': 0,
-    'online': 101,
-    'business': 102,
-    'take_out': 103,
-    'wallet_recharge': 201,
-}
+    @property
+    def is_consume_orders(self):
+        """
+        消费订单
+        """
+        if self.orders_type not in (ORDERS_ORDERS_TYPE['wallet_withdraw'],
+                                    ORDERS_ORDERS_TYPE['unknown']):
+            return True
+        return False
 
 
 class VerifyOrdersAction(object):
@@ -208,6 +228,12 @@ class VerifyOrdersAction(object):
             obj.save()
         except Exception as e:
             return e
+
+        if obj.is_success:
+            # 更新商户端钱包余额
+            result = WalletAction().income(obj)
+            if isinstance(result, Exception):
+                return result
         return obj
 
 
