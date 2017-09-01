@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'comment',
     'coupons',
     'setup',
+    'common',
 
     # 允许跨域请求
     'corsheaders',

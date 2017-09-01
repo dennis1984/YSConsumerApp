@@ -11,7 +11,7 @@ from decimal import Decimal
 from horizon.models import model_to_dict
 from horizon.main import days_7_plus
 
-from orders.models import SerialNumberGenerator
+from common.models import SerialNumberGenerator
 
 import json
 import datetime
