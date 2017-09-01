@@ -16,6 +16,25 @@ import os
 import copy
 
 
+class BaseCouponsManager(models.Manager):
+    def get(self, *args, **kwargs):
+        if 'status' not in kwargs:
+            kwargs['status'] = 1
+        instance = super(BaseCouponsManager, self).get(*args, **kwargs)
+        if now() >= instance.expires:
+            instance.status = 400
+        return instance
+
+    def filter(self, *args, **kwargs):
+        if 'status' not in kwargs:
+            kwargs['status'] = 1
+        instances = super(BaseCouponsManager, self).filter(*args, **kwargs)
+        for instance in instances:
+            if now() >= instance.expires:
+                instance.status = 400
+        return instances
+
+
 class Coupons(models.Model):
     """
     我的优惠券
@@ -26,10 +45,11 @@ class Coupons(models.Model):
     # 优惠券状态：1：未使用  2：已使用  400：已过期
     status = models.IntegerField(u'优惠券状态', default=1)
 
+    expires = models.DateTimeField(u'优惠券过期时间', default=now)
     created = models.DateTimeField(u'创建时间', default=now)
     updated = models.DateTimeField(u'更新时间', auto_now=True)
 
-    objects = BaseManager()
+    objects = BaseCouponsManager()
 
     class Meta:
         db_table = 'ys_coupons'
@@ -60,10 +80,12 @@ class Coupons(models.Model):
         admin_instance = CouponsConfig.get_object(pk=instance.coupons_id)
         if isinstance(admin_instance, Exception):
             return admin_instance
+
         admin_detail = model_to_dict(admin_instance)
-        admin_detail.pop('id')
-        admin_detail.pop('created')
-        admin_detail.pop('updated')
+        pop_keys = ('id', 'created', 'updated', 'expires_in', 'total_count',
+                    'send_count', 'status')
+        for key in pop_keys:
+            admin_detail.pop(key)
         detail.update(**admin_detail)
         return detail
 
@@ -79,7 +101,9 @@ class Coupons(models.Model):
     def get_perfect_detail_list(cls, **kwargs):
         _kwargs = copy.deepcopy(kwargs)
         if kwargs.get('status') == 400:
-            kwargs.pop('status')
+            kwargs['status'] = 1
+            kwargs['expires__lte'] = now()
+            _kwargs.pop('status')
         instances = cls.filter_objects(**kwargs)
         details = []
         for instance in instances:
@@ -87,10 +111,12 @@ class Coupons(models.Model):
             admin_instance = CouponsConfig.get_object(pk=instance.coupons_id, **_kwargs)
             if isinstance(admin_instance, Exception):
                 continue
+
             admin_detail = model_to_dict(admin_instance)
-            admin_detail.pop('id')
-            admin_detail.pop('created')
-            admin_detail.pop('updated')
+            pop_keys = ('id', 'created', 'updated', 'expires_in', 'total_count',
+                        'send_count', 'status')
+            for key in pop_keys:
+                admin_detail.pop(key)
             consumer_detail.update(**admin_detail)
             details.append(consumer_detail)
         return details
