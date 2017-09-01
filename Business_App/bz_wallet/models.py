@@ -108,7 +108,7 @@ class Wallet(models.Model):
 
         instance = None
         # 数据库加排它锁，保证更改信息是列队操作的，防止数据混乱
-        with transaction.atomic():
+        with transaction.atomic(using='business'):
             try:
                 _instance = cls.objects.select_for_update().get(user_id=user_id)
             except cls.DoesNotExist:

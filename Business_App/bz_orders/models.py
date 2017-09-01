@@ -30,6 +30,7 @@ ORDERS_ORDERS_TYPE = {
     'business': 102,
     'take_out': 103,
     'wallet_recharge': 201,
+    'wallet_withdraw': 203,
 }
 
 
