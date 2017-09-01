@@ -143,6 +143,7 @@ class WalletTradeDetail(models.Model):
     class Meta:
         db_table = 'ys_wallet_trade_detail'
         ordering = ['-created']
+        app_label = 'Business_App.bz_wallet.models.WalletTradeDetail'
 
     def __unicode__(self):
         return str(self.user_id)
