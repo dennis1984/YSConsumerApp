@@ -34,6 +34,62 @@ ORDERS_ORDERS_TYPE = {
 }
 
 
+class Orders(models.Model):
+    """
+    订单数据模型
+    """
+    orders_id = models.CharField('订单ID', db_index=True, unique=True, max_length=30)
+    user_id = models.IntegerField('用户ID', db_index=True)
+    food_court_id = models.IntegerField('美食城ID')
+    food_court_name = models.CharField('美食城名字', max_length=200)
+    business_name = models.CharField('商户名字', max_length=100)
+
+    dishes_ids = models.TextField('订购列表', default='')
+    # 订购列表详情
+    # [
+    #  {'id': 1, ...},   # 菜品详情
+    #  {'id': 2, ...}, ...
+    # ]
+    #
+    total_amount = models.CharField('订单总计', max_length=16, default='0')
+    member_discount = models.CharField('会员优惠', max_length=16, default='0')
+    online_discount = models.CharField('在线下单优惠', max_length=16, default='0')
+    other_discount = models.CharField('其他优惠', max_length=16, default='0')
+    coupons_discount = models.CharField('优惠券优惠', max_length=16, default='0')
+    service_dishes_subsidy = models.CharField('菜品优惠平台补贴', max_length=16, default='0')
+    service_coupons_subsidy = models.CharField('优惠券优惠平台补贴', max_length=16, default='0')
+    payable = models.CharField('订单总计', max_length=16, default='0')
+
+    coupons_id = models.IntegerField('优惠券ID', null=True)
+
+    # 0:未支付 200:已支付 400: 已过期 500:支付失败
+    payment_status = models.IntegerField('订单支付状态', default=0)
+    # 支付方式：0:未指定支付方式 1：现金支付 2：微信支付 3：支付宝支付
+    payment_mode = models.IntegerField('订单支付方式', default=0)
+    # 订单类型 0: 未指定 101: 在线订单 102：堂食订单 103：外卖订单
+    orders_type = models.IntegerField('订单类型', default=102)
+
+    created = models.DateTimeField('创建时间', default=now)
+    updated = models.DateTimeField('最后修改时间', auto_now=True)
+    expires = models.DateTimeField('订单过期时间', default=minutes_15_plus)
+    extend = models.TextField('扩展信息', default='', blank=True)
+
+    class Meta:
+        db_table = 'ys_orders'
+        ordering = ['-orders_id']
+        app_label = 'Business_App.bz_orders.models.Orders'
+
+    def __unicode__(self):
+        return self.orders_id
+
+    @classmethod
+    def get_object(cls, **kwargs):
+        try:
+            return cls.objects.get(**kwargs)
+        except Exception as e:
+            return e
+
+
 def date_for_model():
     return now().date()
 
@@ -43,6 +99,9 @@ def ordersIdIntegerToString(orders_id):
 
 
 class OrdersIdGenerator(models.Model):
+    """
+    订单号生成器
+    """
     date = models.DateField('日期', primary_key=True, default=date_for_model)
     orders_id = models.IntegerField('订单ID', default=1)
     created = models.DateTimeField('创建日期', default=now)
@@ -58,7 +117,6 @@ class OrdersIdGenerator(models.Model):
     @classmethod
     def get_orders_id(cls):
         date_day = date_for_model()
-        orders_id = 0
         # 数据库加排它锁，保证订单号是唯一的
         with transaction.atomic(using='business'):   # 多数据库事务管理需显示声明操作的数据库
                                                      # （以后的版本可能会改进）
@@ -77,7 +135,7 @@ class OrdersIdGenerator(models.Model):
 
 class VerifyOrders(models.Model):
     """
-    核销订单
+    核销订单模型
     """
     orders_id = models.CharField('订单ID', db_index=True, unique=True, max_length=32)
     user_id = models.IntegerField('用户ID', db_index=True)
@@ -235,6 +293,14 @@ class VerifyOrdersAction(object):
             result = WalletAction().income(obj)
             if isinstance(result, Exception):
                 return result
+            # 把商户对应的订单隐藏掉（置为过期状态）（商户端选择吟食支付时，用户端会重新下单并支付，
+                # 最后再把核销订单同步到商户端，所以商户端的最原始订单已经无效了）
+            yspay_ins = YinshiPayCode.get_object(consume_orders_id=obj.orders_id)
+            if not isinstance(yspay_ins, Exception):
+                orders_ins = Orders.get_object(orders_id=yspay_ins.business_orders_id)
+                orders_ins.expires = now()
+                orders_ins.save()
+
         return obj
 
 
@@ -254,6 +320,7 @@ class YinshiPayCode(models.Model):
     """
     user_id = models.IntegerField('用户ID')
     dishes_ids = models.TextField('订购商品列表')
+    business_orders_id = models.CharField('商户端对应的订单ID', max_length=32)
     pay_orders_id = models.CharField('支付订单ID', max_length=32,
                                      blank=True, null=True, default='')
     consume_orders_id = models.CharField('核销订单ID', max_length=32,
