@@ -3,7 +3,7 @@ from horizon import forms
 
 
 class CouponsListForm(forms.Form):
-    start_amount = forms.FloatField(min_value=0, required=False)
+    start_amount = forms.FloatField(min_value=0.01, required=False)
     status = forms.ChoiceField(choices=((1, 1),
                                         (400, 3),),
                                required=False)
