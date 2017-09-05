@@ -7,7 +7,9 @@ from horizon.models import (model_to_dict,
                             BaseManager,
                             get_perfect_filter_params)
 
-from Admin_App.ad_coupons.models import CouponsConfig
+from Admin_App.ad_coupons.models import (CouponsConfig,
+                                         CouponsUsedRecord)
+from users.models import ConsumerUser
 from horizon.main import minutes_15_plus
 from horizon import main
 import datetime
@@ -130,6 +132,9 @@ class Coupons(models.Model):
 
     @classmethod
     def update_status_for_used(cls, pk):
+        """
+        更新优惠券状态是为使用状态
+        """
         instance = cls.get_object(pk=pk)
         if isinstance(instance, Exception):
             return instance
@@ -138,6 +143,16 @@ class Coupons(models.Model):
             instance.save()
         except Exception as e:
             return e
+
+        user = ConsumerUser.get_object(pk=instance.user_id)
+        used_record_data = {'user_id': instance.user_id,
+                            'coupons_id': instance.coupons_id,
+                            'phone': user.phone}
+        try:
+            CouponsUsedRecord(**used_record_data).save()
+        except:
+            pass
+
         return instance
 
     @classmethod

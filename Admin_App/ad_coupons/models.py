@@ -156,3 +156,31 @@ class DishesDiscountConfig(models.Model):
             return cls.objects.get(**kwargs)
         except Exception as e:
             return e
+
+
+class CouponsUsedRecord(models.Model):
+    """
+    优惠券使用记录
+    """
+    coupons_id = models.IntegerField(u'优惠券ID', db_index=True)
+    user_id = models.IntegerField(u'用户ID')
+    phone = models.CharField(u'用户手机号', max_length=20, null=True, blank=True)
+    count = models.IntegerField(u'使用数量', default=1)
+
+    created = models.DateTimeField(u'创建时间', default=now)
+
+    class Meta:
+        db_table = 'ys_coupons_used_record'
+        ordering = ['-coupons_id']
+        app_label = 'Admin_App.ad_coupons.models.DishesDiscountConfig'
+
+    def __unicode__(self):
+        return '%s-%s' % (self.coupons_id, self.user_id)
+
+    @classmethod
+    def get_object(cls, **kwargs):
+        kwargs = get_perfect_filter_params(cls, **kwargs)
+        try:
+            return cls.objects.get(**kwargs)
+        except Exception as e:
+            return e
