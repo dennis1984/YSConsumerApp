@@ -87,7 +87,7 @@ class CouponsConfig(models.Model):
         except Exception as e:
             return e
 
-        if not start_amount or Decimal(instance.start_amount) >= Decimal(start_amount):
+        if not start_amount or Decimal(instance.start_amount) <= Decimal(start_amount):
             return instance
         else:
             return Exception('Data does not existed')
