@@ -55,6 +55,7 @@ class Coupons(models.Model):
 
     class Meta:
         db_table = 'ys_coupons'
+        ordering = ['-coupons_id']
 
     def __unicode__(self):
         return str(self.coupons_id)
