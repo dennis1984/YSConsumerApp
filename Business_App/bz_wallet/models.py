@@ -24,7 +24,7 @@ WALLET_TRADE_DETAIL_TRADE_TYPE_DICT = {
 }
 WALLET_ACTION_METHOD = ('recharge', 'income', 'withdraw')
 
-WALLET_BALANCE = '0.00'
+WALLET_BLOCK_BALANCE = '0.00'
 WALLET_SERVICE_RATE = '0.000'
 
 WITHDRAW_RECORD_STATUS = {
@@ -58,7 +58,7 @@ class Wallet(models.Model):
     """
     user_id = models.IntegerField('用户ID', db_index=True)
     balance = models.CharField('余额', max_length=16, default='0')
-    blocked_money = models.CharField('冻结金额', max_length=16, default='500.00')
+    blocked_money = models.CharField('冻结金额', max_length=16, default=WALLET_BLOCK_BALANCE)
     password = models.CharField('支付密码', max_length=560, null=True)
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
