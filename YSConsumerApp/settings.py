@@ -249,7 +249,7 @@ PICTURE_DIRS = {
 
 # 缓存服务器配置
 REDIS_SETTINGS = {
-    'host': '121.42.249.43',
+    'host': '127.0.0.1',
     'port': 6379,
     'db_set': {
         'business': 0,
