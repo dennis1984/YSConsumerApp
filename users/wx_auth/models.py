@@ -14,7 +14,7 @@ class WXAccessToken(models.Model):
     refresh_token = models.CharField(u'刷新access token的token', max_length=164, unique=True)
     openid = models.CharField(u'微信用户唯一标识', max_length=64, db_index=True)
     scope = models.CharField(u'用户授权的作用域', max_length=64)
-    unionid = models.CharField(u'unionid', max_length=32)
+    unionid = models.CharField(u'unionid', max_length=32, default='', null=True, blank=True)
     state = models.CharField(u'获取微信code的随机数', max_length=128)
     expires = models.DateTimeField(u'过期时间')
 
