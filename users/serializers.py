@@ -13,6 +13,7 @@ from horizon.serializers import (BaseListSerializer,
                                  BaseSerializer,
                                  timezoneStringTostring)
 from Business_App.bz_users.models import AdvertPicture
+from Admin_App.ad_coupons.models import CouponsSendRecord
 
 import urllib
 import os
@@ -106,7 +107,18 @@ class UserSerializer(BaseModelSerializer):
 
     def binding_phone_to_user(self, request, instance, validated_data):
         _validated_data = {'phone': validated_data['username']}
-        return super(UserSerializer, self).update(instance, _validated_data)
+        instance = super(UserSerializer, self).update(instance, _validated_data)
+
+        # 同步手机号到优惠券发送记录
+        records = CouponsSendRecord.filter_objects(user_id=instance.id)
+        for record in records:
+            record.phone = _validated_data['phone']
+            try:
+                record.save()
+            except:
+                return
+
+        return instance
 
 
 class UserInstanceSerializer(serializers.ModelSerializer):
