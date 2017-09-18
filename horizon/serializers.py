@@ -86,7 +86,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         self.make_perfect_initial_data(validated_data)
-        super(BaseModelSerializer, self).update(instance, validated_data)
+        return super(BaseModelSerializer, self).update(instance, validated_data)
 
     @property
     def data(self):
