@@ -19,6 +19,9 @@ from horizon.views import APIView
 from horizon.http_requests import send_http_request
 from horizon.main import make_time_delta
 
+from Admin_App.ad_coupons.models import CouponsConfig
+from coupons.models import Coupons, CouponsAction
+
 from oauthlib.common import generate_token
 from django.utils.timezone import now
 import json
@@ -49,6 +52,14 @@ class AuthCallback(APIView):
         user.last_login = now()
         user.save()
         return user
+
+    def send_coupons_to_new_user(self, user):
+        # 派发首单优惠优惠券
+        kwargs = {'type': 1, 'type_detail': 10}
+        coupons = CouponsConfig.get_object(**kwargs)
+        if isinstance(coupons, Exception):
+            return None
+        return CouponsAction().create_coupons([user], coupons)
 
     def post(self, request, *args, **kwargs):
         """
@@ -116,6 +127,9 @@ class AuthCallback(APIView):
             serializer.save()
             _user = self.get_user_by_open_id(userinfo_response_dict['openid'])
             is_binding = False
+
+            # 派发首单优惠优惠券
+            self.send_coupons_to_new_user(_user)
         else:
             if not _user.phone:        # 已经创建的用户，但是没有绑定手机号
                 is_binding = False

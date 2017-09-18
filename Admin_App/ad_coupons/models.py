@@ -49,6 +49,8 @@ class CouponsConfig(models.Model):
 
     # 优惠券类别：1：代金券， 2：折扣券
     type = models.IntegerField(u'优惠券类别')
+    # 优惠券类别详情：0：未设置 10：首单优惠券 20：节日券 30：促销券 100：其他优惠券
+    type_detail = models.IntegerField(u'优惠券类别详情', default=0)
 
     amount_of_money = models.CharField(u'优惠金额', max_length=16, null=True)
     discount_percent = models.IntegerField(u'折扣率', null=True)
@@ -66,6 +68,9 @@ class CouponsConfig(models.Model):
     status = models.IntegerField(u'数据状态', default=1)
     created = models.DateTimeField(u'创建时间', default=now)
     updated = models.DateTimeField(u'最后更新时间', auto_now=True)
+
+    # 优惠券备注信息
+    note = models.TextField(u'优惠券备注', default='', null=True, blank=True)
 
     objects = BaseCouponsManager()
 
@@ -184,3 +189,60 @@ class CouponsUsedRecord(models.Model):
             return cls.objects.get(**kwargs)
         except Exception as e:
             return e
+
+
+class CouponsSendRecord(models.Model):
+    """
+    优惠券派发记录
+    """
+    coupons_id = models.IntegerField(u'优惠券ID', db_index=True)
+    user_id = models.IntegerField(u'用户ID')
+    phone = models.CharField(u'用户手机号', max_length=20, null=True, blank=True)
+    count = models.IntegerField(u'发放数量', default=1)
+
+    created = models.DateTimeField(u'创建时间', default=now)
+
+    class Meta:
+        db_table = 'ys_coupons_send_record'
+        ordering = ['-coupons_id']
+        app_label = 'Admin_App.ad_coupons.models.CouponsSendRecord'
+
+    def __unicode__(self):
+        return '%s-%s' % (self.coupons_id, self.user_id)
+
+    @classmethod
+    def get_object(cls, **kwargs):
+        kwargs = get_perfect_filter_params(cls, **kwargs)
+        try:
+            return cls.objects.get(**kwargs)
+        except Exception as e:
+            return e
+
+    @classmethod
+    def filter_objects(cls, **kwargs):
+        kwargs = get_perfect_filter_params(cls, **kwargs)
+        try:
+            return cls.objects.filter(**kwargs)
+        except Exception as e:
+            return e
+
+    @classmethod
+    def filter_perfect_objects(cls, **kwargs):
+        instances = cls.filter_objects(**kwargs)
+        if isinstance(instances, Exception):
+            return instances
+        details = []
+        coupons_dict = {}
+        for ins in instances:
+            coupons = coupons_dict.get(ins.coupons_id)
+            if not coupons:
+                coupons = CouponsConfig.get_object(pk=ins.coupons_id)
+                coupons_dict[ins.coupons_id] = coupons
+            detail = model_to_dict(ins)
+            update_dict = {'coupons_name': coupons.name,
+                           'coupons_type': coupons.type,
+                           }
+            detail.update(update_dict)
+            details.append(detail)
+        return details
+

@@ -8,9 +8,10 @@ from horizon.models import (model_to_dict,
                             get_perfect_filter_params)
 
 from Admin_App.ad_coupons.models import (CouponsConfig,
-                                         CouponsUsedRecord)
+                                         CouponsUsedRecord,
+                                         CouponsSendRecord)
 from users.models import ConsumerUser
-from horizon.main import minutes_15_plus
+from horizon.main import minutes_15_plus, make_perfect_time_delta
 from horizon import main
 import datetime
 import re
@@ -165,3 +166,57 @@ class Coupons(models.Model):
             return True
         else:
             return False
+
+
+class CouponsAction(object):
+    """
+    我的优惠券操作
+    """
+    def create_coupons(self, user_ids, coupons):
+        """
+        发放优惠券到用户手中
+        返回：成功：发放数量,
+             失败：Exception
+        """
+        if isinstance(user_ids, (str, unicode)):
+            if user_ids.lower() != 'all':
+                return Exception('The params data is incorrect.')
+            user_ids = ConsumerUser.filter_objects()
+        else:
+            if not isinstance(user_ids, (list, tuple)):
+                return Exception('The params data is incorrect.')
+        if coupons.total_count:
+            if (coupons.total_count - coupons.send_count) < len(user_ids):
+                return Exception('The coupon total count is not enough.')
+
+        send_count = 0
+        for item in user_ids:
+            if hasattr(item, 'pk'):
+                user_id = item.pk
+                phone = item.phone
+            else:
+                user_id = item
+                user = ConsumerUser.get_object(pk=user_id)
+                phone = user.phone
+            initial_data = {'coupons_id': coupons.pk,
+                            'user_id': user_id,
+                            'expires': make_perfect_time_delta(days=coupons.expire_in,
+                                                               hours=23,
+                                                               minutes=59,
+                                                               seconds=59)}
+            instance = Coupons(**initial_data)
+            try:
+                instance.save()
+            except Exception as e:
+                return e
+
+            send_count += 1
+            send_record_data = {'coupons_id': coupons.pk,
+                                'user_id': user_id,
+                                'phone': phone}
+            try:
+                CouponsSendRecord(**send_record_data).save()
+            except Exception as e:
+                pass
+
+        return send_count

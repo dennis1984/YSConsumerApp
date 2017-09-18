@@ -42,6 +42,28 @@ def make_time_delta(days=0, minutes=0, seconds=0):
                                       seconds=seconds)
 
 
+def make_time_delta_for_custom(date_time, days=0, hours=0, minutes=0, seconds=0):
+    """
+    设置时间增量
+    """
+    return date_time + datetime.timedelta(days=days,
+                                          hours=hours,
+                                          minutes=minutes,
+                                          seconds=seconds)
+
+
+def make_perfect_time_delta(days=0, hours=0, minutes=0, seconds=0):
+    """
+    设置时间增量
+    """
+    now_date = datetime.datetime.strftime(now().date(), '%Y-%m-%d %H:%M:%S')
+    now_datetime = datetime.datetime.strptime(now_date, '%Y-%m-%d %H:%M:%S')
+    return now_datetime + datetime.timedelta(days=days,
+                                             hours=hours,
+                                             minutes=minutes,
+                                             seconds=seconds)
+
+
 class DatetimeEncode(json.JSONEncoder):
     """
     让json模块可以序列化datetime类型的字段
