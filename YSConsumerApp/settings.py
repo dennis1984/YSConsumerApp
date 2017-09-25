@@ -28,6 +28,13 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
+# 服务器环境（根据服务器环境不同，配置不同的值）
+ENVIRONMENT_DICT = {
+    'DEV': 10,        # 开发环境
+    'TEST': 20,       # 测试环境
+    'PRODUCE': 30,    # 生产环境
+}
+ENVIRONMENT = 10
 
 # Application definition
 
@@ -222,8 +229,14 @@ PAGE_SIZE = 100
 MAX_PAGE_SIZE = 500
 
 # domain name
-
-DOMAIN_NAME = '121.42.249.43'
+if ENVIRONMENT == 10:     # 开发环境
+    DOMAIN_NAME = '121.42.249.43'
+elif ENVIRONMENT == 20:   # 测试环境
+    DOMAIN_NAME = '118.190.40.233'
+elif ENVIRONMENT == 30:   # 生成环境
+    DOMAIN_NAME = '118.190.166.150'
+else:
+    DOMAIN_NAME = '121.42.249.43'
 
 # WEB URL FIX
 
