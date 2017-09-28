@@ -56,10 +56,12 @@ class AuthCallback(APIView):
     def send_coupons_to_new_user(self, user):
         # 派发首单优惠优惠券
         kwargs = {'type': 1, 'type_detail': 10}
-        coupons = CouponsConfig.get_object(**kwargs)
+        coupons = CouponsConfig.filter_objects(**kwargs)
         if isinstance(coupons, Exception):
             return None
-        return CouponsAction().create_coupons([user], coupons)
+        if len(coupons) <= 0:
+            return None
+        return CouponsAction().create_coupons([user], coupons[0])
 
     def post(self, request, *args, **kwargs):
         """
