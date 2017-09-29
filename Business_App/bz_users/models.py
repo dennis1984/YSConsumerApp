@@ -188,7 +188,7 @@ class AdvertPicture(models.Model):
     food_court_id = models.IntegerField(u'美食城ID')
     # owner取值： 1: 商户端  2: 用户端
     owner = models.IntegerField(u'广告所属设备端', default=1)
-    name = models.CharField(u'图片名称', max_length=60, unique=True, db_index=True)
+    name = models.CharField(u'图片名称', max_length=60, db_index=True)
     image = models.ImageField(u'图片', upload_to=ADVERT_PICTURE_DIR,)
     ad_position_name = models.CharField(u'广告位名称', max_length=60)
     ad_link = models.CharField(u'广告链接', max_length=100)
@@ -202,7 +202,7 @@ class AdvertPicture(models.Model):
 
     class Meta:
         db_table = 'ys_advert_picture'
-        ordering = ['-created']
+        ordering = ['-updated']
         app_label = 'Business_App.bz_users.models.AdvertPicture'
 
     def __unicode__(self):
