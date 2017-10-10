@@ -276,7 +276,7 @@ def send_message_to_phone(params, receive_phones, template_name=None):
     AppCode = '2e8a1a8a3e22486b9be6ac46c3d2c6ec'
     sign_names = ('吟食',)
     template_dict = {'register': 'SMS_91765097',
-                     'recharge': 'SMS_82105108'}
+                     'recharge': 'SMS_102170028'}
     params_key_dict = {'register': 'code',
                        'recharge': 'count'}
 
