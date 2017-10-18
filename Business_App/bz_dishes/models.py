@@ -97,6 +97,8 @@ class Dishes(models.Model):
 
     @classmethod
     def get_hot_sale_list(cls, request, **kwargs):
+        if 'mark' not in kwargs or 'mark__in' not in kwargs:
+            kwargs['mark__in'] = [10, 20, 30]
         hot_objects = cls.filter_objects(**kwargs)
         if isinstance(hot_objects, Exception):
             return hot_objects
