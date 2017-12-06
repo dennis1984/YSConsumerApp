@@ -42,7 +42,8 @@ class PayOrdersCreateForm(forms.Form):
                                                 u'[shopping_cart, yinshi_pay, other]'
                                 })
     orders_type = forms.ChoiceField(choices=(('recharge', 1), ('consume', 2)))
-    payable = forms.IntegerField(min_value=10, required=False)
+    # 单次充值最少1元，最多1000元
+    payable = forms.IntegerField(min_value=1, max_value=1000, required=False)
     random_code = forms.CharField(min_length=6, max_length=32, required=False)
     coupons_id = forms.IntegerField(min_value=1, required=False)
     notes = forms.CharField(max_length=120, required=False)

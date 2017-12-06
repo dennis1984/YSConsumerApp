@@ -497,6 +497,8 @@ class ConsumeOrders(models.Model):
     confirm_code = models.CharField('核销码', max_length=32, default='', blank=True)
 
     notes = models.CharField('订单备注', max_length=40, default='', blank=True, null=True)
+    # 核销时段：例如：17:30~20:30
+    consumer_time_slot = models.CharField('订单核销时间段', max_length=32, null=True, blank=True)
 
     created = models.DateTimeField('创建时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
@@ -631,12 +633,17 @@ class BaseConsumeOrders(object):
             other_discount = 0
             coupons_discount = 0
             total_amount = 0
+            # 核销时段
+            consumer_time_slot = ''
             for item in business_dishes['dishes_detail']:
                 total_amount = Decimal(total_amount) + Decimal(item['price']) * item['count']
                 if item['mark'] in DISHES_MARK_DISCOUNT_VALUES and \
                         pay_orders.orders_type == ORDERS_ORDERS_TYPE['online']:
                     online_discount = str(Decimal(online_discount) +
                                           Decimal(item['discount']) * item['count'])
+                if item.get('discount_time_slot_start') and item.get('discount_time_slot_end'):
+                    consumer_time_slot = '%s~%s' % (item['discount_time_slot_start'],
+                                                   item['discount_time_slot_end'])
             if _instance.coupons_id:
                 coupons_detail = Coupons.get_detail_for_make_orders(pk=_instance.coupons_id,
                                                                     user_id=_instance.user_id)
@@ -674,6 +681,7 @@ class BaseConsumeOrders(object):
                 'payment_mode': pay_orders.payment_mode,
                 'orders_type': pay_orders.orders_type,
                 'master_orders_id': pay_orders_id,
+                'consumer_time_slot': consumer_time_slot,
                 'notes': pay_orders.notes,
             }
             consume_data.update(**kwargs)

@@ -4,7 +4,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics
 from django.utils.six import BytesIO
-from Business_App.bz_dishes.models import Dishes, City
+from Business_App.bz_dishes.models import (Dishes,
+                                           City,
+                                           DISHES_MARK_DISCOUNT_VALUES)
 from Business_App.bz_users.models import FoodCourt
 from Business_App.bz_dishes.caches import DishesDetailCache
 from hot_sale.serializers import (HotSaleSerializer,
@@ -28,7 +30,7 @@ class HotSaleList(generics.GenericAPIView):
 
     def get_hot_sale_list(self, request, **kwargs):
         if kwargs['mark'] == 0:
-            kwargs['mark__in'] = [10, 20, 30]
+            kwargs['mark__in'] = DISHES_MARK_DISCOUNT_VALUES
             kwargs.pop('mark')
         return Dishes.get_hot_sale_list(request, **kwargs)
 

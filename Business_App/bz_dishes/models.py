@@ -19,8 +19,11 @@ DISHES_MARK = {
     'new': 10,
     'preferential': 20,
     'flagship': 30,
+    'new_business': 40,
+    'night_discount': 50,
 }
-DISHES_MARK_DISCOUNT_VALUES = (10, 20, 30)
+DISHES_MARK_DISCOUNT_VALUES = (10, 20, 30, 40, 50)
+CAN_NOT_USE_COUPONS_WITH_MARK = [DISHES_MARK['new_business']]
 DISHES_PICTURE_DIR = settings.PICTURE_DIRS['business']['dishes']
 
 
@@ -48,10 +51,14 @@ class Dishes(models.Model):
     status = models.IntegerField('数据状态', default=1)  # 1 有效 2 已删除 3 其他（比如暂时不用）
     is_recommend = models.BooleanField('是否推荐该菜品', default=False)  # 0: 不推荐  1：推荐
 
-    # 运营标记： 0：无标记  10：新品  20：特惠  30：招牌
+    # 运营标记： 0：无标记  10：新品  20：特惠  30：招牌  40: 新商户专区  50: 晚市特惠
     mark = models.IntegerField('运营标记', default=0)
     # 优惠金额
     discount = models.CharField('优惠金额', max_length=16, default='0')
+    # 优惠时间段-开始 (用来标记菜品在某个时段是否有优惠)，以24小时制数字为标准， 如：8:00（代表早晨8点）
+    discount_time_slot_start = models.CharField('优惠时间段-开始', null=True)
+    # 优惠时间段-结束 (用来标记菜品在某个时段是否有优惠)，以24小时制数字为标准， 如：19:30（代表晚上7点30分）
+    discount_time_slot_end = models.CharField('优惠时间段-结束', null=True)
 
     # 菜品标记和排序顺序
     tag = models.CharField('标记', max_length=64, default='', null=True, blank=True)

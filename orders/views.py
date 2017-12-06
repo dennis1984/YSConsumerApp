@@ -15,7 +15,7 @@ from orders.permissions import IsOwnerOrReadOnly
 from orders.models import (PayOrders,
                            ConsumeOrders,
                            ConfirmConsume,
-                           ORDERS_ORDERS_TYPE)
+                           ORDERS_ORDERS_TYPE,)
 from orders.forms import (PayOrdersCreateForm,
                           PayOrdersUpdateForm,
                           PayOrdersConfirmForm,
@@ -29,7 +29,8 @@ from shopping_cart.serializers import ShoppingCartSerializer
 from shopping_cart.models import ShoppingCart
 from orders.pay import WXPay, WalletPay
 from Business_App.bz_orders.models import YinshiPayCode
-from Business_App.bz_dishes.models import Dishes
+from Business_App.bz_dishes.models import (Dishes,
+                                           CAN_NOT_USE_COUPONS_WITH_MARK)
 from wallet.models import Wallet
 
 from horizon import main
@@ -105,20 +106,33 @@ class PayOrdersAction(generics.GenericAPIView):
             if 'random_code' not in kwargs:
                 return False, 'Field ["random_code"] must be not empty when ' \
                               'gateway is "yinshi_pay"'
-        if kwargs['orders_type'] == INPUT_ORDERS_TYPE['recharge']:
-            if not kwargs.get('payable'):
-                return False, 'Field ["payable"] data error.'
-            if 'coupons_id' in kwargs:
-                return False, 'Can not use coupons'
+
         if kwargs['orders_type'] == INPUT_ORDERS_TYPE['consume']:
             if 'dishes_ids' not in kwargs:
                 return False, 'Field ["dishes_ids"] must be not empty when ' \
                               'orders_type is "consume".'
-            if isinstance(kwargs['dishes_ids'], (str, unicode)):
-                try:
-                    json.loads(kwargs['dishes_ids'])
-                except Exception as e:
-                    return False, e.args
+            # if isinstance(kwargs['dishes_ids'], (str, unicode)):
+            try:
+                dishes_ids = json.loads(kwargs['dishes_ids'])
+            except Exception as e:
+                return False, e.args
+
+            # 判断是否能使用优惠券
+            if 'coupons_id' in kwargs:
+                d_kw = {'id__in': dishes_ids,
+                        'mark__in': CAN_NOT_USE_COUPONS_WITH_MARK}
+                instances = Dishes.filter_objects(**d_kw)
+                if not isinstance(instances, Exception):
+                    # 有运营标记为"新商户专区"的商品，不能使用优惠券
+                    if len(instances) != 0:
+                        return False, 'Can not use coupons'
+
+        elif kwargs['orders_type'] == INPUT_ORDERS_TYPE['recharge']:
+            if 'payable' not in kwargs:
+                return False, 'Field ["payable"] data error.'
+            if 'coupons_id' in kwargs:
+                return False, 'Can not use coupons'
+
         return True, None
 
     def is_user_binding(self, request):

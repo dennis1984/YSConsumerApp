@@ -120,6 +120,8 @@ class ConsumeOrdersResponseSerializer(BaseSerializer):
     # 是否评价过
     is_commented = serializers.IntegerField(allow_null=True)
     notes = serializers.CharField(allow_null=True, allow_blank=True)
+    # 核销时段：例如：17:30~20:30
+    consumer_time_slot = serializers.CharField(allow_null=True, allow_blank=True)
 
     extend = serializers.CharField(allow_blank=True)
 
