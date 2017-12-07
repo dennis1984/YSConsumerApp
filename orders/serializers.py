@@ -71,6 +71,7 @@ class PayOrdersConfirmSerializer(PayOrdersResponseSerializer):
 
     request_data = serializers.DictField()
     notes = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    can_use_coupons = serializers.BooleanField(default=True)
 
     created = serializers.DateTimeField(required=False, allow_null=True)
     updated = serializers.DateTimeField(required=False, allow_null=True)

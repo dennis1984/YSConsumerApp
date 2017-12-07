@@ -111,21 +111,19 @@ class PayOrdersAction(generics.GenericAPIView):
             if 'dishes_ids' not in kwargs:
                 return False, 'Field ["dishes_ids"] must be not empty when ' \
                               'orders_type is "consume".'
-            # if isinstance(kwargs['dishes_ids'], (str, unicode)):
-            try:
-                dishes_ids = json.loads(kwargs['dishes_ids'])
-            except Exception as e:
-                return False, e.args
+
+            dishes_ids = kwargs['dishes_ids']
+            if isinstance(kwargs['dishes_ids'], (str, unicode)):
+                try:
+                    dishes_ids = json.loads(kwargs['dishes_ids'])
+                except Exception as e:
+                    return False, e.args
 
             # 判断是否能使用优惠券
             if 'coupons_id' in kwargs:
-                d_kw = {'id__in': dishes_ids,
-                        'mark__in': CAN_NOT_USE_COUPONS_WITH_MARK}
-                instances = Dishes.filter_objects(**d_kw)
-                if not isinstance(instances, Exception):
-                    # 有运营标记为"新商户专区"的商品，不能使用优惠券
-                    if len(instances) != 0:
-                        return False, 'Can not use coupons'
+                can_use_coupons = self.can_use_coupons(dishes_ids)
+                if not can_use_coupons:
+                    return False, 'Can not use coupons'
 
         elif kwargs['orders_type'] == INPUT_ORDERS_TYPE['recharge']:
             if 'payable' not in kwargs:
@@ -134,6 +132,19 @@ class PayOrdersAction(generics.GenericAPIView):
                 return False, 'Can not use coupons'
 
         return True, None
+
+    def can_use_coupons(self, dishes_ids):
+        """
+        判断是否能使用优惠券
+        """
+        kwargs = {'id__in': [item['dishes_id'] for item in dishes_ids],
+                  'mark__in': CAN_NOT_USE_COUPONS_WITH_MARK}
+        instances = Dishes.filter_objects(**kwargs)
+        if not isinstance(instances, Exception):
+            # 有运营标记为"新商户专区"的商品，不能使用优惠券
+            if len(instances) != 0:
+                return False
+        return True
 
     def is_user_binding(self, request):
         if not request.user.is_binding:
@@ -320,12 +331,14 @@ class PayOrdersConfirmDetail(PayOrdersAction):
         if isinstance(_data, Exception):
             return Response({'Detail': _data.args}, status=status.HTTP_400_BAD_REQUEST)
 
-        _data['dishes_ids'] = json.loads(_data['dishes_ids'])
+        dishes_ids = json.loads(_data['dishes_ids'])
+        _data['dishes_ids'] = dishes_ids
         _data['request_data'] = cld
+        _data['can_use_coupons'] = self.can_use_coupons(dishes_ids)
         serializer = PayOrdersConfirmSerializer(data=_data)
-        if serializer.is_valid():
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, *args, **kwargs):
         pass
