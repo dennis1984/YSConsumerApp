@@ -156,6 +156,13 @@ class PayOrdersAction(generics.GenericAPIView):
     def check_password(self, request, password):
         return Wallet.check_password(request, password)
 
+    def is_password_valid(self, request, **kwargs):
+        if 'password' not in kwargs:
+            return False, 'Password is required while use wallet pay.'
+        if not self.check_password(request, kwargs['password']):
+            return False, 'Password is incorrect.'
+        return True, None
+
     def post(self, request, *args, **kwargs):
         """
         生成支付订单
@@ -207,9 +214,9 @@ class PayOrdersAction(generics.GenericAPIView):
 
         orders_detail = serializer.instance.orders_detail
         serializer_response = PayOrdersResponseSerializer(data=orders_detail)
-        if serializer_response.is_valid():
-            return Response(serializer_response.data, status=status.HTTP_201_CREATED)
-        return Response(serializer_response.errors, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer_response.is_valid():
+            return Response(serializer_response.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer_response.data, status=status.HTTP_201_CREATED)
 
     def put(self, request, *args, **kwargs):
         """
@@ -230,21 +237,25 @@ class PayOrdersAction(generics.GenericAPIView):
         cld = form.cleaned_data
         payment_mode = cld['payment_mode']
         if payment_mode == 1:
-            if 'password' not in cld:
-                return Response({'Detail': 'Password is required while use wallet pay.'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            if not self.check_password(request, cld['password']):
-                return Response({'Detail': 'Password is incorrect.'},
-                                status=status.HTTP_400_BAD_REQUEST)
+            is_password_valid, error_message = self.is_password_valid(request, **cld)
+            if not is_password_valid:
+                return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
+
         _instance = self.get_orders_by_orders_id(cld['orders_id'])
         if isinstance(_instance, Exception):
             return Response({'Detail': _instance.args}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 检查充值订单的支付方式是否正确
+        if _instance.orders_type == ORDERS_ORDERS_TYPE['wallet_recharge'] and payment_mode == 1:
+            return Response({'Detail': 'Payment mode is incorrect.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         # 检查优惠券是否已经使用过了
         if _instance.coupons_id:
             is_used = Coupons.is_used(pk=_instance.coupons_id)
             if is_used:
-                return Response({'Detail': 'The coupon is used.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'Detail': 'The coupon is used.'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
         if payment_mode == 1:      # 钱包支付
             wallet_pay = WalletPay(request, _instance)

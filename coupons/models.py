@@ -204,16 +204,24 @@ class CouponsAction(object):
                                                                hours=23,
                                                                minutes=59,
                                                                seconds=59)}
-            instance = Coupons(**initial_data)
-            try:
-                instance.save()
-            except Exception as e:
-                return e
+            instances = []
+            if coupons.each_count:
+                for i in range(coupons.each_count):
+                    instance = Coupons(**initial_data)
+                    instances.append(instance)
+            else:
+                instances = [Coupons(**initial_data)]
+            for ins in instances:
+                try:
+                    ins.save()
+                except Exception as e:
+                    return e
 
-            send_count += 1
+            send_count += len(instances)
             send_record_data = {'coupons_id': coupons.pk,
                                 'user_id': user_id,
-                                'phone': phone}
+                                'phone': phone,
+                                'count': len(instances)}
             try:
                 CouponsSendRecord(**send_record_data).save()
             except Exception as e:

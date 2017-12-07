@@ -12,8 +12,12 @@ from decimal import Decimal
 from orders.models import (PayOrders,
                            TradeRecordAction,
                            ORDERS_ORDERS_TYPE)
-from coupons.models import Coupons
+from coupons.models import Coupons, CouponsAction
+from Admin_App.ad_coupons.models import (CouponsConfig,
+                                         COUPONS_CONFIG_TYPE_DETAIL,
+                                         RECHARGE_GIVE_CONFIG)
 from horizon.models import model_to_dict
+
 
 import json
 import datetime
@@ -244,6 +248,19 @@ class WalletAction(object):
         _trade = WalletTradeAction().create(request, orders)
         if isinstance(_trade, Exception):
             return _trade
+
+        # 送优惠券
+        loop = int(float(orders.payable) / RECHARGE_GIVE_CONFIG['start_amount'])
+        if loop > 0:
+            kwargs = {'type_detail': COUPONS_CONFIG_TYPE_DETAIL['recharge_give']}
+            coupons = CouponsConfig.filter_objects(**kwargs)
+            if isinstance(coupons, Exception) or not coupons:
+                pass
+            else:
+                user_ids = [request.user.id]
+                for coupons in coupons:
+                    CouponsAction().create_coupons(user_ids, coupons)
+
         return result
 
     def consume(self, request, orders):

@@ -643,7 +643,7 @@ class BaseConsumeOrders(object):
                                           Decimal(item['discount']) * item['count'])
                 if item.get('discount_time_slot_start') and item.get('discount_time_slot_end'):
                     consumer_time_slot = '%s~%s' % (item['discount_time_slot_start'],
-                                                   item['discount_time_slot_end'])
+                                                    item['discount_time_slot_end'])
             if _instance.coupons_id:
                 coupons_detail = Coupons.get_detail_for_make_orders(pk=_instance.coupons_id,
                                                                     user_id=_instance.user_id)
