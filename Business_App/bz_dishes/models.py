@@ -56,9 +56,9 @@ class Dishes(models.Model):
     # 优惠金额
     discount = models.CharField('优惠金额', max_length=16, default='0')
     # 优惠时间段-开始 (用来标记菜品在某个时段是否有优惠)，以24小时制数字为标准， 如：8:00（代表早晨8点）
-    discount_time_slot_start = models.CharField('优惠时间段-开始', null=True)
+    discount_time_slot_start = models.CharField('优惠时间段-开始', max_length=16, null=True)
     # 优惠时间段-结束 (用来标记菜品在某个时段是否有优惠)，以24小时制数字为标准， 如：19:30（代表晚上7点30分）
-    discount_time_slot_end = models.CharField('优惠时间段-结束', null=True)
+    discount_time_slot_end = models.CharField('优惠时间段-结束', max_length=16, null=True)
 
     # 菜品标记和排序顺序
     tag = models.CharField('标记', max_length=64, default='', null=True, blank=True)
