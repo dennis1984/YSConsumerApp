@@ -2,6 +2,7 @@
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
+from django.utils.timezone import now
 from django.conf import settings
 from orders.serializers import (PayOrdersSerializer,
                                 PayOrdersResponseSerializer,
@@ -30,7 +31,8 @@ from shopping_cart.models import ShoppingCart
 from orders.pay import WXPay, WalletPay
 from Business_App.bz_orders.models import YinshiPayCode
 from Business_App.bz_dishes.models import (Dishes,
-                                           CAN_NOT_USE_COUPONS_WITH_MARK)
+                                           CAN_NOT_USE_COUPONS_WITH_MARK,
+                                           DISHES_FOR_NIGHT_DISCOUNT)
 from wallet.models import Wallet
 
 from horizon import main
@@ -293,6 +295,20 @@ class PayOrdersConfirmDetail(PayOrdersAction):
     """
     订单确认-订单详情
     """
+    def is_night_consume_orders(self, dishes_ids):
+        """
+        判断订单里是否包含晚间特惠的商户，
+        用来提示用户此单只能在晚间核销
+        """
+        dishes_id_list = [item['dishes_id'] for item in dishes_ids]
+        kwargs = {'id__in': dishes_id_list,
+                  'mark__in': DISHES_FOR_NIGHT_DISCOUNT}
+        instances = Dishes.filter_objects(**kwargs)
+        if not isinstance(instances, Exception) and instances:
+            return True, '%s~%s' % (instances[0].discount_time_slot_start,
+                                    instances[0].discount_time_slot_end)
+        return False, None
+
     def post(self, request, *args, **kwargs):
         """
         订单详情
@@ -334,6 +350,10 @@ class PayOrdersConfirmDetail(PayOrdersAction):
         _data['dishes_ids'] = json.loads(_data['dishes_ids'])
         _data['request_data'] = cld
         _data['can_use_coupons'] = self.can_use_coupons(cld['dishes_ids'])
+        is_night, consumer_time_slot = self.is_night_consume_orders(cld['dishes_ids'])
+        if is_night:
+            _data['consumer_time_slot'] = consumer_time_slot
+
         serializer = PayOrdersConfirmSerializer(data=_data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
