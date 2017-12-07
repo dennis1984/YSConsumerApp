@@ -331,10 +331,9 @@ class PayOrdersConfirmDetail(PayOrdersAction):
         if isinstance(_data, Exception):
             return Response({'Detail': _data.args}, status=status.HTTP_400_BAD_REQUEST)
 
-        dishes_ids = json.loads(_data['dishes_ids'])
-        _data['dishes_ids'] = dishes_ids
+        _data['dishes_ids'] = json.loads(_data['dishes_ids'])
         _data['request_data'] = cld
-        _data['can_use_coupons'] = self.can_use_coupons(dishes_ids)
+        _data['can_use_coupons'] = self.can_use_coupons(cld['dishes_ids'])
         serializer = PayOrdersConfirmSerializer(data=_data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
