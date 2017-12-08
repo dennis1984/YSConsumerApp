@@ -259,8 +259,8 @@ class WalletAction(object):
             else:
                 user_ids = [request.user.id]
                 for i in range(loop):
-                    for coupons in coupons:
-                        CouponsAction().create_coupons(user_ids, coupons)
+                    for coupon in coupons:
+                        CouponsAction().create_coupons(user_ids, coupon)
         return result
 
     def consume(self, request, orders):
