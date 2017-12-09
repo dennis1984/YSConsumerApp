@@ -308,7 +308,7 @@ class PayOrdersConfirmDetail(PayOrdersAction):
     """
     def is_night_consume_orders(self, dishes_ids):
         """
-        判断订单里是否包含晚间特惠的商户，
+        判断订单里是否包含晚间特惠的商户并且是在特惠时段购买的，
         用来提示用户此单只能在晚间核销
         """
         dishes_id_list = [item['dishes_id'] for item in dishes_ids]
@@ -318,6 +318,13 @@ class PayOrdersConfirmDetail(PayOrdersAction):
         if not isinstance(instances, Exception) and instances:
             return True, '%s~%s' % (instances[0].discount_time_slot_start,
                                     instances[0].discount_time_slot_end)
+            # for ins in instances:
+            #     is_sale_time = Dishes.is_sale_time_slot(ins)
+            #     if is_sale_time:
+            #         return True, '%s~%s' % (instances[0].discount_time_slot_start,
+            #                                 instances[0].discount_time_slot_end)
+            # else:
+            #     return False, None
         return False, None
 
     def post(self, request, *args, **kwargs):
