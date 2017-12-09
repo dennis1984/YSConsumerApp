@@ -112,7 +112,6 @@ class Dishes(models.Model):
             return hot_objects
 
         hot_objects = sorted(hot_objects, key=lambda x: x.sort_orders)
-
         dishes_list = []
         for item in hot_objects:
             dishes = cls.get_dishes_detail_dict_with_user_info(pk=item.pk)
@@ -120,23 +119,46 @@ class Dishes(models.Model):
         return dishes_list
 
     @classmethod
+    def is_sale_time_slot(cls, dishes_instance):
+        """
+        判断当前时间是否在菜品优惠时段内
+        返回：True 或 False
+        """
+        if dishes_instance.mark in DISHES_FOR_NIGHT_DISCOUNT:
+            time_start_int = int('%s%s' % dishes_instance.discount_time_slot_start.split(':'))
+            time_end_int = int('%s%s' % dishes_instance.discount_time_slot_end.split(':'))
+            time_now = now()
+            time_now_hour_minute_int = int('%s%s' % (time_now.hour, time_now.minute))
+            if time_start_int < time_now_hour_minute_int < time_end_int:
+                return True
+            else:
+                return False
+        else:
+            return True
+
+    @classmethod
     def get_dishes_detail_dict_with_user_info(cls, need_perfect=False,  **kwargs):
         instance = cls.get_object(**kwargs)
         if isinstance(instance, Exception):
             return instance
+
         user = BusinessUser.get_object(pk=instance.user_id)
         if need_perfect:
             dishes_dict = get_perfect_detail_by_instance(instance)
         else:
             dishes_dict = model_to_dict(instance)
+        # 判断价格是否是优惠时段
+        is_sale_time = cls.is_sale_time_slot(instance)
+        if not is_sale_time:
+            dishes_dict['discount'] = 0
         dishes_dict['business_name'] = getattr(user, 'business_name', '')
         dishes_dict['stalls_number'] = user.stalls_number
         dishes_dict['business_id'] = dishes_dict['user_id']
         if dishes_dict['mark'] in DISHES_MARK_DISCOUNT_VALUES:
-            dishes_dict['discount_price'] = str(Decimal(instance.price) -
-                                                Decimal(instance.discount))
+            dishes_dict['discount_price'] = str(Decimal(dishes_dict['price']) -
+                                                Decimal(dishes_dict['discount']))
         else:
-            dishes_dict['discount_price'] = instance.price
+            dishes_dict['discount_price'] = dishes_dict['price']
 
         # 获取美食城信息
         food_instance = FoodCourt.get_object(pk=user.food_court_id)
