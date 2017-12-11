@@ -55,6 +55,8 @@ class BaseListSerializer(serializers.ListSerializer):
         ordered_dict = self.data
         for item in ordered_dict:
             for key in item.keys():
+                if key not in dict_format:
+                    continue
                 if isinstance(dict_format[key], datetime.datetime):
                     item[key] = timezoneStringTostring(item[key])
                 if isinstance(dict_format[key], models.fields.files.ImageFieldFile):
