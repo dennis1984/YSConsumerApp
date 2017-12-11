@@ -56,7 +56,7 @@ class Wallet(models.Model):
     """
     用户钱包
     """
-    user_id = models.IntegerField('用户ID', db_index=True)
+    user_id = models.IntegerField('用户ID', db_index=True, unique=True)
     balance = models.CharField('余额', max_length=16, default='0')
     blocked_money = models.CharField('冻结金额', max_length=16, default=WALLET_BLOCK_BALANCE)
     password = models.CharField('支付密码', max_length=560, null=True)
