@@ -101,8 +101,8 @@ class RecommendDishesList(generics.GenericAPIView):
     """
     permission_classes = (IsOwnerOrReadOnly,)
 
-    def get_recommend_dishes_list(self, request, **kwargs):
-        details_list = Dishes.get_hot_sale_list(request, **kwargs)
+    def get_recommend_dishes_list(self, food_court_id):
+        details_list = HotSaleCache.get_hot_sale_list(food_court_id, mark=0)
         details_ids = []
         details_dict = {}
         for item in details_list:
@@ -124,7 +124,7 @@ class RecommendDishesList(generics.GenericAPIView):
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         cld = form.cleaned_data
-        dishes_details = self.get_recommend_dishes_list(request, **cld)
+        dishes_details = self.get_recommend_dishes_list(cld['food_court_id'])
         serializer = HotSaleSerializer(data=dishes_details)
 
         if not serializer.is_valid():
