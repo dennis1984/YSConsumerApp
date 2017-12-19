@@ -102,7 +102,7 @@ class RecommendDishesList(generics.GenericAPIView):
     permission_classes = (IsOwnerOrReadOnly,)
 
     def get_recommend_dishes_list(self, food_court_id):
-        details_list = HotSaleCache.get_hot_sale_list(food_court_id, mark=0)
+        details_list = HotSaleCache().get_hot_sale_list(food_court_id, mark=0)
         details_ids = []
         details_dict = {}
         for item in details_list:
