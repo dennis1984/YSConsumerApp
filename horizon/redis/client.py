@@ -1,4 +1,7 @@
-#-*- coding:utf8 -*-
+# -*- coding:utf8 -*-
+from django.db.models.fields.files import FieldFile, FileField
+from django.db.models import Model
+from horizon.storage import yinshi_storage
 import redis
 import pickle
 
