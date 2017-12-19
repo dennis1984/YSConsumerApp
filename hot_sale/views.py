@@ -20,6 +20,7 @@ from hot_sale.forms import (HotSaleListForm,
                             FoodCourtGetForm,
                             RecommendDishesListForm)
 from hot_sale.permissions import IsOwnerOrReadOnly
+from hot_sale.caches import HotSaleCache
 from collect.models import Collect
 
 import random
@@ -29,10 +30,12 @@ class HotSaleList(generics.GenericAPIView):
     permissions = (IsOwnerOrReadOnly,)
 
     def get_hot_sale_list(self, request, **kwargs):
-        if kwargs['mark'] == 0:
-            kwargs['mark__in'] = DISHES_MARK_DISCOUNT_VALUES
-            kwargs.pop('mark')
-        return Dishes.get_hot_sale_list(request, **kwargs)
+        # if kwargs['mark'] == 0:
+        #     kwargs['mark__in'] = DISHES_MARK_DISCOUNT_VALUES
+        #     kwargs.pop('mark')
+        kwargs = {'mark': kwargs['mark'],
+                  'food_court_id': kwargs['food_court_id']}
+        return HotSaleCache().get_hot_sale_list(**kwargs)
 
     def post(self, request, *args, **kwargs):
         """
