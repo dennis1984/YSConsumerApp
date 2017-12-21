@@ -119,14 +119,21 @@ class Dishes(models.Model):
         return dishes_list
 
     @classmethod
-    def is_sale_time_slot(cls, dishes_instance):
+    def is_sale_time_slot(cls, dishes_object):
         """
         判断当前时间是否在菜品优惠时段内
         返回：True 或 False
         """
-        if dishes_instance.mark in DISHES_FOR_NIGHT_DISCOUNT:
-            start_hour_str, start_second_str = dishes_instance.discount_time_slot_start.split(':')
-            end_hour_str, end_second_str = dishes_instance.discount_time_slot_end.split(':')
+        if isinstance(dishes_object, cls):
+            mark = dishes_object.mark
+            start_hour_str, start_second_str = dishes_object.discount_time_slot_start.split(':')
+            end_hour_str, end_second_str = dishes_object.discount_time_slot_end.split(':')
+        else:
+            mark = dishes_object['mark']
+            start_hour_str, start_second_str = dishes_object['discount_time_slot_start'].split(':')
+            end_hour_str, end_second_str = dishes_object['discount_time_slot_end'].split(':')
+
+        if mark in DISHES_FOR_NIGHT_DISCOUNT:
             time_start_int = int('%02d%02d' % (int(start_hour_str), int(start_second_str)))
             time_end_int = int('%02d%02d' % (int(end_hour_str), int(end_second_str)))
             time_now = now()
@@ -149,10 +156,10 @@ class Dishes(models.Model):
             dishes_dict = get_perfect_detail_by_instance(instance)
         else:
             dishes_dict = model_to_dict(instance)
-        # 判断价格是否是优惠时段
-        is_sale_time = cls.is_sale_time_slot(instance)
-        if not is_sale_time:
-            dishes_dict['discount'] = 0
+        # # 判断价格是否是优惠时段
+        # is_sale_time = cls.is_sale_time_slot(instance)
+        # if not is_sale_time:
+        #     dishes_dict['discount'] = 0
         dishes_dict['business_name'] = getattr(user, 'business_name', '')
         dishes_dict['stalls_number'] = user.stalls_number
         dishes_dict['business_id'] = dishes_dict['user_id']

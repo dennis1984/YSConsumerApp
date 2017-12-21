@@ -68,7 +68,7 @@ class DishesDetail(generics.GenericAPIView):
 
     def get_dishes_detail(self, request, dishes_id):
         kwargs = {'dishes_id': dishes_id}
-        result = DishesDetailCache().get_dishes_detail(**kwargs)
+        result = HotSaleCache().get_dishes_detail(**kwargs)
         if isinstance(result, Exception):
             return result
         is_collected = Collect.is_collected(request, dishes_id)
