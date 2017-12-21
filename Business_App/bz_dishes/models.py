@@ -126,14 +126,16 @@ class Dishes(models.Model):
         """
         if isinstance(dishes_object, cls):
             mark = dishes_object.mark
-            start_hour_str, start_second_str = dishes_object.discount_time_slot_start.split(':')
-            end_hour_str, end_second_str = dishes_object.discount_time_slot_end.split(':')
+            discount_time_slot_start = dishes_object.discount_time_slot_start
+            discount_time_slot_end = dishes_object.discount_time_slot_end
         else:
             mark = dishes_object['mark']
-            start_hour_str, start_second_str = dishes_object['discount_time_slot_start'].split(':')
-            end_hour_str, end_second_str = dishes_object['discount_time_slot_end'].split(':')
+            discount_time_slot_start = dishes_object['discount_time_slot_start']
+            discount_time_slot_end = dishes_object['discount_time_slot_end']
 
         if mark in DISHES_FOR_NIGHT_DISCOUNT:
+            start_hour_str, start_second_str = discount_time_slot_start.split(':')
+            end_hour_str, end_second_str = discount_time_slot_end.split(':')
             time_start_int = int('%02d%02d' % (int(start_hour_str), int(start_second_str)))
             time_end_int = int('%02d%02d' % (int(end_hour_str), int(end_second_str)))
             time_now = now()
