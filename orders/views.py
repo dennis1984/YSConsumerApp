@@ -149,8 +149,9 @@ class PayOrdersAction(generics.GenericAPIView):
         return True
 
     def is_user_binding(self, request):
-        if not request.user.is_binding:
-            return False, 'Can not perform this action, Please bind your phone first.'
+        # 创建订单暂时不再需要绑定手机号
+        # if not request.user.is_binding:
+        #     return False, 'Can not perform this action, Please bind your phone first.'
         return True, None
 
     def check_password(self, request, password):
