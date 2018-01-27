@@ -53,6 +53,10 @@ ORDERS_PAYMENT_MODE = {
     'alipay': 3,
 }
 
+ORDERS_NOTES = {
+    'recharge_give_gift': 'WALLET RECHARGE GIVE GIFT',
+}
+
 
 class OrdersManager(models.Manager):
     query1 = ~Q(payment_status=ORDERS_PAYMENT_STATUS['finished'])
@@ -104,7 +108,7 @@ class PayOrders(models.Model):
     # 支付方式：0:未指定支付方式 1：钱包 2：微信支付 3：支付宝支付
     payment_mode = models.IntegerField('订单支付方式', default=0)
     # 订单类型 0: 未指定 101: 在线订单 102：堂食订单 103：外卖订单
-    #         201: 钱包充值订单  (预留：202：钱包消费订单 203: 钱包提现)
+    #        201：钱包充值订单 (预留：212：钱包消费订单 213: 钱包提现)
     orders_type = models.IntegerField('订单类型', default=0)
 
     notes = models.CharField('订单备注', max_length=40, default='', blank=True, null=True)
@@ -376,13 +380,14 @@ class PayOrders(models.Model):
         return orders_data
 
     @classmethod
-    def make_orders_by_recharge(cls, request, orders_type, payable):
+    def make_orders_by_recharge(cls, request, orders_type, payable, recharge_give_gift=False):
         dishes_details = [{'orders_type': orders_type,
                           'payable': payable},
                           ]
         food_court_id = 0
         food_court_name = 'CZ'
         total_amount = str(payable)
+        notes = ORDERS_NOTES['recharge_give_gift'] if recharge_give_gift else ''
 
         # 会员优惠及其他优惠
         member_discount = 0
@@ -393,7 +398,8 @@ class PayOrders(models.Model):
                                            total_amount=total_amount,
                                            member_discount=member_discount,
                                            other_discount=other_discount,
-                                           orders_type=ORDERS_ORDERS_TYPE['wallet_recharge'])
+                                           orders_type=ORDERS_ORDERS_TYPE['wallet_recharge'],
+                                           notes=notes)
         return orders_data
 
     @classmethod

@@ -1,4 +1,4 @@
-#-*- coding:utf8 -*-
+# -*- coding:utf8 -*-
 
 import requests
 from PAY.wxpay import settings as wx_settings

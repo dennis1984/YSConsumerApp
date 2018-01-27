@@ -275,10 +275,14 @@ def send_message_to_phone(params, receive_phones, template_name=None):
     url = 'http://sms.market.alicloudapi.com/singleSendSms'
     AppCode = '2e8a1a8a3e22486b9be6ac46c3d2c6ec'
     sign_names = ('吟食',)
-    template_dict = {'register': 'SMS_91765097',
-                     'recharge': 'SMS_102170028'}
+    template_dict = {# 'register': 'SMS_91765097',
+                     # 'recharge': 'SMS_102170028',
+                     'recharge': 'SMS_123290665',
+                     'register': 'SMS_123290666',
+                     'recharge_give_gift': 'SMS_123671461'}
     params_key_dict = {'register': 'code',
-                       'recharge': 'count'}
+                       'recharge': 'count',
+                       'recharge_give_gift': ['code_user', 'code_verify']}
 
     if not template_name:
         template = template_dict['register']
@@ -294,6 +298,9 @@ def send_message_to_phone(params, receive_phones, template_name=None):
         params_query = urllib.quote(json.dumps(params_dict))
     elif isinstance(params, dict):
         params_query = urllib.quote(json.dumps(params))
+    elif isinstance(params, (tuple, list)):
+        params_dict = dict(zip(params_key_dict[template_name], params))
+        params_query = urllib.quote(json.dumps(params_dict))
     else:
         return TypeError('params must be unicode or dictionary')
 

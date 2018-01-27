@@ -66,8 +66,8 @@ class PayOrdersAction(generics.GenericAPIView):
                                                 notes=notes,
                                                 _method=_method)
 
-    def make_orders_by_recharge(self, request, orders_type, payable):
-        return PayOrders.make_orders_by_recharge(request, orders_type, payable)
+    def make_orders_by_recharge(self, request, orders_type, payable, recharge_give_gift=False):
+        return PayOrders.make_orders_by_recharge(request, orders_type, payable, recharge_give_gift)
 
     def get_shopping_cart_instances_by_dishes_ids(self, request, dishes_ids):
         instances = []
@@ -149,9 +149,8 @@ class PayOrdersAction(generics.GenericAPIView):
         return True
 
     def is_user_binding(self, request):
-        # 创建订单暂时不再需要绑定手机号
-        # if not request.user.is_binding:
-        #     return False, 'Can not perform this action, Please bind your phone first.'
+        if not request.user.is_binding:
+            return False, 'Can not perform this action, Please bind your phone first.'
         return True, None
 
     def check_password(self, request, password):
@@ -176,14 +175,17 @@ class PayOrdersAction(generics.GenericAPIView):
         is_valid, error_message = self.is_request_data_valid(**cld)
         if not is_valid:
             return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
-        is_bind, error_message = self.is_user_binding(request)
-        if not is_bind:
-            return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
+        # 判断是否绑定了手机号（充值操作需要绑定手机号）
+        if cld['orders_type'] == INPUT_ORDERS_TYPE['recharge']:
+            is_bind, error_message = self.is_user_binding(request)
+            if not is_bind:
+                return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
 
         dishes_ids = None
         # 充值订单
         if cld['orders_type'] == INPUT_ORDERS_TYPE['recharge']:
-            _data = self.make_orders_by_recharge(request, cld['orders_type'], cld['payable'])
+            _data = self.make_orders_by_recharge(request, cld['orders_type'], cld['payable'],
+                                                 cld.get('recharge_give_gift'))
         else:
             dishes_ids = json.loads(cld['dishes_ids'])
             coupons_id = cld.get('coupons_id')

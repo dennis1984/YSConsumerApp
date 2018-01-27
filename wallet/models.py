@@ -11,13 +11,16 @@ from decimal import Decimal
 
 from orders.models import (PayOrders,
                            TradeRecordAction,
-                           ORDERS_ORDERS_TYPE)
+                           ORDERS_ORDERS_TYPE,
+                           ORDERS_NOTES)
 from coupons.models import Coupons, CouponsAction
 from Admin_App.ad_coupons.models import (CouponsConfig,
                                          COUPONS_CONFIG_TYPE_DETAIL,
                                          RECHARGE_GIVE_CONFIG)
-from horizon.models import model_to_dict
+from users.caches import ConsumerUserCache
 
+from horizon.models import model_to_dict
+from horizon import main
 
 import json
 import datetime
@@ -28,8 +31,8 @@ WALLET_TRADE_DETAIL_TRADE_TYPE_DICT = {
     'consume': 2,
     'withdrawals': 3,
 }
-
 WALLET_ACTION_METHOD = ('recharge', 'consume', 'withdrawals')
+WALLET_RECHARGE_GIVE_GIFT_START_PAYABLE = 100
 
 
 class WalletManager(models.Manager):
@@ -46,7 +49,7 @@ class Wallet(models.Model):
     """
     用户钱包
     """
-    user_id = models.IntegerField('用户ID', db_index=True)
+    user_id = models.IntegerField('用户ID', unique=True)
     balance = models.CharField('余额', max_length=16, default='0')
     password = models.CharField('支付密码', max_length=560, null=True)
     created = models.DateTimeField('创建时间', default=now)
@@ -249,18 +252,26 @@ class WalletAction(object):
         if isinstance(_trade, Exception):
             return _trade
 
-        # 送优惠券
-        loop = int(float(orders.payable) / RECHARGE_GIVE_CONFIG['start_amount'])
-        if loop > 0:
-            kwargs = {'type_detail': COUPONS_CONFIG_TYPE_DETAIL['recharge_give']}
-            coupons = CouponsConfig.filter_objects(**kwargs)
-            if isinstance(coupons, Exception) or not coupons:
-                pass
-            else:
-                user_ids = [request.user.id]
-                for i in range(loop):
-                    for coupon in coupons:
-                        CouponsAction().create_coupons(user_ids, coupon)
+        # 充值送礼物
+        if orders.notes == ORDERS_NOTES['recharge_give_gift']:
+            # 单次充值金额超过100，则送礼物
+            if orders.payable >= WALLET_RECHARGE_GIVE_GIFT_START_PAYABLE:
+                wallet_recharge_gift = WalletRechargeGiftAction.create(orders.user_id)
+                if isinstance(wallet_recharge_gift, Exception):
+                    return wallet_recharge_gift
+        else:
+            # 充值送优惠券
+            loop = int(float(orders.payable) / RECHARGE_GIVE_CONFIG['start_amount'])
+            if loop > 0:
+                kwargs = {'type_detail': COUPONS_CONFIG_TYPE_DETAIL['recharge_give']}
+                coupons = CouponsConfig.filter_objects(**kwargs)
+                if isinstance(coupons, Exception) or not coupons:
+                    pass
+                else:
+                    user_ids = [request.user.id]
+                    for i in range(loop):
+                        for coupon in coupons:
+                            CouponsAction().create_coupons(user_ids, coupon)
         return result
 
     def consume(self, request, orders):
@@ -333,3 +344,58 @@ class WalletTradeAction(object):
         except Exception as e:
             return e
         return wallet_detail
+
+
+class WalletRechargeGift(models.Model):
+    """
+    充值送礼物Model
+    """
+    user_id = models.IntegerField('用户ID')
+    verification_code = models.CharField('验证码', max_length=16, unique=True)
+    # 数据状态：1：正常  2：已使用
+    status = models.IntegerField('数据状态', default=1)
+    created = models.DateTimeField('创建时间', default=now)
+    updated = models.DateTimeField('更新时间', auto_now_add=True)
+
+    class Meta:
+        db_table = 'ys_wallet_recharge_gift'
+        ordering = ['-created']
+
+    def __unicode__(self):
+        return self.verification_code
+
+    @classmethod
+    def get_object(cls, **kwargs):
+        try:
+            return cls.objects.get(**kwargs)
+        except Exception as e:
+            return e
+
+    @classmethod
+    def filter_objects(cls, **kwargs):
+        try:
+            return cls.objects.filter(**kwargs)
+        except Exception as e:
+            return e
+
+
+class WalletRechargeGiftAction(object):
+    @classmethod
+    def create(cls, user_id):
+        verification_code_list = cls.get_verification_code(user_id)
+        init_data = {'user_id': user_id,
+                     'verification_code': ''.join(verification_code_list)}
+        wallet_recharge_gift = WalletRechargeGift(**init_data)
+        try:
+            wallet_recharge_gift.save()
+        except Exception as e:
+            return e
+
+        user = ConsumerUserCache().get_user_by_id(user_id)
+        # 发送短信提示用户领取礼物
+        main.send_message_to_phone(verification_code_list, user.phone, template_name='recharge_give_gift')
+        return wallet_recharge_gift
+
+    @classmethod
+    def get_verification_code(cls, user_id):
+        return [user_id, main.make_random_number_of_string(6)]

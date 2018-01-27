@@ -15,7 +15,7 @@ EXPIRES_24_HOURS = 24 * 60 * 60
 EXPIRES_10_HOURS = 10 * 60 * 60
 
 
-class BusinessUserCache(object):
+class ConsumerUserCache(object):
     def __init__(self):
         pool = redis.ConnectionPool(host=settings.REDIS_SETTINGS['host'],
                                     port=settings.REDIS_SETTINGS['port'],
@@ -32,9 +32,7 @@ class BusinessUserCache(object):
         self.handle.set(key, data)
         self.handle.expire(key, EXPIRES_24_HOURS)
 
-    def get_user_by_id(self, request, user_id=None):
-        if not request.user.is_admin:
-            user_id = request.user.id
+    def get_user_by_id(self, user_id):
         key = self.get_user_id_key(user_id)
         user_instance = self.handle.get(key)
         if not user_instance:
