@@ -282,7 +282,7 @@ def send_message_to_phone(params, receive_phones, template_name=None):
                      'recharge_give_gift': 'SMS_123796382'}
     params_key_dict = {'register': 'code',
                        'recharge': 'count',
-                       'recharge_give_gift': ['code_user', 'code_verify']}
+                       'recharge_give_gift': 'code'}
 
     if not template_name:
         template = template_dict['register']

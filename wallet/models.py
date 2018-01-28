@@ -350,8 +350,8 @@ class WalletRechargeGift(models.Model):
     """
     充值送礼物Model
     """
-    user_id = models.IntegerField('用户ID')
-    verification_code = models.CharField('验证码', max_length=16, db_index=True)
+    user_id = models.IntegerField('用户ID', db_index=True)
+    verification_code = models.CharField('验证码', max_length=6, db_index=True)
     # 数据状态：1：正常  2：已使用
     status = models.IntegerField('数据状态', default=1)
     created = models.DateTimeField('创建时间', default=now)
@@ -382,9 +382,9 @@ class WalletRechargeGift(models.Model):
 class WalletRechargeGiftAction(object):
     @classmethod
     def create(cls, user_id):
-        verification_code_list = cls.get_verification_code(user_id)
+        verification_code = cls.get_verification_code(user_id)
         init_data = {'user_id': user_id,
-                     'verification_code': ''.join(verification_code_list)}
+                     'verification_code': verification_code}
         wallet_recharge_gift = WalletRechargeGift(**init_data)
         try:
             wallet_recharge_gift.save()
@@ -393,9 +393,9 @@ class WalletRechargeGiftAction(object):
 
         user = ConsumerUserCache().get_user_by_id(user_id)
         # 发送短信提示用户领取礼物
-        main.send_message_to_phone(verification_code_list, user.phone, template_name='recharge_give_gift')
+        main.send_message_to_phone(verification_code, user.phone, template_name='recharge_give_gift')
         return wallet_recharge_gift
 
     @classmethod
     def get_verification_code(cls, user_id):
-        return [user_id, main.make_random_number_of_string(6)]
+        return main.make_random_number_of_string(6)
