@@ -351,7 +351,7 @@ class WalletRechargeGift(models.Model):
     充值送礼物Model
     """
     user_id = models.IntegerField('用户ID')
-    verification_code = models.CharField('验证码', max_length=16, unique=True)
+    verification_code = models.CharField('验证码', max_length=16, db_index=True)
     # 数据状态：1：正常  2：已使用
     status = models.IntegerField('数据状态', default=1)
     created = models.DateTimeField('创建时间', default=now)
