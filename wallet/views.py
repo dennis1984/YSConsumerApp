@@ -23,6 +23,11 @@ class WalletAction(generics.GenericAPIView):
     def get_wallet_object(self, request):
         return Wallet.get_object(user_id=request.user.id)
 
+    def is_user_phone_binding(self, user):
+        if not user.is_binding:
+            return False, 'Can not perform this action, Please bind your phone first.'
+        return True, None
+
     def does_wallet_password_exist(self, request):
         instance = self.get_wallet_object(request)
         if isinstance(instance, Exception):
@@ -70,8 +75,10 @@ class WalletAction(generics.GenericAPIView):
         if not form.is_valid():
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+        is_bind, error_message = self.is_user_phone_binding(request.user)
+        if not is_bind:
+            return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
         cld = form.cleaned_data
-
         is_correct, error_obj = self.verify_identifying_code(request, cld['identifying_code'])
         if not is_correct:
             return Response({'Detail': error_obj.args}, status=status.HTTP_400_BAD_REQUEST)

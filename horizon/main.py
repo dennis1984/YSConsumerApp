@@ -279,7 +279,7 @@ def send_message_to_phone(params, receive_phones, template_name=None):
                      # 'recharge': 'SMS_102170028',
                      'recharge': 'SMS_123290665',
                      'register': 'SMS_123290666',
-                     'recharge_give_gift': 'SMS_123671461'}
+                     'recharge_give_gift': 'SMS_123796382'}
     params_key_dict = {'register': 'code',
                        'recharge': 'count',
                        'recharge_give_gift': ['code_user', 'code_verify']}

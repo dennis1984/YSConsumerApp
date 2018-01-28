@@ -192,7 +192,16 @@ class IdentifyingCodeActionWithLogin(generics.GenericAPIView):
     """
     permission_classes = (IsOwnerOrReadOnly,)
 
+    def is_user_phone_binding(self, user):
+        if not user.is_binding:
+            return False, 'Can not perform this action, Please bind your phone first.'
+        return True, None
+
     def post(self, request, *args, **kwargs):
+        is_bind, error_message = self.is_user_phone_binding(request.user)
+        if not is_bind:
+            return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
+
         phone = request.user.phone
         identifying_code = make_random_number_of_string(str_length=6)
         serializer = IdentifyingCodeSerializer(data={'phone': phone,
