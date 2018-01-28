@@ -272,14 +272,21 @@ def send_message_to_phone(params, receive_phones, template_name=None):
     """
     from horizon.http_requests import send_http_request
     import urllib
+
     url = 'http://sms.market.alicloudapi.com/singleSendSms'
     AppCode = '2e8a1a8a3e22486b9be6ac46c3d2c6ec'
+
+    # Access Key ID
+    access_id = 'LTAIr9xuJ6xt2UKa'
+    # Access Key Secret
+    access_secret = '8XyKngzCRxVzJITc2I85L3LupaLzrS'
+
     sign_names = ('吟食',)
     template_dict = {# 'register': 'SMS_91765097',
                      # 'recharge': 'SMS_102170028',
                      'recharge': 'SMS_123290665',
                      'register': 'SMS_123290666',
-                     'recharge_give_gift': 'SMS_123796382'}
+                     'recharge_give_gift': 'SMS_123671510'}
     params_key_dict = {'register': 'code',
                        'recharge': 'count',
                        'recharge_give_gift': 'code'}

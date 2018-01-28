@@ -33,6 +33,7 @@ ORDERS_PAYMENT_STATUS = {
     'unpaid': 0,
     'paid': 200,
     'consuming': 201,
+    'canceled': 204,
     'finished': 206,
     'expired': 400,
     'failed': 500,
@@ -488,7 +489,7 @@ class ConsumeOrders(models.Model):
     coupons_id = models.IntegerField('优惠券ID', null=True)
     payable = models.CharField('应付金额', max_length=16)
 
-    # 0:未支付 200:已支付 201:待消费 206:已完成 400: 已过期 500:支付失败
+    # 0:未支付 200:已支付 201:待消费 204:已取消 206:已完成 400: 已过期 500:支付失败
     payment_status = models.IntegerField('订单支付状态', default=201)
     # 支付方式：0:未指定支付方式 1：钱包支付 2：微信支付 3：支付宝支付
     payment_mode = models.IntegerField('订单支付方式', default=0)
