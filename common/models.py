@@ -5,8 +5,6 @@ from django.db import models
 from django.utils.timezone import now
 from django.db import transaction
 
-from horizon import main
-
 import json
 import datetime
 import copy
@@ -51,3 +49,28 @@ class SerialNumberGenerator(models.Model):
                 _instance.save()
         serial_no_str = cls.int_to_string(serial_no)
         return 'LS%s%s' % (date_day.strftime('%Y%m%d'), serial_no_str)
+
+
+class AliYunPhoneMessageInformation(models.Model):
+    """
+    阿里云短信服务配置
+    """
+    region = models.CharField('区域', max_length=32)
+    access_id = models.CharField('ACCESS_ID_KEY', max_length=32)
+    access_secret = models.CharField('ACCESS_ID_SECRET', max_length=64)
+
+    created = models.DateTimeField(default=now)
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'ys_aliyun_phone_message_information'
+
+    def __unicode__(self):
+        return self.access_id
+
+    @classmethod
+    def get_object(cls, *args, **kwargs):
+        try:
+            return cls.objects.get(**kwargs)
+        except Exception as e:
+            return e

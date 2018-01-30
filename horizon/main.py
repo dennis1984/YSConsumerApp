@@ -1,6 +1,5 @@
 # -*- coding:utf8 -*-
 from aliyun_sms_sdk.aliyunsdkdysmsapi.request.v20170525 import SendSmsRequest
-from aliyun_sms_sdk.aliyunsdkdysmsapi.request.v20170525 import QuerySendDetailsRequest
 from aliyun_sms_sdk.aliyunsdkcore.client import AcsClient
 from PAY.wxpay import settings as wx_settings
 from oauthlib.common import generate_token
@@ -19,6 +18,8 @@ import base64
 import random
 import time
 import uuid
+
+from common.models import AliYunPhoneMessageInformation
 
 
 def minutes_5_plus():
@@ -330,6 +331,15 @@ def send_message_to_phone(params, receive_phones, template_name=None):
     # return send_http_request(url, query_str, add_header={'Authorization': 'APPCODE %s' % AppCode})
 
 
+Aliyun_Message_Information = AliYunPhoneMessageInformation.get_object()
+# Access Key ID   'LTAIr9xuJ6xt2UKa'
+ACCESS_ID = Aliyun_Message_Information.access_id
+# Access Key Secret  '8XyKngzCRxVzJITc2I85L3LupaLzrS'
+ACCESS_SECRET = Aliyun_Message_Information.access_secret
+# REGION "cn-hangzhou"
+REGION = Aliyun_Message_Information.region
+
+
 def send_sms(business_id, phone_number, sign_name, template_code, template_param=None):
     """
     阿里云短信服务：发送短信官方函数
@@ -355,5 +365,6 @@ def send_sms(business_id, phone_number, sign_name, template_code, template_param
     # 批量调用相对于单条调用及时性稍有延迟,验证码类型的短信推荐使用单条调用的方式
     smsRequest.set_PhoneNumbers(phone_number)
     # 发送请求
+    acs_client = AcsClient(ACCESS_ID, ACCESS_SECRET, REGION)
     smsResponse = acs_client.do_action_with_exception(smsRequest)
     return smsResponse
