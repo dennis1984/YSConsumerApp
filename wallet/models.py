@@ -355,7 +355,7 @@ class WalletRechargeGift(models.Model):
     # 数据状态：1：正常  2：已使用
     status = models.IntegerField('数据状态', default=1)
     created = models.DateTimeField('创建时间', default=now)
-    updated = models.DateTimeField('更新时间', auto_now_add=True)
+    updated = models.DateTimeField('更新时间', auto_now=True)
 
     class Meta:
         db_table = 'ys_wallet_recharge_gift'
