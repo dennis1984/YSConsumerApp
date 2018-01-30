@@ -382,7 +382,7 @@ class WalletRechargeGift(models.Model):
 class WalletRechargeGiftAction(object):
     @classmethod
     def create(cls, user_id):
-        verification_code = cls.get_verification_code(user_id)
+        verification_code = cls.get_verification_code()
         init_data = {'user_id': user_id,
                      'verification_code': verification_code}
         wallet_recharge_gift = WalletRechargeGift(**init_data)
@@ -397,5 +397,5 @@ class WalletRechargeGiftAction(object):
         return wallet_recharge_gift
 
     @classmethod
-    def get_verification_code(cls, user_id):
+    def get_verification_code(cls):
         return main.make_random_number_of_string(6)
