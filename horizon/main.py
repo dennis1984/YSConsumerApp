@@ -286,9 +286,7 @@ def send_message_to_phone(params, receive_phones, template_name=None):
     access_secret = '8XyKngzCRxVzJITc2I85L3LupaLzrS'
     region = "cn-hangzhou"
     sign_names = '吟食'
-    template_dict = {# 'register': 'SMS_91765097',
-                     # 'recharge': 'SMS_102170028',
-                     'recharge': 'SMS_123290665',
+    template_dict = {'recharge': 'SMS_123290665',
                      'register': 'SMS_123290666',
                      'recharge_give_gift': 'SMS_123671510'}
     params_key_dict = {'register': 'code',
@@ -332,11 +330,8 @@ def send_message_to_phone(params, receive_phones, template_name=None):
 
 
 Aliyun_Message_Information = AliYunPhoneMessageInformation.get_object()
-# Access Key ID   'LTAIr9xuJ6xt2UKa'
 ACCESS_ID = Aliyun_Message_Information.access_id
-# Access Key Secret  '8XyKngzCRxVzJITc2I85L3LupaLzrS'
 ACCESS_SECRET = Aliyun_Message_Information.access_secret
-# REGION "cn-hangzhou"
 REGION = Aliyun_Message_Information.region
 
 
