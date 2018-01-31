@@ -24,6 +24,7 @@ from horizon import main
 
 import json
 import datetime
+from decimal import Decimal
 
 
 WALLET_TRADE_DETAIL_TRADE_TYPE_DICT = {
@@ -255,7 +256,7 @@ class WalletAction(object):
         # 充值送礼物
         if orders.notes == ORDERS_NOTES['recharge_give_gift']:
             # 单次充值金额超过100，则送礼物
-            if orders.payable >= WALLET_RECHARGE_GIVE_GIFT_START_PAYABLE:
+            if Decimal(orders.payable) >= Decimal(WALLET_RECHARGE_GIVE_GIFT_START_PAYABLE):
                 wallet_recharge_gift = WalletRechargeGiftAction.create(orders.user_id)
                 if isinstance(wallet_recharge_gift, Exception):
                     return wallet_recharge_gift
