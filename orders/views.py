@@ -294,9 +294,9 @@ class PayOrdersConfirm(PayOrdersAction):
         is_valid, error_message = self.is_request_data_valid(**cld)
         if not is_valid:
             return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
-        is_bind, error_message = self.is_user_binding(request)
-        if not is_bind:
-            return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
+        # is_bind, error_message = self.is_user_binding(request)
+        # if not is_bind:
+        #     return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
 
         cld['dishes_ids'] = json.loads(cld['dishes_ids'])
         return Response({'request_data': cld}, status=status.HTTP_200_OK)
@@ -346,9 +346,9 @@ class PayOrdersConfirmDetail(PayOrdersAction):
         is_valid, error_message = self.is_request_data_valid(**cld)
         if not is_valid:
             return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
-        is_bind, error_message = self.is_user_binding(request)
-        if not is_bind:
-            return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
+        # is_bind, error_message = self.is_user_binding(request)
+        # if not is_bind:
+        #     return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
 
         # 消费订单
         if cld['orders_type'] != INPUT_ORDERS_TYPE['consume']:
