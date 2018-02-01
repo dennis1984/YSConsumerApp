@@ -66,7 +66,8 @@ class HotSaleCache(object):
                 kwargs = {'food_court_id': food_court_id,
                           'mark': mark}
             hot_list = Dishes.get_hot_sale_list(None, **kwargs)
-            self.set_hot_sale_list(key, hot_list)
+            if hot_list:
+                self.set_hot_sale_list(key, hot_list)
 
         perfect_hot_list = []
         for detail in hot_list:
