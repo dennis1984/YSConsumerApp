@@ -233,9 +233,9 @@ class PayOrdersAction(generics.GenericAPIView):
         if not form.is_valid():
             return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-        is_bind, error_message = self.is_user_binding(request)
-        if not is_bind:
-            return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
+        # is_bind, error_message = self.is_user_binding(request)
+        # if not is_bind:
+        #     return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
 
         cld = form.cleaned_data
         payment_mode = cld['payment_mode']
@@ -248,10 +248,15 @@ class PayOrdersAction(generics.GenericAPIView):
         if isinstance(_instance, Exception):
             return Response({'Detail': _instance.args}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 检查充值订单的支付方式是否正确
-        if _instance.orders_type == ORDERS_ORDERS_TYPE['wallet_recharge'] and payment_mode == 1:
-            return Response({'Detail': 'Payment mode is incorrect.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+        # 充值订单
+        if _instance.orders_type == ORDERS_ORDERS_TYPE['wallet_recharge']:
+            # 检查充值订单的支付方式是否正确
+            if payment_mode == 1:
+                return Response({'Detail': 'Payment mode is incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+            # 检查充值时用户是否绑定了手机号
+            is_bind, error_message = self.is_user_binding(request)
+            if not is_bind:
+                return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
 
         # 检查优惠券是否已经使用过了
         if _instance.coupons_id:
