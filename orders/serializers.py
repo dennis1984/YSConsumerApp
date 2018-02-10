@@ -118,6 +118,7 @@ class ConsumeOrdersResponseSerializer(BaseSerializer):
     orders_type = serializers.IntegerField()
     master_orders_id = serializers.CharField(max_length=32)
     created = serializers.DateTimeField()
+    payment_time = serializers.DateTimeField(allow_null=True)
     updated = serializers.DateTimeField()
     expires = serializers.DateTimeField()
     # 是否评价过
@@ -178,6 +179,7 @@ class OrdersDetailForListSerializer(BaseSerializer):
     master_orders_id = serializers.CharField(max_length=32, required=False,
                                              allow_null=True, allow_blank=True)
     created = serializers.DateTimeField()
+    payment_time = serializers.DateTimeField(allow_null=True)
     updated = serializers.DateTimeField()
     expires = serializers.DateTimeField()
 
