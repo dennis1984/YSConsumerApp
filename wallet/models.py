@@ -290,7 +290,8 @@ class WalletAction(object):
         kwargs = {'orders_id': orders.orders_id,
                   'validated_data':
                       {'payment_status': 200,
-                       'payment_mode': 1},
+                       'payment_mode': 1,
+                       'payment_time': now()},
                   }
         try:
             orders = PayOrders.update_payment_status_by_pay_callback(**kwargs)

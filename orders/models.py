@@ -446,6 +446,7 @@ class PayOrders(models.Model):
 
         payment_status = validated_data.get('payment_status')
         payment_mode = validated_data.get('payment_mode')
+        payment_time = validated_data.get('payment_time')
         if payment_status not in (200, 400, 500):
             raise ValueError('Payment status must in range [200, 400, 500]')
         if payment_mode not in [1, 2, 3]:    # 钱包支付、微信支付和支付宝支付
@@ -461,6 +462,7 @@ class PayOrders(models.Model):
                 raise Exception('Cannot perform this action')
             _instance.payment_status = payment_status
             _instance.payment_mode = payment_mode
+            _instance.payment_time = payment_time
             _instance.save()
             instance = _instance
         return instance

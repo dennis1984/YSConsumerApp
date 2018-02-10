@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.settings import APISettings, DEFAULTS, IMPORT_STRINGS
+from django.utils.timezone import now
 
 from horizon import main
 from PAY.wxpay.models import WXPayResult
@@ -63,7 +64,8 @@ class JsApiCallback(APIView):
         fail_message = {'return_code': 'FAIL',
                         'return_msg': 'SIGN INCORRECT'}
         success_data = {'payment_status': 200,
-                        'payment_mode': 2}
+                        'payment_mode': 2,
+                        'payment_time': now()}
         fail_data = {'payment_status': 500,
                      'payment_code': 2}
 
