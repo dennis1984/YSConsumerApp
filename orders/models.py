@@ -115,6 +115,7 @@ class PayOrders(models.Model):
     notes = models.CharField('订单备注', max_length=40, default='', blank=True, null=True)
 
     created = models.DateTimeField('创建时间', default=now)
+    payment_time = models.DateTimeField('订单支付时间', null=True)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
     expires = models.DateTimeField('订单过期时间', default=minutes_15_plus)
     extend = models.TextField('扩展信息', default='', blank=True)
@@ -508,6 +509,7 @@ class ConsumeOrders(models.Model):
     consumer_time_slot = models.CharField('订单核销时间段', max_length=32, null=True, blank=True)
 
     created = models.DateTimeField('创建时间', default=now)
+    payment_time = models.DateTimeField('订单支付时间', default=now)
     updated = models.DateTimeField('最后修改时间', auto_now=True)
     expires = models.DateTimeField('订单过期时间', default=minutes_15_plus)
     extend = models.TextField('扩展信息', default='', blank=True)
