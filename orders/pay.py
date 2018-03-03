@@ -92,7 +92,7 @@ class WalletPay(object):
             return result
 
         # 支付成功后，拆分主订单为子订单
-        consume_result = BaseConsumeOrders().create(self.orders)
+        consume_result = BaseConsumeOrders().create(self.orders.orders_id)
         if isinstance(consume_result, Exception):
             return consume_result
 
