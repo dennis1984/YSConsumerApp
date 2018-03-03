@@ -143,6 +143,8 @@ class VerifyOrders(models.Model):
 
     business_name = models.CharField('商户名字', max_length=200)
     food_court_id = models.IntegerField('美食城ID')
+    stalls_number = models.CharField('档口编号', max_length=20, default='',
+                                     null=True, blank=True)
     food_court_name = models.CharField('美食城名字', max_length=200)
     consumer_id = models.IntegerField('消费者ID')
 
@@ -153,11 +155,10 @@ class VerifyOrders(models.Model):
     online_discount = models.CharField('在线下单优惠', max_length=16, default='0')
     other_discount = models.CharField('其他优惠', max_length=16, default='0')
     coupons_discount = models.CharField('优惠券优惠', max_length=16, default='0')
+    coupons_id = models.IntegerField('优惠券ID', null=True)
     service_dishes_subsidy = models.CharField('菜品优惠平台补贴', max_length=16, default='0')
     service_coupons_subsidy = models.CharField('优惠券优惠平台补贴', max_length=16, default='0')
     payable = models.CharField('应付金额', max_length=16)
-
-    coupons_id = models.IntegerField('优惠券ID', null=True)
 
     # 0:未支付 200:已支付 201:待消费 206:已完成 400: 已过期 500:支付失败
     payment_status = models.IntegerField('订单支付状态', default=201)
@@ -169,6 +170,8 @@ class VerifyOrders(models.Model):
     notes = models.CharField('订单备注', max_length=40, default='')
     # 核销时段：例如：17:30~20:30
     consumer_time_slot = models.CharField('订单核销时间段', max_length=32, null=True, blank=True)
+    # 核销时间
+    confirm_time = models.DateTimeField('核销时间', null=True)
 
     created = models.DateTimeField('创建时间', default=now)
     payment_time = models.DateTimeField('订单支付时间', default=now)
@@ -280,8 +283,7 @@ class VerifyOrdersAction(object):
                                       Decimal(service_coupons_subsidy))}
         orders_data = model_to_dict(consume_orders)
         pop_keys = ['created', 'updated', 'master_orders_id',
-                    'is_commented', 'confirm_code', 'business_id',
-                    'stalls_number']
+                    'is_commented', 'confirm_code', 'business_id']
         for key in pop_keys:
             orders_data.pop(key)
 

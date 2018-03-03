@@ -490,6 +490,8 @@ class ConsumeOrders(models.Model):
     other_discount = models.CharField('其他优惠', max_length=16, default='0')
     coupons_discount = models.CharField('优惠券优惠', max_length=16, default='0')
     coupons_id = models.IntegerField('优惠券ID', null=True)
+    service_dishes_subsidy = models.CharField('菜品优惠平台补贴', max_length=16, default='0')
+    service_coupons_subsidy = models.CharField('优惠券优惠平台补贴', max_length=16, default='0')
     payable = models.CharField('应付金额', max_length=16)
 
     # 0:未支付 200:已支付 201:待消费 204:已取消 206:已完成 400: 已过期 500:支付失败
@@ -509,6 +511,8 @@ class ConsumeOrders(models.Model):
     notes = models.CharField('订单备注', max_length=40, default='', blank=True, null=True)
     # 核销时段：例如：17:30~20:30
     consumer_time_slot = models.CharField('订单核销时间段', max_length=32, null=True, blank=True)
+    # 核销时间
+    confirm_time = models.DateTimeField('核销时间', null=True)
 
     created = models.DateTimeField('创建时间', default=now)
     payment_time = models.DateTimeField('订单支付时间', default=now)
@@ -714,6 +718,14 @@ class BaseConsumeOrders(object):
             result = VerifyOrdersAction().create(obj, pay_orders)
             if isinstance(result, Exception):
                 return result
+
+            # 更新用户端的平台补贴字段的数字
+            obj.service_dishes_subsidy = result.service_dishes_subsidy
+            obj.service_coupons_subsidy = result.service_coupons_subsidy
+            try:
+                obj.save()
+            except Exception as e:
+                return e
             orders.append(obj)
         return orders
 
