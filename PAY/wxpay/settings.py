@@ -1,15 +1,13 @@
 # -*- coding:utf8 -*-
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from users.wx_auth.models import WXAPPInformation
 import os
 
 # 统一下单URL
 UNIFIED_ORDER_URL = 'https://api.mch.weixin.qq.com/pay/unifiedorder'
 
-wx_app_info = WXAPPInformation.get_object()
 # 公众账号ID
-APPID = wx_app_info.app_id
+APPID = 'wx88ede042ff75faf2'
 
 # 商户号
 MCH_ID = '1448533802'

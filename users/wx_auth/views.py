@@ -215,7 +215,7 @@ class JSSDKPermissonSignDetail(generics.GenericAPIView):
 
         # 存储jsapi ticket
         response_dict = json.loads(result.text)
-        if response_dict['errcode'] != 0:
+        if response_dict.get('errcode', 0) != 0:
             return Exception('Get jsapi ticket error.')
 
         response_dict['open_id'] = request.user.out_open_id
