@@ -8,10 +8,12 @@ from users.wx_auth.serializers import (AccessTokenSerializer,
                                        RandomStringSerializer,
                                        Oauth2AccessTokenSerializer,
                                        Oauth2RefreshTokenSerializer,
-                                       JSAPITicketSerializer)
+                                       JSAPITicketSerializer,
+                                       JSAPIAccessTokenSerializer)
 from users.wx_auth.models import (WXRandomString,
                                   WXAccessToken,
                                   WXJSAPITicket,
+                                  WXJSAPIAccessToken,
                                   Oauth2_Application,
                                   Oauth2_RefreshToken,
                                   Oauth2_AccessToken)
@@ -200,12 +202,41 @@ class JSSDKPermissonSignDetail(generics.GenericAPIView):
     JS-SDK使用权限签名
     """
     def get_access_token(self, request):
-        return WXAccessToken.get_object_by_openid(request.user.out_open_id)
+        access_token = WXJSAPIAccessToken.get_object(request)
+        if access_token:
+            return access_token.access_token
 
-    def get_jsapi_ticket(self, request, access_token):
+        # 没有JSAPI access token，重新获取
+        # 获取jsapi access token
+        access_url = wx_auth_settings.WX_JS_API_ACCESS_TOKEN
+        result = send_http_request(access_url=access_url, access_params={})
+        if isinstance(result, Exception) or not getattr(result, 'text'):
+            return result
+
+        # 存储jsapi ticket
+        response_dict = json.loads(result.text)
+        if response_dict['errcode'] != 0:
+            return Exception('Get jsapi ticket error.')
+
+        response_dict['open_id'] = request.user.out_open_id
+        serializer = JSAPIAccessTokenSerializer(data=response_dict)
+        if not serializer.is_valid():
+            return Exception(serializer.errors)
+        try:
+            serializer.save()
+        except Exception as e:
+            return e
+
+        return response_dict['access_token']
+
+    def get_jsapi_ticket(self, request):
         ticket = WXJSAPITicket.get_object(request)
         if ticket:
             return ticket.ticket
+
+        access_token = self.get_access_token(request)
+        if isinstance(access_token, Exception):
+            return access_token
 
         # 没有JSAPI ticket，重新获取
         # 获取jsapi ticket
@@ -216,7 +247,7 @@ class JSSDKPermissonSignDetail(generics.GenericAPIView):
 
         # 存储jsapi ticket
         response_dict = json.loads(result.text)
-        if 'errcode' != 0:
+        if response_dict['errcode'] != 0:
             return Exception('Get jsapi ticket error.')
 
         init_data = {'ticket': response_dict['ticket'],
@@ -250,12 +281,12 @@ class JSSDKPermissonSignDetail(generics.GenericAPIView):
                           'nonceStr': main.make_random_char_and_number_of_string(str_length=32),
                           'signature': None}
 
-        access_token = self.get_access_token(request)
-        if not access_token:
-            return Response({'Detail': 'Access Token is expired!'},
-                            status=status.HTTP_400_BAD_REQUEST)
+        # access_token = self.get_access_token(request)
+        # if not access_token:
+        #     return Response({'Detail': 'Access Token is expired!'},
+        #                     status=status.HTTP_400_BAD_REQUEST)
 
-        ticket = self.get_jsapi_ticket(request, access_token)
+        ticket = self.get_jsapi_ticket(request)
         if isinstance(ticket, Exception):
             return Response({'Detail': ticket.args}, status=status.HTTP_400_BAD_REQUEST)
         # 生成签名

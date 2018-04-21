@@ -78,6 +78,36 @@ class WXAPPInformation(models.Model):
             return e
 
 
+class WXJSAPIAccessToken(models.Model):
+    """
+    js api调用授权access token
+    """
+    access_token = models.CharField(u'微信授权访问用户的token', max_length=512)
+    open_id = models.CharField(u'微信用户唯一标识', max_length=64, db_index=True)
+    expires = models.DateTimeField(u'过期时间')
+
+    created = models.DateTimeField(u'创建时间', default=now)
+    updated = models.DateTimeField(u'更新时间', auto_now=True)
+
+    objects = BaseExpiresManager()
+
+    class Meta:
+        db_table = 'ys_wxauth_jsapi_access_token'
+        ordering = ['-expires']
+
+    def __unicode__(self):
+        return self.access_token
+
+    @classmethod
+    def get_object(cls, request):
+        kwargs = {'open_id': request.user.out_open_id}
+        instances = cls.objects.filter(**kwargs)
+        if instances:
+            return instances[0]
+        else:
+            return None
+
+
 class WXJSAPITicket(models.Model):
     """
     jsapi ticket存储
