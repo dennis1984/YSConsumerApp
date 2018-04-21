@@ -11,7 +11,7 @@ import qrcode
 import json
 import os
 import uuid
-from hashlib import md5
+from hashlib import md5, sha1
 from barcode import generate
 from barcode.writer import ImageWriter
 import base64
@@ -197,9 +197,11 @@ def make_dict_to_xml(source_dict, use_cdata=True):
     return xml_string.split('\n', 1)[1]
 
 
-def make_sign_for_wxpay(source_dict):
+def make_perfect_sign_string(source_dict):
     """
-    生成签名（微信支付）
+    对字典key进行排序，并生成"&"字符连接的字符串
+    :param source_dict:
+    :return:
     """
     key_list = []
     for _key in source_dict:
@@ -211,10 +213,34 @@ def make_sign_for_wxpay(source_dict):
     string_param = ''
     for item in key_list:
         string_param += '%s=%s&' % (item['key'], item['value'])
-        # 把密钥和其它参数组合起来
-    string_param += 'key=%s' % wx_settings.KEY
+    return string_param[:-1]
+
+
+def make_sign_for_wxpay(source_dict):
+    """
+    生成签名（微信支付）
+    """
+    string_param = make_perfect_sign_string(source_dict)
+    # 把密钥和其它参数组合起来
+    string_param += '&key=%s' % wx_settings.KEY
     md5_string = md5(string_param.encode('utf8')).hexdigest()
     return md5_string.upper()
+
+
+def make_sign_base(source_dict, sign_type='md5'):
+    """
+    对字典key进行排序，并签名
+    :param source_dict
+    :param sign_type:
+    :return:
+    """
+    sign_string = make_perfect_sign_string(source_dict)
+    if sign_type.lower() == 'md5':
+        return md5(sign_string.encode('utf8')).hexdigest()
+    elif sign_type.lower() == 'sha1':
+        return sha1(sign_string.encode('utf8')).hexdigest()
+    else:
+        return md5(sign_string.encode('utf8')).hexdigest()
 
 
 # def verify_sign_for_alipay(params_str, source_sign):

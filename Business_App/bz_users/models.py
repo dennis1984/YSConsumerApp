@@ -138,6 +138,10 @@ class FoodCourt(models.Model):
     image = models.ImageField('美食城平面图',
                               upload_to=FOOD_COURT_DIR,
                               default=os.path.join(FOOD_COURT_DIR, 'noImage.png'), )
+    # 经度
+    longitude = models.CharField('经度', max_length=32, null=True)
+    # 维度
+    latitude = models.CharField('维度', max_length=32, null=True)
     # 状态：1：有效 2：已删除
     status = models.IntegerField('数据状态', default=1)
     extend = models.TextField('扩展信息', default='', blank=True, null=True)

@@ -1,4 +1,4 @@
-#-*- coding:utf8 -*-
+# -*- coding:utf8 -*-
 import requests
 import urllib
 from rest_framework.views import View
@@ -20,7 +20,10 @@ def send_http_request(access_url, access_params, method='get',
         for key, value in kwargs['add_header'].items():
             headers[key] = value
 
-    request_url = '%s?%s' % (access_url, access_params)
+    if method == 'get' and access_params:
+        request_url = '%s?%s' % (access_url, access_params)
+    else:
+        request_url = access_url
     handle = getattr(requests, method)
     try:
         results = handle(request_url, headers=headers)

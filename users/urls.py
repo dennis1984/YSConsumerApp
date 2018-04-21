@@ -25,6 +25,9 @@ urlpatterns = [
     url(r'^wxauth/token/$', wx_auth_views.AuthCallback.as_view()),
     # 微信授权登录绑定手机号
     url(r'^wx_register/$', users_view.WXAuthUserNotLoggedAction.as_view()),
+
+    # 获取config接口注入权限验证配置
+    url(r'^get_js_sdk_permission_detail/$', wx_auth_views.JSSDKPermissonSignDetail.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

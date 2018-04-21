@@ -46,6 +46,9 @@ else:
 # 网页授权登录链接
 WX_AUTH_WEB_LINK = 'https://open.weixin.qq.com/connect/oauth2/authorize'
 
+# 请求获得jsapi_ticket
+WX_JS_API_TICKET = 'https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=%s&type=jsapi'
+
 # 网页授权登录参数配置
 WX_AUTH_PARAMS = {
     'get_code': {

@@ -2,6 +2,7 @@ from itertools import chain
 from django.db import models
 from django.conf import settings
 from horizon.main import timezoneStringTostring
+from django.utils.timezone import now
 import urllib
 import os
 import copy
@@ -43,6 +44,20 @@ class BaseManager(models.Manager):
         if 'status' not in kwargs:
             kwargs['status'] = 1
         instances = super(BaseManager, self).filter(*args, **kwargs)
+        return instances
+
+
+class BaseExpiresManager(models.Manager):
+    def get(self, *args, **kwargs):
+        if 'expires' not in kwargs:
+            kwargs['expires__gt'] = now()
+        instance = super(BaseExpiresManager, self).get(*args, **kwargs)
+        return instance
+
+    def filter(self, *args, **kwargs):
+        if 'expires' not in kwargs:
+            kwargs['expires__gt'] = now()
+        instances = super(BaseExpiresManager, self).filter(*args, **kwargs)
         return instances
 
 

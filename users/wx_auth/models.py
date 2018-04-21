@@ -5,6 +5,7 @@ from horizon.main import minutes_15_plus
 from oauth2_provider.models import (Application as Oauth2_Application,
                                     AccessToken as Oauth2_AccessToken,
                                     RefreshToken as Oauth2_RefreshToken)
+from horizon.models import BaseExpiresManager
 import datetime
 from hashlib import md5
 
@@ -75,3 +76,33 @@ class WXAPPInformation(models.Model):
             return cls.objects.all()[0]
         except Exception as e:
             return e
+
+
+class WXJSAPITicket(models.Model):
+    """
+    jsapi ticket存储
+    """
+    ticket = models.CharField(u'jsapi ticket', max_length=164, unique=True)
+    open_id = models.CharField(u'微信用户唯一标识', max_length=64, db_index=True)
+    expires = models.DateTimeField(u'过期时间')
+
+    created = models.DateTimeField(u'创建时间', default=now)
+    updated = models.DateTimeField(u'更新时间', auto_now=True)
+
+    objects = BaseExpiresManager()
+
+    class Meta:
+        db_table = 'ys_wxauth_jsapi_ticket'
+        ordering = ['-expires']
+
+    def __unicode__(self):
+        return self.ticket
+
+    @classmethod
+    def get_object(cls, request):
+        kwargs = {'open_id': request.user.out_open_id}
+        instances = cls.objects.filter(**kwargs)
+        if instances:
+            return instances[0]
+        else:
+            return None

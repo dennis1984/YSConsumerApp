@@ -6,3 +6,7 @@ class AuthCallbackForm(forms.Form):
     code = forms.CharField(max_length=128)
     state = forms.CharField(max_length=128)
 
+
+class JSSDKPermissonSignDetailForm(forms.Form):
+    url = forms.CharField()
+

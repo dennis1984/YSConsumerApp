@@ -1,6 +1,8 @@
 # -*- coding:utf8 -*-
 from rest_framework import serializers
-from users.wx_auth.models import WXRandomString, WXAccessToken
+from users.wx_auth.models import (WXRandomString,
+                                  WXAccessToken,
+                                  WXJSAPITicket)
 from django.utils.timezone import now
 from horizon.main import make_time_delta
 from oauth2_provider.models import (AccessToken as Oauth2_AccessToken,
@@ -53,16 +55,18 @@ class Oauth2RefreshTokenSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# class Oauth2AccessTokenSerializer(serializers.Serializer):
-#     token = serializers.CharField(max_length=255)
-#     expires = serializers.DateTimeField()
-#     scope = serializers.CharField(max_length=255)
-#     application_id = serializers.IntegerField()
-#     user_id = serializers.IntegerField()
-#
-#
-# class Oauth2RefreshTokenSerializer(serializers.Serializer):
-#     token = serializers.CharField(max_length=255)
-#     access_token_id = serializers.IntegerField()
-#     application_id = serializers.IntegerField()
-#     user_id = serializers.IntegerField()
+class JSAPITicketSerializer(serializers.ModelSerializer):
+    def __init__(self, instance=None, data=None, **kwargs):
+        if data:
+            seconds_plus = data.pop('expires_in')
+            data['expires'] = make_time_delta(seconds=seconds_plus)
+            super(JSAPITicketSerializer, self).__init__(data=data, **kwargs)
+        else:
+            super(JSAPITicketSerializer, self).__init__(instance, **kwargs)
+
+    class Meta:
+        model = WXJSAPITicket
+        fields = '__all__'
+
+    def save(self, **kwargs):
+        return super(JSAPITicketSerializer, self).save(**kwargs)
