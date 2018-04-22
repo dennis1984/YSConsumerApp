@@ -18,10 +18,12 @@ from hot_sale.forms import (HotSaleListForm,
                             DishesGetForm,
                             FoodCourtListForm,
                             FoodCourtGetForm,
-                            RecommendDishesListForm)
+                            RecommendDishesListForm,
+                            FoodCourtNearestForm)
 from hot_sale.permissions import IsOwnerOrReadOnly
 from hot_sale.caches import HotSaleCache
 from collect.models import Collect
+from horizon import main
 
 import random
 
@@ -209,4 +211,31 @@ class CityList(generics.GenericAPIView):
         city_list = self.get_city_list()
         return Response(city_list, status=status.HTTP_200_OK)
 
+
+class FoodCourtNearestDetail(generics.GenericAPIView):
+    """
+    获取距离用户最近的美食城
+    """
+    def get_nearest_food_court(self, longitude, latitude):
+        instance_list = FoodCourt.get_object_list()
+        distance_ids = [{'instance': ins,
+                         'distance': main.haversine(longitude, latitude, ins.longitude, ins.latitude)}
+                        for ins in instance_list
+                        if ins.longitude and ins.latitude]
+        distance_ids = sorted(distance_ids, key=lambda x: x['distance'])
+        if len(distance_ids) > 0:
+            return distance_ids[0]
+        return Exception('Can not match any food court')
+
+    def post(self, request, *args, **kwargs):
+        form = FoodCourtNearestForm(request.data)
+        if not form.is_valid():
+            return Response({'Detail': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        cld = form.cleaned_data
+        instance = self.get_nearest_food_court(cld['longitude'], cld['latitude'])
+        if isinstance(instance, Exception):
+            return Response({'Detail': instance.args}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = FoodCourtSerializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 

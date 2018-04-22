@@ -11,6 +11,8 @@ urlpatterns = [
     url(r'^city_list/$', views.CityList.as_view()),
 
     url(r'^recommend_dishes_list/$', views.RecommendDishesList.as_view()),
+
+    url(r'^get_nearest_food_court/$', views.FoodCourtNearestDetail.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

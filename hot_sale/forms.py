@@ -40,3 +40,8 @@ class FoodCourtListForm(forms.Form):
 
 class RecommendDishesListForm(forms.Form):
     food_court_id = forms.IntegerField(min_value=1)
+
+
+class FoodCourtNearestForm(forms.Form):
+    longitude = forms.CharField(max_length=32)
+    latitude = forms.CharField(max_length=32)
