@@ -396,6 +396,8 @@ def haversine(lon1, lat1, lon2, lat2):  # 经度1，纬度1，经度2，纬度2 
     """
     根据两点的经度纬度来计算两点间的距离
     """
+    lon1, lat1, lon2, lat2 = float(lon1), float(lat1), float(lon2), float(lat2)
+
     # 将十进制度数转化为弧度
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
 

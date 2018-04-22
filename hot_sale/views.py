@@ -224,7 +224,7 @@ class FoodCourtNearestDetail(generics.GenericAPIView):
                         if ins.longitude and ins.latitude]
         distance_ids = sorted(distance_ids, key=lambda x: x['distance'])
         if len(distance_ids) > 0:
-            return distance_ids[0]
+            return distance_ids[0]['instance']
         return Exception('Can not match any food court')
 
     def post(self, request, *args, **kwargs):
