@@ -83,7 +83,7 @@ class WXJSAPIAccessToken(models.Model):
     js api调用授权access token
     """
     access_token = models.CharField(u'微信授权访问用户的token', max_length=512)
-    open_id = models.CharField(u'微信用户唯一标识', max_length=64, db_index=True)
+    # open_id = models.CharField(u'微信用户唯一标识', max_length=64, db_index=True)
     expires = models.DateTimeField(u'过期时间')
 
     created = models.DateTimeField(u'创建时间', default=now)
@@ -99,11 +99,10 @@ class WXJSAPIAccessToken(models.Model):
         return self.access_token
 
     @classmethod
-    def get_object(cls, request):
-        kwargs = {'open_id': request.user.out_open_id}
-        instances = cls.objects.filter(**kwargs)
+    def get_object(cls):
+        instances = cls.objects.filter()
         if instances:
-            return instances[0]
+            return instances[instances.count() - 1]
         else:
             return None
 
@@ -113,7 +112,7 @@ class WXJSAPITicket(models.Model):
     jsapi ticket存储
     """
     ticket = models.CharField(u'jsapi ticket', max_length=164, unique=True)
-    open_id = models.CharField(u'微信用户唯一标识', max_length=64, db_index=True)
+    # open_id = models.CharField(u'微信用户唯一标识', max_length=64, db_index=True)
     expires = models.DateTimeField(u'过期时间')
 
     created = models.DateTimeField(u'创建时间', default=now)
@@ -129,10 +128,9 @@ class WXJSAPITicket(models.Model):
         return self.ticket
 
     @classmethod
-    def get_object(cls, request):
-        kwargs = {'open_id': request.user.out_open_id}
-        instances = cls.objects.filter(**kwargs)
+    def get_object(cls):
+        instances = cls.objects.filter()
         if instances:
-            return instances[0]
+            return instances[instances.count() - 1]
         else:
             return None

@@ -202,7 +202,7 @@ class JSSDKPermissonSignDetail(generics.GenericAPIView):
     JS-SDK使用权限签名
     """
     def get_access_token(self, request):
-        access_token = WXJSAPIAccessToken.get_object(request)
+        access_token = WXJSAPIAccessToken.get_object()
         if access_token:
             return access_token.access_token
 
@@ -218,7 +218,6 @@ class JSSDKPermissonSignDetail(generics.GenericAPIView):
         if response_dict.get('errcode', 0) != 0:
             return Exception('Get jsapi ticket error.')
 
-        response_dict['open_id'] = request.user.out_open_id
         serializer = JSAPIAccessTokenSerializer(data=response_dict)
         if not serializer.is_valid():
             return Exception(serializer.errors)
@@ -230,7 +229,7 @@ class JSSDKPermissonSignDetail(generics.GenericAPIView):
         return response_dict['access_token']
 
     def get_jsapi_ticket(self, request):
-        ticket = WXJSAPITicket.get_object(request)
+        ticket = WXJSAPITicket.get_object()
         if ticket:
             return ticket.ticket
 
@@ -251,8 +250,7 @@ class JSSDKPermissonSignDetail(generics.GenericAPIView):
             return Exception('Get jsapi ticket error.')
 
         init_data = {'ticket': response_dict['ticket'],
-                     'expires_in': response_dict['expires_in'],
-                     'open_id': request.user.out_open_id}
+                     'expires_in': response_dict['expires_in']}
         serializer = JSAPITicketSerializer(data=init_data)
         if not serializer.is_valid():
             return Exception(serializer.errors)
