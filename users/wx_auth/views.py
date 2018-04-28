@@ -139,7 +139,7 @@ class AuthCallback(APIView):
             is_binding = False
 
             # 派发首单优惠优惠券
-            self.send_coupons_to_new_user(_user)
+            # self.send_coupons_to_new_user(_user)
         else:
             if not _user.phone:        # 已经创建的用户，但是没有绑定手机号
                 is_binding = False
