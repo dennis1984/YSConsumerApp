@@ -239,10 +239,10 @@ class PayOrdersAction(generics.GenericAPIView):
 
         cld = form.cleaned_data
         payment_mode = cld['payment_mode']
-        if payment_mode == 1:
-            is_password_valid, error_message = self.is_password_valid(request, **cld)
-            if not is_password_valid:
-                return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
+        # if payment_mode == 1:
+        #     is_password_valid, error_message = self.is_password_valid(request, **cld)
+        #     if not is_password_valid:
+        #         return Response({'Detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
 
         _instance = self.get_orders_by_orders_id(cld['orders_id'])
         if isinstance(_instance, Exception):
