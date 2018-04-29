@@ -254,25 +254,25 @@ class WalletAction(object):
             return _trade
 
         # 充值送礼物
-        if orders.notes == ORDERS_NOTES['recharge_give_gift']:
-            # 单次充值金额超过100，则送礼物
-            if Decimal(orders.payable) >= Decimal(WALLET_RECHARGE_GIVE_GIFT_START_PAYABLE):
-                wallet_recharge_gift = WalletRechargeGiftAction.create(orders.user_id)
-                if isinstance(wallet_recharge_gift, Exception):
-                    return wallet_recharge_gift
-        else:
-            # 充值送优惠券
-            loop = int(float(orders.payable) / RECHARGE_GIVE_CONFIG['start_amount'])
-            if loop > 0:
-                kwargs = {'type_detail': COUPONS_CONFIG_TYPE_DETAIL['recharge_give']}
-                coupons = CouponsConfig.filter_objects(**kwargs)
-                if isinstance(coupons, Exception) or not coupons:
-                    pass
-                else:
-                    user_ids = [request.user.id]
-                    for i in range(loop):
-                        for coupon in coupons:
-                            CouponsAction().create_coupons(user_ids, coupon)
+        # if orders.notes == ORDERS_NOTES['recharge_give_gift']:
+        #     # 单次充值金额超过100，则送礼物
+        #     if Decimal(orders.payable) >= Decimal(WALLET_RECHARGE_GIVE_GIFT_START_PAYABLE):
+        #         wallet_recharge_gift = WalletRechargeGiftAction.create(orders.user_id)
+        #         if isinstance(wallet_recharge_gift, Exception):
+        #             return wallet_recharge_gift
+        # else:
+        #     # 充值送优惠券
+        #     loop = int(float(orders.payable) / RECHARGE_GIVE_CONFIG['start_amount'])
+        #     if loop > 0:
+        #         kwargs = {'type_detail': COUPONS_CONFIG_TYPE_DETAIL['recharge_give']}
+        #         coupons = CouponsConfig.filter_objects(**kwargs)
+        #         if isinstance(coupons, Exception) or not coupons:
+        #             pass
+        #         else:
+        #             user_ids = [request.user.id]
+        #             for i in range(loop):
+        #                 for coupon in coupons:
+        #                     CouponsAction().create_coupons(user_ids, coupon)
         return result
 
     def consume(self, request, orders):
