@@ -7,7 +7,8 @@ import os
 UNIFIED_ORDER_URL = 'https://api.mch.weixin.qq.com/pay/unifiedorder'
 
 # 公众账号ID
-APPID = 'wx88ede042ff75faf2'
+# APPID = 'wx88ede042ff75faf2'  # 百灵科技（测试）
+APPID = 'wx55da5a50194f8c73'    # 公元铭（线上）
 
 # 商户号
 MCH_ID = '1448533802'
