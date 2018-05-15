@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     'coupons',
     'setup',
     'common',
+    # 商家 zl
+    'business',
 
     # 允许跨域请求
     'corsheaders',

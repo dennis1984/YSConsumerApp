@@ -39,7 +39,8 @@ urlpatterns = [
     url(r'^collect/', include('collect.urls', namespace='collect')),
     url(r'^comment/', include('comment.urls', namespace='comment')),
     url(r'^coupons/', include('coupons.urls', namespace='coupons')),
-
+    # 获取商场商家
+    url(r'^business/', include('business.urls', namespace='business')),
     # 设置
     url(r'^setup/', include('setup.urls', namespace='setup')),
 

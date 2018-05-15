@@ -117,6 +117,22 @@ class Dishes(models.Model):
             dishes = cls.get_dishes_detail_dict_with_user_info(pk=item.pk)
             dishes_list.append(dishes)
         return dishes_list
+    #商户菜品详情
+    @classmethod
+    def get_business_dishes_list(cls, **kwargs):
+        kwargs = get_perfect_filter_params(cls, **kwargs)
+        hot_objects = cls.filter_objects(**kwargs)
+        if isinstance(hot_objects, Exception):
+            return hot_objects
+        hot_objects = sorted(hot_objects, key=lambda x: x.sort_orders)
+        dishes_list = []
+        for item in hot_objects:
+            dishes = cls.get_dishes_detail_dict_with_user_info(pk=item.pk)
+            dishes_list.append(dishes)
+        return dishes_list
+
+
+
 
     @classmethod
     def is_sale_time_slot(cls, dishes_object):

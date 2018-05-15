@@ -62,7 +62,7 @@ class BusinessUser(AbstractBaseUser):
                                          null=False, default='')
     stalls_number = models.CharField(u'档口编号', max_length=20,
                                      null=False, default='')
-
+    business_summary = models.CharField(u'商户简介', max_length=250, default='')
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=now)
@@ -79,6 +79,11 @@ class BusinessUser(AbstractBaseUser):
         db_table = 'ys_auth_user'
         unique_together = ('business_name', 'food_court_id')
         app_label = 'Business_App.bz_users.models.BusinessUser'
+
+    @classmethod
+    def get_object_list(cls, **kwargs):
+        kwargs = get_perfect_filter_params(cls, **kwargs)
+        return cls.objects.filter(**kwargs)
 
     def set_password(self, raw_password):
         self.password = make_password(raw_password)
