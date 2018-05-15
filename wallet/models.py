@@ -272,11 +272,7 @@ class WalletAction(object):
         #             user_ids = [request.user.id]
         #             for i in range(loop):
         #                 for coupon in coupons:
-<<<<<<< HEAD
-                            CouponsAction().create_coupons(user_ids, coupon)
-=======
         #                     CouponsAction().create_coupons(user_ids, coupon)
->>>>>>> d3074aafb368dc605d732eaf643b06ff338c2be2
         return result
 
     def consume(self, request, orders):

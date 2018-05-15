@@ -138,11 +138,7 @@ class AuthCallback(APIView):
             _user = self.get_user_by_open_id(userinfo_response_dict['openid'])
             is_binding = False
 
-<<<<<<< HEAD
-            # 派发首单优惠优惠券
-=======
             # # 派发首单优惠优惠券
->>>>>>> d3074aafb368dc605d732eaf643b06ff338c2be2
             # self.send_coupons_to_new_user(_user)
         else:
             if not _user.phone:        # 已经创建的用户，但是没有绑定手机号
