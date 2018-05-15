@@ -11,6 +11,7 @@ from Business_App.bz_dishes.models import (Dishes,
                                            DISHES_MARK_DISCOUNT_VALUES,
                                            )
 from business.serializers import (BusinessUserSerializer,
+                                    UserDetailSerializer,
                                   BusinessUserListSerializer,
                                   BusinessDishesListSerializer)
 
@@ -73,9 +74,9 @@ class BusinessUserDetail(APIView):
             obj = self.get_object_detail(**cld)
         except Exception as e:
             return Response({'Error': e.args}, status=status.HTTP_400_BAD_REQUEST)
-        print obj
-        serializer = BusinessUserSerializer(obj)
-        print serializer
+
+        serializer = UserDetailSerializer(obj)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class BusinessDishesList(APIView):
